@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,8 +27,8 @@ public class UserService {
 
 
     public User createUser(User user) {
-        user.setCreateAt(new java.util.Date()); // Gán thời gian hiện tại
-        user.setUpdateAt(new java.util.Date());
+        user.setCreateAt(new Date().toInstant()); // Gán thời gian hiện tại
+        user.setUpdateAt(new Date().toInstant());
         return userRepository.save(user);
     }
 
@@ -43,7 +44,7 @@ public class UserService {
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setAddress(updatedUser.getAddress());
-            existingUser.setUpdateAt(new java.util.Date()); // Gán lại thời gian cập nhật
+            existingUser.setUpdateAt(new Date().toInstant()); // Gán lại thời gian cập nhật
             existingUser.setStatus(updatedUser.getStatus());
             return userRepository.save(existingUser);
         }

@@ -4,15 +4,15 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
 
 @Entity
-public class KoiType {
+public class KoiOrigin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "KoiTypeID", nullable = false)
+    @Column(name = "CountryID", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "TypeName", length = 100)
-    private String typeName;
+    @Column(name = "Country", length = 100)
+    private String country;
 
     public Integer getId() {
         return id;
@@ -22,12 +22,12 @@ public class KoiType {
         this.id = id;
     }
 
-    public String getTypeName() {
-        return typeName;
+    public String getCountry() {
+        return country;
     }
 
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
+    public void setCountry(String country) {
+        this.country = country;
     }
 
 }

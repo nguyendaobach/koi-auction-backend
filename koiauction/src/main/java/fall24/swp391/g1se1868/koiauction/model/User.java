@@ -1,61 +1,63 @@
 package fall24.swp391.g1se1868.koiauction.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
 
-import java.io.Serializable;
-import java.util.Date;
-
-import jakarta.persistence.*;
-import java.util.Date;
+import java.time.Instant;
 
 @Entity
-@Table(name = "[User]")
-public class User implements Serializable{
-
+@Table(name = "\"User\"")
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "UserID")
-    private Long userId;
+    @Column(name = "UserID", nullable = false)
+    private Integer id;
 
-    @Column(name = "Role")
+    @Nationalized
+    @Column(name = "Role", length = 50)
     private String role;
 
-    @Column(name = "UserName")
+    @Nationalized
+    @Column(name = "UserName", length = 100)
     private String userName;
 
-    @Column(name = "FullName")
+    @Nationalized
+    @Column(name = "FullName", length = 200)
     private String fullName;
 
+    @Nationalized
     @Column(name = "PhoneNumber", length = 20)
     private String phoneNumber;
 
+    @Nationalized
     @Column(name = "Email", length = 100)
     private String email;
 
+    @Nationalized
     @Column(name = "Password", length = 100)
     private String password;
 
-    @Column(name = "Address", columnDefinition = "NVARCHAR(MAX)")
+    @Nationalized
+    @Lob
+    @Column(name = "Address")
     private String address;
 
     @Column(name = "CreateAt")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createAt;
+    private Instant createAt;
 
     @Column(name = "UpdateAt")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updateAt;
+    private Instant updateAt;
 
+    @Nationalized
     @Column(name = "Status", length = 50)
     private String status;
 
-    // Getters và Setters
-    public Long getUserId() {
-        return userId;
+    public Integer getId() {
+        return id;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getRole() {
@@ -114,19 +116,19 @@ public class User implements Serializable{
         this.address = address;
     }
 
-    public Date getCreateAt() {
+    public Instant getCreateAt() {
         return createAt;
     }
 
-    public void setCreateAt(Date createAt) {
+    public void setCreateAt(Instant createAt) {
         this.createAt = createAt;
     }
 
-    public Date getUpdateAt() {
+    public Instant getUpdateAt() {
         return updateAt;
     }
 
-    public void setUpdateAt(Date updateAt) {
+    public void setUpdateAt(Instant updateAt) {
         this.updateAt = updateAt;
     }
 
@@ -137,6 +139,5 @@ public class User implements Serializable{
     public void setStatus(String status) {
         this.status = status;
     }
+
 }
-
-
