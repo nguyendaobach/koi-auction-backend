@@ -33,6 +33,10 @@ public class UserService {
         user.setRole("User");
         return userRepository.save(user);
     }
+    public boolean verifyUserName(String username){
+        User user = userRepository.findByUserName(username);
+        return user==null?true:false;
+    }
 
     public String login(User user) {
         Authentication authentication

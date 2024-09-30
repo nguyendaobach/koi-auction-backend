@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +47,17 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+    }
+
+
+    @GetMapping("/verifyUserName")
+    public ResponseEntity<String> verifyUserName(@RequestParam String userName) {
+        boolean isAvailable = userService.verifyUserName(userName);
+        if (isAvailable) {
+            return ResponseEntity.ok("Username is available");
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
+        }
     }
 }
 
