@@ -59,5 +59,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
         }
     }
+    @GetMapping("/verifyEmail")
+    public ResponseEntity<String> verifyEmail(@RequestParam String Email) {
+        boolean isAvailable = userService.verifyEmail(Email);
+        if (isAvailable) {
+            return ResponseEntity.ok("Email is available");
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
+        }
+    }
+
 }
 

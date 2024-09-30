@@ -37,6 +37,10 @@ public class UserService {
         User user = userRepository.findByUserName(username);
         return user==null?true:false;
     }
+    public boolean verifyEmail(String email){
+        User user = userRepository.findByEmail(email);
+        return user==null?true:false;
+    }
 
     public String login(User user) {
         Authentication authentication
