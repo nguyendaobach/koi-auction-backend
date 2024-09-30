@@ -50,24 +50,8 @@ public class UserController {
     }
 
 
-    @GetMapping("/verifyUserName")
-    public ResponseEntity<String> verifyUserName(@RequestParam String userName) {
-        boolean isAvailable = userService.verifyUserName(userName);
-        if (isAvailable) {
-            return ResponseEntity.ok("Username is available");
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
-        }
-    }
-    @GetMapping("/verifyEmail")
-    public ResponseEntity<String> verifyEmail(@RequestParam String Email) {
-        boolean isAvailable = userService.verifyEmail(Email);
-        if (isAvailable) {
-            return ResponseEntity.ok("Email is available");
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
-        }
-    }
+
+
 
 }
 
