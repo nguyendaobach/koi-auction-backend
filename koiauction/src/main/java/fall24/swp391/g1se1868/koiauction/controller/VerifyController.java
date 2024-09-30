@@ -41,7 +41,7 @@ public class VerifyController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
             }
         }else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is invalid format");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is invalid format");
         }
     }
     @GetMapping("/verifyPhone")
@@ -55,7 +55,7 @@ public class VerifyController {
                     return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone number is already taken");
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone number is invalid format");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Phone number is invalid format");
             }
         }
     }
