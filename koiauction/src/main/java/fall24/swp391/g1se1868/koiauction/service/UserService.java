@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.UserLogin;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -45,17 +46,28 @@ public class UserService {
         User user = userRepository.findByPhoneNumber(phoneNumber);
         return user==null?true:false;
     }
+    public int getUserId(String username){
+        User user = userRepository.findByUserName(username);
+        return user==null?-1:user.getId();
+    }
+    public User getUserByUserName(String username){
+        User user = userRepository.findByUserName(username);
+        return user==null?null:user;
+    }
 
-    public String login(User user) {
+    public String login(UserLogin user) {
         Authentication authentication
                 =authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUserName(),user.getPassword()));
         if (authentication.isAuthenticated()){
-            return jwtService.generateToken(user.getUserName());
+            User user1 = userRepository.findByUserName(user.getUserName());
+            if ("banned".equalsIgnoreCase(user1.getStatus())) {
+                return "User is banned and cannot log in.";
+            }
+            return jwtService.generateToken(user1.getUserName(), user1.getId());
         }
         else {
-            throw new UsernameNotFoundException("Username not found");
+            return "Username or password is incorrect.";
         }
-
     }
 
     public List<User> getAllUsers() {

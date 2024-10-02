@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.UserLogin;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ public class SecurityController {
     }
 
     @PostMapping("/login")
-    public String Login (@RequestBody User user){
+    public String Login (@RequestBody UserLogin user){
         return userService.login(user);
     }
 }

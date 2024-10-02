@@ -51,6 +51,27 @@ public class User {
     @Nationalized
     @Column(name = "Status", length = 50)
     private String status;
+    public User() {
+
+    }
+    public User(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
+    }
+
+    public User(Integer id, String role, String userName, String phoneNumber, String fullName, String password, String email, String address, Instant updateAt, String status, Instant createAt) {
+        this.id = id;
+        this.role = role;
+        this.userName = userName;
+        this.phoneNumber = phoneNumber;
+        this.fullName = fullName;
+        this.password = password;
+        this.email = email;
+        this.address = address;
+        this.updateAt = updateAt;
+        this.status = status;
+        this.createAt = createAt;
+    }
 
     public Integer getId() {
         return id;
