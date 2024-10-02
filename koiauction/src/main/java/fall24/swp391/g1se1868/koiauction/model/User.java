@@ -52,6 +52,9 @@ public class User {
     @Column(name = "Status", length = 50)
     private String status;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private ForgotPassword forgotPassword;
+
     public Integer getId() {
         return id;
     }
