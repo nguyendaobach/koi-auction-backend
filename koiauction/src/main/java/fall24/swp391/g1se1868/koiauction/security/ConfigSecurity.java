@@ -29,9 +29,17 @@ public class ConfigSecurity {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
         httpSecurity.csrf(customizer -> customizer.disable());
-        httpSecurity.authorizeHttpRequests(request ->
-                        request.requestMatchers("/register", "/login", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**","/swagger-ui/index.html/**", "/verify/**").permitAll()
+        httpSecurity.authorizeHttpRequests(request -> request
+                        .requestMatchers("/register").permitAll()
+                        .requestMatchers( "/login").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers( "/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui/index.html/**").permitAll()
+                        .requestMatchers("/verify/**").permitAll()
+                        .requestMatchers("/forgotPassword/**").permitAll()
                         .anyRequest().authenticated())
+
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                                 )

@@ -73,6 +73,9 @@ public class User {
         this.createAt = createAt;
     }
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private ForgotPassword forgotPassword;
+
     public Integer getId() {
         return id;
     }
