@@ -30,6 +30,10 @@ public class ConfigSecurity {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
         httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
+                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/breeder").hasRole("BREEDER")
+                        .requestMatchers("/staff").hasRole("STAFF")
+                        .requestMatchers("/user").hasRole("USER")
                         .requestMatchers("/register").permitAll()
                         .requestMatchers( "/login").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
@@ -39,7 +43,6 @@ public class ConfigSecurity {
                         .requestMatchers("/verify/**").permitAll()
                         .requestMatchers("/forgotPassword/**").permitAll()
                         .anyRequest().authenticated())
-
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                                 )
