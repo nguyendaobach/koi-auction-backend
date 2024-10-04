@@ -2,11 +2,13 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserLogin;
+import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,20 +57,22 @@ public class UserService {
         return user==null?null:user;
     }
 
-    public String login(UserLogin user) {
-        Authentication authentication
-                =authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUserName(),user.getPassword()));
-        if (authentication.isAuthenticated()){
-            User user1 = userRepository.findByUserName(user.getUserName());
-            if ("banned".equalsIgnoreCase(user1.getStatus())) {
+    public String login(UserLogin userLogin) {
+        try {
+            Authentication authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPassword())
+            );
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            User user = userPrinciple.getUser();
+            if ("banned".equalsIgnoreCase(user.getStatus())) {
                 return "User is banned and cannot log in.";
             }
-            return jwtService.generateToken(user1.getUserName(), user1.getId());
-        }
-        else {
+            return jwtService.generateToken(user.getUserName(), user.getId());
+        } catch (AuthenticationException e) {
             return "Username or password is incorrect.";
         }
     }
+
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
