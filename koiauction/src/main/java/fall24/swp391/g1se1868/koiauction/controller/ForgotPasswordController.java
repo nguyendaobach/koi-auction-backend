@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @RestController
-@RequestMapping("/forgotPassword")
+@RequestMapping("/api/forgot-password")
 public class ForgotPasswordController {
 
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
