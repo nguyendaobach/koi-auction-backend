@@ -1,10 +1,14 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
+import fall24.swp391.g1se1868.koiauction.model.LoginResponse;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserLogin;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.LoginResponse;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -79,19 +83,26 @@ public class UserService {
         return user==null?null:user;
     }
 
-    public String login(UserLogin userLogin) {
+    public ResponseEntity<?> login(UserLogin userLogin) {
         try {
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPassword())
             );
+
             UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
             User user = userPrinciple.getUser();
+
             if ("banned".equalsIgnoreCase(user.getStatus())) {
-                return "User is banned and cannot log in.";
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User is banned and cannot log in.");
             }
-            return jwtService.generateToken(user.getUserName(), user.getId());
+
+            String token = jwtService.generateToken(user.getUserName(), user.getId());
+
+            LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName());
+            return ResponseEntity.ok(response);
+
         } catch (AuthenticationException e) {
-            return "Username or password is incorrect.";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username or password is incorrect.");
         }
     }
 
