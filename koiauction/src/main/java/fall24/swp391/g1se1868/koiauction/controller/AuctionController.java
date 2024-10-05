@@ -6,10 +6,7 @@ import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +40,26 @@ public class AuctionController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
         return auctionService.getAuctionsParticipantByUser(userId);
+    }
+    @GetMapping("/auction-by-winner")
+    public List<Auction> getWinnerAuctions() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        return auctionService.getWinnerAuctionByWinnerID(userId);
+    }
+    @GetMapping("/check-participant-for-auction")
+    public boolean checkParticipantForAuction(@RequestParam int auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        return auctionService.isUserParticipantForAuction(userId,auctionId);
     }
 
 }

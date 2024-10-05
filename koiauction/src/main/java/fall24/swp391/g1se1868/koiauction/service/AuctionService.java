@@ -52,6 +52,12 @@ public class AuctionService {
         List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(UserID);
         return auctionParticipantRepository.findAuctionsByIds(auctionIds);
     }
+    public List<Auction> getWinnerAuctionByWinnerID(int WinnerID){
+        return auctionRepository.getAuctionbyWinnerID(WinnerID);
+    }
+    public boolean isUserParticipantForAuction(int userId, int auctionId) {
+        return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
+    }
     }
 
 
