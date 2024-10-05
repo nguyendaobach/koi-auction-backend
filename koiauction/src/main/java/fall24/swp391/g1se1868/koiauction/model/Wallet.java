@@ -11,12 +11,11 @@ public class Wallet {
     @Column(name = "WalletID", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "UserID")
-    private User userID;
+    @Column(name = "UserID", nullable = false)
+    private Integer userID;
 
     @Column(name = "Amount", precision = 10, scale = 2)
-    private BigDecimal amount;
+    private Long amount;
 
     public Integer getId() {
         return id;
@@ -26,19 +25,19 @@ public class Wallet {
         this.id = id;
     }
 
-    public User getUserID() {
+    public Integer getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(Integer userID) {
         this.userID = userID;
     }
 
-    public BigDecimal getAmount() {
+    public Long getAmount() {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(Long amount) {
         this.amount = amount;
     }
 

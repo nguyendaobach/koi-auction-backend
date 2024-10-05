@@ -21,16 +21,26 @@ public class Transaction {
     @Column(name = "\"Time\"")
     private Instant time;
 
-    @Column(name = "Amount", precision = 10, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "Amount")
+    private Long amount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "AuctionID")
-    private Auction auctionID;
+    @Column(name = "AuctionID", nullable = false)
+    private Integer auctionID;
 
     @Nationalized
     @Column(name = "Status", length = 50)
     private String status;
+
+    @Column(name="TransactionType")
+    private String transactionType;
+
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
+    }
 
     public Integer getId() {
         return id;
@@ -56,19 +66,19 @@ public class Transaction {
         this.time = time;
     }
 
-    public BigDecimal getAmount() {
+    public Long getAmount() {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(Long amount) {
         this.amount = amount;
     }
 
-    public Auction getAuctionID() {
+    public Integer getAuctionID() {
         return auctionID;
     }
 
-    public void setAuctionID(Auction auctionID) {
+    public void setAuctionID(Integer auctionID) {
         this.auctionID = auctionID;
     }
 
