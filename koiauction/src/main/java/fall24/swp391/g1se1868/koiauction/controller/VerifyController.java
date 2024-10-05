@@ -19,7 +19,7 @@ public class VerifyController {
     @Autowired
     UserService userService;
 
-    @GetMapping("/verifyUserName")
+    @GetMapping("/verify-userName")
     public ResponseEntity<String> verifyUserName(@RequestParam String userName) {
         boolean isAvailable = userService.verifyUserName(userName);
         if (isAvailable) {
@@ -30,7 +30,7 @@ public class VerifyController {
     }
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-    @GetMapping("/verifyEmail")
+    @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String Email) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(Email);
         if(matcher.matches()) {
@@ -44,7 +44,7 @@ public class VerifyController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is invalid format");
         }
     }
-    @GetMapping("/verifyPhone")
+    @GetMapping("/verify-phone")
     public ResponseEntity<String> verifyPhone(@RequestParam String Phone) {
         String allCountryRegex = "^(\\+\\d{1,3}( )?)?((\\(\\d{1,3}\\))|\\d{1,3})[- .]?\\d{3,4}[- .]?\\d{4}$";
             if (Phone.matches(allCountryRegex)) {
