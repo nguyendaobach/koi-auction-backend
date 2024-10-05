@@ -31,10 +31,32 @@ public class UserService {
 
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
-    public User register(User user){
-        user.setPassword(encoder.encode(user.getPassword()));
-        user.setRole("User");
-        return userRepository.save(user);
+    public String register(User user) {
+        if (user == null) {
+            return "User object cannot be null";
+        }
+
+        if (user.getUserName() == null || user.getUserName().isEmpty()) {
+            return "Username cannot be null or empty";
+        }
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return "Password cannot be null or empty";
+        }
+
+        if (verifyUserName(user.getUserName())) {
+            user.setPassword(encoder.encode(user.getPassword()));
+            user.setRole("User");
+            user.setStatus("Active");
+
+            if (userRepository.save(user) != null) {
+                return "Registered successfully";
+            } else {
+                return "Registration failed";
+            }
+        } else {
+            return "Username already in use";
+        }
     }
     public boolean verifyUserName(String username){
         User user = userRepository.findByUserName(username);
