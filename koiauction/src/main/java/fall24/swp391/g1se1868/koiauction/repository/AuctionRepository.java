@@ -24,7 +24,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
             "AND a.status = 'Closed'")
     List<Object[]> findPastAuctionsWithWinnerName();
 
-
+    @Query("SELECT a FROM Auction a WHERE a.winnerID = ?1")
+    List<Auction> getAuctionbyWinnerID(int winnerID);
 
 
 

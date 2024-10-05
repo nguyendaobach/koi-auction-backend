@@ -48,10 +48,15 @@ public class AuctionService {
 
         return pastAuctions;
     }
-    public List<Auction> getAuctionsParticipantByUser(String token){
-        Integer userId = jwtService.getUserIdFromToken(token);
-        List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(userId);
+    public List<Auction> getAuctionsParticipantByUser(int UserID){
+        List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(UserID);
         return auctionParticipantRepository.findAuctionsByIds(auctionIds);
+    }
+    public List<Auction> getWinnerAuctionByWinnerID(int WinnerID){
+        return auctionRepository.getAuctionbyWinnerID(WinnerID);
+    }
+    public boolean isUserParticipantForAuction(int userId, int auctionId) {
+        return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
     }
     }
 
