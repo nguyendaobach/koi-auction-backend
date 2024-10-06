@@ -66,5 +66,10 @@ public class WalletService {
         transactionRepository.save(payerTransaction);
         return "Payment successful!";
     }
+    @Transactional
+    public void addUserWallet(Integer id){
+        Wallet wallet=new Wallet(id,0L);
+        walletRepository.save(wallet);
+    }
 }
 

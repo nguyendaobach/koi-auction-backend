@@ -32,6 +32,8 @@ public class UserService {
     @Autowired
     JwtService jwtService;
 
+    @Autowired
+    WalletService walletService;
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
     public String register(User user) {
@@ -51,12 +53,13 @@ public class UserService {
             user.setPassword(encoder.encode(user.getPassword()));
             user.setRole("User");
             user.setStatus("Active");
-
             if (userRepository.save(user) != null) {
+                walletService.addUserWallet(user.getId());
                 return "Registered successfully";
             } else {
                 return "Registration failed";
             }
+
         } else {
             return "Username already in use";
         }
@@ -97,7 +100,7 @@ public class UserService {
 
             String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-            LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName());
+            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getRole());
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {

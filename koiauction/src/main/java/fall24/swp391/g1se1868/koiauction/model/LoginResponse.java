@@ -4,12 +4,21 @@ package fall24.swp391.g1se1868.koiauction.model;
     public class LoginResponse {
         private String token;
         private String username;
-        private String fullName;
 
-        public LoginResponse(String token, String username, String fullName) {
+        private String Role;
+
+        public LoginResponse(String token, String username, String role) {
             this.token = token;
             this.username = username;
-            this.fullName = fullName;
+            Role = role;
+        }
+
+        public String getRole() {
+            return Role;
+        }
+
+        public void setRole(String role) {
+            Role = role;
         }
 
         public String getToken() {
@@ -28,13 +37,8 @@ package fall24.swp391.g1se1868.koiauction.model;
             this.username = username;
         }
 
-        public String getFullName() {
-            return fullName;
-        }
 
-        public void setFullName(String fullName) {
-            this.fullName = fullName;
-        }
+
     }
 
 
