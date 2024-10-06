@@ -21,6 +21,7 @@ public class UserPrinciple implements UserDetails {
         return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()));
     }
 
+
     @Override
     public String getPassword() {
         return user.getPassword();

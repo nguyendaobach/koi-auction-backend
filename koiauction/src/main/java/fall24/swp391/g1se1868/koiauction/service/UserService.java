@@ -4,7 +4,6 @@ import fall24.swp391.g1se1868.koiauction.model.LoginResponse;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserLogin;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
-import fall24.swp391.g1se1868.koiauction.model.LoginResponse;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,9 +12,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -142,11 +141,20 @@ public class UserService {
         return null;
     }
 
-
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public void banUser(Long id) {
+        userRepository.banUser(id);
     }
 
+    @Transactional
+    public User updateUserRole(Long id, String role) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setRole(role);
+            return userRepository.save(user);
+        }
+        return null;
+    }
 
 
 }

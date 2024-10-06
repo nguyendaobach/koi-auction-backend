@@ -3,7 +3,6 @@ package fall24.swp391.g1se1868.koiauction.controller;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,47 +10,48 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/admin-manager/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
 
-    @GetMapping
+    @GetMapping("/getAll")
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
 
 
-    @GetMapping("/{id}")
+    @GetMapping("/get-user/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    @PostMapping("/ban-user/{id}")
+    public ResponseEntity<User> banUser(@PathVariable Long id) {
+        userService.banUser(id);
+        Optional<User> user = userService.getUserById(id);
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PostMapping("/update-role/{id}")
+    public ResponseEntity<User> updateRole(@PathVariable Long id, @RequestParam String role) {
 
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        User user = userService.updateUser(id, updatedUser);
+        if (!isValidRole(role)) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+
+        User user = userService.updateUserRole(id, role);
+
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
-
-    @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    private boolean isValidRole(String role) {
+        return role.equals("User") || role.equals("Breeder") || role.equals("Staff") || role.equals("Admin");
     }
 
-
-
-
-
 }
-
