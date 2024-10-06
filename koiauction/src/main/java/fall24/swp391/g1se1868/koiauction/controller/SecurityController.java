@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserLogin;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.UserRegister;
 import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class SecurityController {
     private JwtService jwtService;
 
     @PostMapping("/register")
-    public String register(@RequestBody User user){
+    public String register(@RequestBody UserRegister user){
         return userService.register(user);
     }
 
