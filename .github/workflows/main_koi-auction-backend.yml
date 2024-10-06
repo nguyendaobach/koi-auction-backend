@@ -50,4 +50,4 @@ jobs:
           app-name: 'koi-auction-backend'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C68FEF329C704F45B7857B8174323CF5 }}
-          package: '*.war'
+          package: '*.jar'
