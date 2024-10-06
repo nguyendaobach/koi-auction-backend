@@ -17,6 +17,11 @@ public class Wallet {
     @Column(name = "Amount", precision = 10, scale = 2)
     private Long amount;
 
+    public Wallet(Integer userID, Long amount) {
+        this.userID = userID;
+        this.amount = amount;
+    }
+
     public Integer getId() {
         return id;
     }
