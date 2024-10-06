@@ -46,6 +46,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
+        httpSecurity.cors(Customizer.withDefaults());
         httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
                         .requestMatchers("/admin").hasRole("ADMIN")
