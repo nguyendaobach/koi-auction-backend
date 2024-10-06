@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
-import fall24.swp391.g1se1868.koiauction.model.LoginResponse;
-import fall24.swp391.g1se1868.koiauction.model.User;
-import fall24.swp391.g1se1868.koiauction.model.UserLogin;
-import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -36,23 +34,32 @@ public class UserService {
     WalletService walletService;
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
-    public String register(User user) {
-        if (user == null) {
+    public String register(UserRegister userRegister) {
+        if (userRegister == null) {
             return "User object cannot be null";
         }
 
-        if (user.getUserName() == null || user.getUserName().isEmpty()) {
+        if (userRegister.getUserName() == null || userRegister.getUserName().isEmpty()) {
             return "Username cannot be null or empty";
         }
 
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+        if (userRegister.getPassword() == null || userRegister.getPassword().isEmpty()) {
             return "Password cannot be null or empty";
         }
 
-        if (verifyUserName(user.getUserName())) {
-            user.setPassword(encoder.encode(user.getPassword()));
+        if (verifyUserName(userRegister.getUserName())) {
+            User user = new User();
+            user.setUserName(userRegister.getUserName());
+            user.setFullName(userRegister.getFullName());
+            user.setPhoneNumber(userRegister.getPhoneNumber());
+            user.setEmail(userRegister.getEmail());
+            user.setPassword(encoder.encode(userRegister.getPassword()));
+            user.setAddress(userRegister.getAddress());
+            user.setCreateAt(Instant.now());
+            user.setUpdateAt(Instant.now());
             user.setRole("User");
             user.setStatus("Active");
+
             if (userRepository.save(user) != null) {
                 walletService.addUserWallet(user.getId());
                 return "Registered successfully";
@@ -64,6 +71,7 @@ public class UserService {
             return "Username already in use";
         }
     }
+
     public boolean verifyUserName(String username){
         User user = userRepository.findByUserName(username);
         return user==null?true:false;
