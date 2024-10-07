@@ -2,7 +2,9 @@ package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.KoiType;
 import fall24.swp391.g1se1868.koiauction.service.KoiTypeService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,14 +29,26 @@ public class KoiTypeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public KoiType createKoiType(@RequestBody KoiType koiType) {
-        return koiTypeService.saveKoiType(koiType);
+    @PostMapping("/add-koitype")
+    public ResponseEntity<KoiType> createKoiType(@RequestParam String name) {
+        KoiType koiType = new KoiType(name);
+        KoiType savedKoiType = koiTypeService.saveKoiType(koiType);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedKoiType);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteKoiType(@PathVariable Integer id) {
-        koiTypeService.deleteKoiType(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteKoiType(@PathVariable Integer id) {
+        try {
+            koiTypeService.deleteKoiType(id);
+            return ResponseEntity.ok("KoiType with ID " + id + " has been successfully deleted.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("KoiType with ID " + id + " not found.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while trying to delete KoiType with ID " + id);
+        }
     }
+
+
 }
