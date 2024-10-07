@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
-import fall24.swp391.g1se1868.koiauction.model.Auction;
-import fall24.swp391.g1se1868.koiauction.model.AuctionParticipant;
-import fall24.swp391.g1se1868.koiauction.model.Transaction;
-import fall24.swp391.g1se1868.koiauction.model.Wallet;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionParticipantRepository;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import jakarta.transaction.Transactional;
@@ -21,23 +18,34 @@ public class AuctionParticipantService {
     @Autowired
     private AuctionRepository auctionRepository;
     @Autowired
-    private WalletService walletService; @Transactional
+    private WalletService walletService;
+
+    @Transactional
     public String registerForAuction(Integer userId, Integer auctionId) {
+        // Kiểm tra nếu người dùng đã đăng ký cho phiên đấu giá này
         if (auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId)) {
             return "You are already registered for this auction.";
         }
         Wallet userWallet = walletService.getWalletByUserId(userId);
-        Auction activeAuction = auctionRepository.findById(auctionId).get();
+        Auction activeAuction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new IllegalArgumentException("Auction not found"));
         if (userWallet.getAmount() < activeAuction.getBidderDeposit()) {
             return "Insufficient balance for deposit.";
         }
-        Transaction tr = walletService.deposit(userId, activeAuction.getBidderDeposit());
+        Transaction transaction = walletService.deposit(userId, activeAuction.getBidderDeposit());
         AuctionParticipant auctionParticipant = new AuctionParticipant();
-        auctionParticipant.setUserID(userId);
-        auctionParticipant.setAuctionID(auctionId);
+        AuctionParticipantId participantId = new AuctionParticipantId();
+        Auction auction = new Auction(auctionId);
+        User user = new User(userId);
+        auctionParticipant.setAuctionID(auction);
+        auctionParticipant.setUserID(user);
+        auctionParticipant.setId(participantId);
         auctionParticipant.setParticipantAuctionDate(Instant.now());
-        auctionParticipant.setTransactionID(tr.getId());
+        auctionParticipant.setTransactionID(transaction.getId());
+        auctionParticipant.setStatus("Participated");
         auctionParticipantRepository.save(auctionParticipant);
+
         return "Registration successful!";
     }
+
 }

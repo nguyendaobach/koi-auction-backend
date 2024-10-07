@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-
+@Repository
 public interface ForgotpasswordRepository extends JpaRepository<ForgotPassword,Integer>{
 
     @Query("SELECT fp FROM ForgotPassword fp WHERE fp.user = ?1")

@@ -61,6 +61,7 @@ public class WalletService {
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);  // Negative for deduction
         payerTransaction.setTime(Instant.now());
+        payerTransaction.setAuctionID(null);
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");
         transactionRepository.save(payerTransaction);
@@ -81,7 +82,7 @@ public class WalletService {
         walletRepository.save(recipientWallet);
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
-        payerTransaction.setAmount(amount);  // Negative for deduction
+        payerTransaction.setAmount(amount);
         payerTransaction.setTime(Instant.now());
         payerTransaction.setTransactionType("Deposit");
         payerTransaction.setStatus("Completed");

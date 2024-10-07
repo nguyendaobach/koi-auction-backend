@@ -59,6 +59,13 @@ public class Auction {
     @Column(name = "Status", length = 50)
     private String status;
 
+    public Auction() {
+    }
+
+    public Auction(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }
