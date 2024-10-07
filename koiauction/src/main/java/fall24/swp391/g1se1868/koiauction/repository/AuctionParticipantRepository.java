@@ -25,4 +25,5 @@ public interface AuctionParticipantRepository extends JpaRepository<AuctionParti
             "FROM AuctionParticipant ap " +
             "WHERE ap.userID.id = ?1 AND ap.auctionID.id = ?2")
     boolean existsByUserIdAndAuctionId( int userId, int auctionId);
+
 }

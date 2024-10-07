@@ -11,18 +11,16 @@ public class AuctionParticipant {
     private AuctionParticipantId id;
 
     @MapsId("auctionID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "AuctionID", nullable = false)
-    private Auction auctionID;
+    @Column(name = "AuctionID")
+    private Integer auctionID;
 
     @MapsId("userID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
+    @Column(name = "UserID", nullable = false)
+    private Integer userID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "TransactionID")
-    private Transaction transactionID;
+
+    @Column(name = "TransactionID")
+    private Integer transactionID;
 
     @Column(name = "ParticipantAuctionDate")
     private Instant participantAuctionDate;
@@ -39,27 +37,27 @@ public class AuctionParticipant {
         this.id = id;
     }
 
-    public Auction getAuctionID() {
+    public Integer getAuctionID() {
         return auctionID;
     }
 
-    public void setAuctionID(Auction auctionID) {
+    public void setAuctionID(Integer auctionID) {
         this.auctionID = auctionID;
     }
 
-    public User getUserID() {
+    public Integer getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(Integer userID) {
         this.userID = userID;
     }
 
-    public Transaction getTransactionID() {
+    public Integer getTransactionID() {
         return transactionID;
     }
 
-    public void setTransactionID(Transaction transactionID) {
+    public void setTransactionID(Integer transactionID) {
         this.transactionID = transactionID;
     }
 

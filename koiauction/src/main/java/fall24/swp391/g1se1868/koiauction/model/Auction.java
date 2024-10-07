@@ -3,7 +3,6 @@ package fall24.swp391.g1se1868.koiauction.model;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -32,26 +31,26 @@ public class Auction {
     @Column(name = "EndTime")
     private Instant endTime;
 
-    @Column(name = "BreederDeposit", precision = 10, scale = 2)
-    private BigDecimal breederDeposit;
+    @Column(name = "BreederDeposit" )
+    private Long breederDeposit;
 
-    @Column(name = "BidderDeposit", precision = 10, scale = 2)
-    private BigDecimal bidderDeposit;
+    @Column(name = "BidderDeposit" )
+    private Long bidderDeposit;
 
-    @Column(name = "StartingPrice", precision = 10, scale = 2)
-    private BigDecimal startingPrice;
+    @Column(name = "StartingPrice" )
+    private Long startingPrice;
 
-    @Column(name = "BuyoutPrice", precision = 10, scale = 2)
-    private BigDecimal buyoutPrice;
+    @Column(name = "BuyoutPrice" )
+    private Long buyoutPrice;
 
-    @Column(name = "FinalPrice", precision = 10, scale = 2)
-    private BigDecimal finalPrice;
+    @Column(name = "FinalPrice" )
+    private Long finalPrice;
 
-    @Column(name = "BidStep", precision = 10, scale = 2)
-    private BigDecimal bidStep;
+    @Column(name = "BidStep" )
+    private Long bidStep;
 
-    @Column(name = "AuctionFee", precision = 10, scale = 2)
-    private BigDecimal auctionFee;
+    @Column(name = "AuctionFee" )
+    private Long auctionFee;
 
     @Column(name = "CreateAt")
     private Instant createAt;
@@ -116,59 +115,59 @@ public class Auction {
         this.endTime = endTime;
     }
 
-    public BigDecimal getBreederDeposit() {
+    public Long getBreederDeposit() {
         return breederDeposit;
     }
 
-    public void setBreederDeposit(BigDecimal breederDeposit) {
+    public void setBreederDeposit(Long breederDeposit) {
         this.breederDeposit = breederDeposit;
     }
 
-    public BigDecimal getBidderDeposit() {
+    public Long getBidderDeposit() {
         return bidderDeposit;
     }
 
-    public void setBidderDeposit(BigDecimal bidderDeposit) {
+    public void setBidderDeposit(Long bidderDeposit) {
         this.bidderDeposit = bidderDeposit;
     }
 
-    public BigDecimal getStartingPrice() {
+    public Long getStartingPrice() {
         return startingPrice;
     }
 
-    public void setStartingPrice(BigDecimal startingPrice) {
+    public void setStartingPrice(Long startingPrice) {
         this.startingPrice = startingPrice;
     }
 
-    public BigDecimal getBuyoutPrice() {
+    public Long getBuyoutPrice() {
         return buyoutPrice;
     }
 
-    public void setBuyoutPrice(BigDecimal buyoutPrice) {
+    public void setBuyoutPrice(Long buyoutPrice) {
         this.buyoutPrice = buyoutPrice;
     }
 
-    public BigDecimal getFinalPrice() {
+    public Long getFinalPrice() {
         return finalPrice;
     }
 
-    public void setFinalPrice(BigDecimal finalPrice) {
+    public void setFinalPrice(Long finalPrice) {
         this.finalPrice = finalPrice;
     }
 
-    public BigDecimal getBidStep() {
+    public Long getBidStep() {
         return bidStep;
     }
 
-    public void setBidStep(BigDecimal bidStep) {
+    public void setBidStep(Long bidStep) {
         this.bidStep = bidStep;
     }
 
-    public BigDecimal getAuctionFee() {
+    public Long getAuctionFee() {
         return auctionFee;
     }
 
-    public void setAuctionFee(BigDecimal auctionFee) {
+    public void setAuctionFee(Long auctionFee) {
         this.auctionFee = auctionFee;
     }
 
