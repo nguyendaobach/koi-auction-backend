@@ -108,7 +108,7 @@ public class UserService {
 
             String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getRole());
+            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getFullName(),user.getRole());
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {

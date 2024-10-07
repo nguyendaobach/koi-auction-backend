@@ -24,7 +24,7 @@ public class Transaction {
     @Column(name = "Amount")
     private Long amount;
 
-    @Column(name = "AuctionID", nullable = false)
+    @Column(name = "AuctionID", nullable = true)
     private Integer auctionID;
 
     @Nationalized

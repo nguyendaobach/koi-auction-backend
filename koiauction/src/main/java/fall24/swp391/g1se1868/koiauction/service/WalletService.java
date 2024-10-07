@@ -61,10 +61,33 @@ public class WalletService {
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);  // Negative for deduction
         payerTransaction.setTime(Instant.now());
+        payerTransaction.setAuctionID(null);
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");
         transactionRepository.save(payerTransaction);
         return "Payment successful!";
+    }
+    @Transactional
+    public Transaction deposit(int payerUserId, Long amount) {
+        Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
+                .orElseThrow(() -> new RuntimeException("Payer wallet not found"));
+        Wallet recipientWallet = walletRepository.findbyuserid(1)
+                .orElseThrow(() -> new RuntimeException("Recipient wallet not found"));
+        if (payerWallet.getAmount().compareTo(amount) < 0) {
+            return null;
+        }
+        payerWallet.setAmount(payerWallet.getAmount()-amount);
+        walletRepository.save(payerWallet);
+        recipientWallet.setAmount(recipientWallet.getAmount()+amount);
+        walletRepository.save(recipientWallet);
+        Transaction payerTransaction = new Transaction();
+        payerTransaction.setWalletID(payerWallet);
+        payerTransaction.setAmount(amount);
+        payerTransaction.setTime(Instant.now());
+        payerTransaction.setTransactionType("Deposit");
+        payerTransaction.setStatus("Completed");
+        transactionRepository.save(payerTransaction);
+        return payerTransaction;
     }
     @Transactional
     public void addUserWallet(Integer id){
