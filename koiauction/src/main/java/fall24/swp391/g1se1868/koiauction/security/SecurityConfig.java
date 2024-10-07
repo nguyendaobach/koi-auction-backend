@@ -47,6 +47,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
         httpSecurity.cors(Customizer.withDefaults());
+        httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
@@ -54,11 +55,11 @@ public class SecurityConfig {
                         .requestMatchers("/staff").hasRole("STAFF")
                         .requestMatchers("/user").hasRole("USER")
 
-                        .requestMatchers("/api/security").permitAll()
+                        .requestMatchers("/api/security/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
-                        .requestMatchers("/api/forgot-password").permitAll()
+                        .requestMatchers("/api/forgot-password/**").permitAll()
                         .anyRequest().authenticated())
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
