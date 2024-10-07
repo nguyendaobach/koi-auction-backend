@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.security;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +45,20 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
+//@Bean
+//public CorsFilter corsFilter() {
+//    CorsConfiguration config = new CorsConfiguration();
+//    config.addAllowedOrigin("*");
+//    config.addAllowedHeader("*");
+//    config.addAllowedMethod("*");
+//
+//    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//    source.registerCorsConfiguration("/**", config);
+//
+//    CorsFilter corsFilter = new CorsFilter(source);
+//
+//    return corsFilter;
+//}
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
