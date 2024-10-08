@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Transactional
     @Modifying
     @Query("update User u set u.status = 'banned' where u.id = ?1")
-    void banUser(Long id);
+    void banUser(Integer id);
 
 
 
