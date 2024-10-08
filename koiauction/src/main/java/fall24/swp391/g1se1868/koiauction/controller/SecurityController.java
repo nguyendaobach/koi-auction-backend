@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
-import fall24.swp391.g1se1868.koiauction.model.User;
-import fall24.swp391.g1se1868.koiauction.model.UserLogin;
-import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
-import fall24.swp391.g1se1868.koiauction.model.UserRegister;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +21,8 @@ public class SecurityController {
     private JwtService jwtService;
 
     @PostMapping("/register")
-    public String register(@RequestBody UserRegister user){
-        return userService.register(user);
+    public StringResponse register(@RequestBody UserRegister user){
+        return new StringResponse(userService.register(user));
     }
 
     @PostMapping("/login")
@@ -33,13 +30,13 @@ public class SecurityController {
         return userService.login(user);
     }
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
+    public ResponseEntity<StringResponse> logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         String username = userPrinciple.getUsername();
         String newToken = jwtService.generateToken(username, 1);
 
-        return ResponseEntity.ok("successfully logged out");
+        return ResponseEntity.ok(new StringResponse("successfully logged out"));
     }
 
 }

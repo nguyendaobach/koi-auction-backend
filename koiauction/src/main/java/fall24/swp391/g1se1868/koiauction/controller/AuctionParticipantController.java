@@ -1,5 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.AuctionParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ public class AuctionParticipantController {
     private AuctionParticipantService auctionParticipantService;
 
     @PostMapping("/participant")
-    public ResponseEntity<String> registerForAuction(@RequestParam Integer auctionId) {
+    public ResponseEntity<StringResponse> registerForAuction(@RequestParam Integer auctionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -26,6 +27,6 @@ public class AuctionParticipantController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
         String response = auctionParticipantService.registerForAuction(userId, auctionId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new StringResponse(response));
     }
 }

@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.config.VNPayConfig;
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.model.Wallet;
@@ -44,7 +45,7 @@ public class WalletController {
     }
 
     @PostMapping("/add-funds")
-    public ResponseEntity<String> addFunds(@RequestParam("amount") String amountStr) {
+    public ResponseEntity<StringResponse> addFunds(@RequestParam("amount") String amountStr) {
         try {
             // Get authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -110,14 +111,14 @@ public class WalletController {
             queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
             String paymentUrl = VNPayConfig.getVnp_PayUrl() + "?" + queryUrl;
 
-            return ResponseEntity.ok(paymentUrl);
+            return ResponseEntity.ok(new StringResponse(paymentUrl));
         } catch (Exception e) {
             // Log the exception
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new StringResponse("An error occurred: " + e.getMessage()));
         }
     }
     @GetMapping("/vnpay_return")
-    public ResponseEntity<String> handleVNPayReturn(@RequestParam Map<String, String> params) {
+    public ResponseEntity<StringResponse> handleVNPayReturn(@RequestParam Map<String, String> params) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -130,14 +131,14 @@ public class WalletController {
 
         if ("00".equals(vnp_ResponseCode)) {
             walletService.addFunds(userId, Long.parseLong(vnp_Amount) / 100);
-            return ResponseEntity.ok("Nạp tiền thành công!");
+            return ResponseEntity.ok(new StringResponse("Nạp tiền thành công!"));
         } else {
-            return ResponseEntity.badRequest().body("Giao dịch thất bại: Mã phản hồi " + vnp_ResponseCode);
+            return ResponseEntity.badRequest().body(new StringResponse("Giao dịch thất bại: Mã phản hồi " + vnp_ResponseCode));
         }
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<String> makePayment( @RequestParam Long amount) {
+    public ResponseEntity<StringResponse> makePayment( @RequestParam Long amount) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -145,7 +146,7 @@ public class WalletController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
         String response = walletService.payment(userId, amount);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new StringResponse(response));
     }
 
     @GetMapping("/transactions")

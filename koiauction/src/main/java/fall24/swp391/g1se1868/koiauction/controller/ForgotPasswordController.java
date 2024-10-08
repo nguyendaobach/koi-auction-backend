@@ -2,6 +2,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.ForgotPassword;
 import fall24.swp391.g1se1868.koiauction.model.MailBody;
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.repository.ForgotpasswordRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
@@ -43,11 +44,11 @@ public class ForgotPasswordController {
 
     @Transactional
     @PostMapping("verifyMail/{email}")
-    public ResponseEntity<String> verifyMail(@PathVariable String email) {
+    public ResponseEntity<StringResponse> verifyMail(@PathVariable String email) {
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please enter invalid email");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Please enter invalid email"));
         }
 
         // Tìm và xóa bản ghi ForgotPassword cũ (nếu có)
@@ -57,38 +58,32 @@ public class ForgotPasswordController {
             forgotpasswordRepository.deleteByFpid(fpToDelete.getFpid());
             System.out.println("Deleted existing ForgotPassword record: " + fpToDelete.getFpid());
         }
-
-
-
-
         int otp = otpGenerator();
         MailBody mailBody = MailBody.builder()
                 .to(email)
                 .text("This is the OTP for your Forgot Password request " + otp)
                 .subject("OTP for Forgot Password")
                 .build();
-
         // Tạo và lưu mới một bản ghi ForgotPassword
         ForgotPassword forgotPassword = ForgotPassword.builder()
                 .otp(otp)
                 .expirationDate(new Date(System.currentTimeMillis() + 70 * 1000))
                 .user(user)
                 .build();
-
         emailService.sendSimpleMessage(mailBody);
         forgotpasswordRepository.save(forgotPassword);
 
-        return ResponseEntity.ok("Email sent successfully");
+        return ResponseEntity.ok(new StringResponse("Email sent successfully"));
     }
 
 
 
     @PostMapping("/verifyOtp/{otp}/{email}")
-    public ResponseEntity<String> verifyOTP(@PathVariable Integer otp, @PathVariable String email) {
+    public ResponseEntity<StringResponse> verifyOTP(@PathVariable Integer otp, @PathVariable String email) {
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please enter invalid email");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Please enter invalid email"));
         }
 
         ForgotPassword fp = forgotpasswordRepository.findByOtpAndUser(otp, user)
@@ -96,23 +91,23 @@ public class ForgotPasswordController {
 
         if (fp.getExpirationDate().before(Date.from(Instant.now()))) {
             forgotpasswordRepository.deleteById(fp.getFpid());
-            return new ResponseEntity<>("OTP has expired!", HttpStatus.EXPECTATION_FAILED);
+            return new ResponseEntity<>(new StringResponse("OTP has expired!"), HttpStatus.EXPECTATION_FAILED);
         }
 
-        return ResponseEntity.ok("OTP verified!");
+        return ResponseEntity.ok(new StringResponse("OTP verified!"));
     }
 
 
 
 
     @PostMapping("/changePassword/{email}")
-    public ResponseEntity<String> changePasswordHandler(@RequestBody ChangePassword changePassword, @PathVariable String email){
+    public ResponseEntity<StringResponse> changePasswordHandler(@RequestBody ChangePassword changePassword, @PathVariable String email){
         if(!Objects.equals(changePassword.password(),changePassword.repeatPassword())){
-            return new ResponseEntity<>("Please enter the password again", HttpStatus.EXPECTATION_FAILED);
+            return new ResponseEntity<>(new StringResponse("Please enter the password again"), HttpStatus.EXPECTATION_FAILED);
         }
         String encodePasword = encoder.encode(changePassword.password());
         userRepository.updatePassword(email,encodePasword);
-        return ResponseEntity.ok("Password has been changed");
+        return ResponseEntity.ok(new StringResponse("Password has been changed"));
     }
 
 
