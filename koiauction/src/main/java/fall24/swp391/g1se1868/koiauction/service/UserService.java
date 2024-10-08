@@ -157,7 +157,7 @@ public class UserService {
     }
 
     @Transactional
-    public User updateUserRole(Long id, String role) {
+    public User updateUserRole(Integer id, String role) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
