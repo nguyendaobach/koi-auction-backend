@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
                         .requestMatchers("/breeder").hasRole("BREEDER")
                         .requestMatchers("/staff").hasRole("STAFF")
-                        .requestMatchers("/user").hasRole("USER")
+                        .requestMatchers("/api/user").hasRole("USER")
 
                         .requestMatchers("/api/security/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()

@@ -24,14 +24,14 @@ public class UserController {
 
 
     @GetMapping("/get-user/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<User> getUserById(@PathVariable Integer id) {
         Optional<User> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
     @PostMapping("/ban-user/{id}")
-    public ResponseEntity<User> banUser(@PathVariable Long id) {
+    public ResponseEntity<User> banUser(@PathVariable Integer id) {
         userService.banUser(id);
         Optional<User> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());

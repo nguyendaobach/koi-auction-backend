@@ -108,7 +108,7 @@ public class UserService {
 
             String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getFullName(),user.getRole());
+            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getFullName(),user.getRole(), user.getId());
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {
@@ -122,7 +122,7 @@ public class UserService {
     }
 
 
-    public Optional<User> getUserById(Long id) {
+    public Optional<User> getUserById(Integer id) {
         return userRepository.findById(id);
     }
 
@@ -134,7 +134,7 @@ public class UserService {
     }
 
 
-    public User updateUser(Long id, User updatedUser) {
+    public User updateUser(Integer id, User updatedUser) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
@@ -152,7 +152,7 @@ public class UserService {
         return null;
     }
 
-    public void banUser(Long id) {
+    public void banUser(Integer id) {
         userRepository.banUser(id);
     }
 
