@@ -38,7 +38,7 @@ public class UserController {
     }
 
     @PostMapping("/update-role/{id}")
-    public ResponseEntity<User> updateRole(@PathVariable Long id, @RequestParam String role) {
+    public ResponseEntity<User> updateRole(@PathVariable Integer id, @RequestParam String role) {
 
         if (!isValidRole(role)) {
             return ResponseEntity.badRequest().body(null);
