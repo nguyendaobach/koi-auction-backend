@@ -17,10 +17,20 @@ public class AuctionController {
     @Autowired
     private AuctionService auctionService;
 
+    @GetMapping("/get-all")
+    public List<Auction> getAllAuctions() {
+        return auctionService.getAllAuctions();
+    }
+    @GetMapping("/get-by-id")
+    public Auction getOnScheduleAuctions(@RequestParam int auctionId) {
+        return auctionService.getAuctionByID(auctionId);
+    }
+
     @GetMapping("/on-schedule")
     public List<Auction> getOnScheduleAuctions() {
         return auctionService.getOnScheduleAuctions();
     }
+
 
     @GetMapping("/on-going")
     public List<Auction> getOngoingAuctions() {

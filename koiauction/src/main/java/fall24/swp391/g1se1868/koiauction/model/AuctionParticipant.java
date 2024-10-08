@@ -20,9 +20,9 @@ public class AuctionParticipant {
     @JoinColumn(name = "UserID", nullable = false)
     private User userID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "TransactionID")
-    private Transaction transactionID;
+//    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "TransactionID")
+    private Integer transactionID;
 
     @Column(name = "ParticipantAuctionDate")
     private Instant participantAuctionDate;
@@ -55,11 +55,11 @@ public class AuctionParticipant {
         this.userID = userID;
     }
 
-    public Transaction getTransactionID() {
+    public Integer getTransactionID() {
         return transactionID;
     }
 
-    public void setTransactionID(Transaction transactionID) {
+    public void setTransactionID(Integer transactionID) {
         this.transactionID = transactionID;
     }
 

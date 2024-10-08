@@ -3,7 +3,6 @@ package fall24.swp391.g1se1868.koiauction.model;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -31,7 +30,7 @@ public class Order {
     private Instant date;
 
     @Column(name = "Price", precision = 10, scale = 2)
-    private BigDecimal price;
+    private  Long price;
 
     @Nationalized
     @Column(name = "PhoneNumber", length = 20)
@@ -86,11 +85,11 @@ public class Order {
         this.date = date;
     }
 
-    public BigDecimal getPrice() {
+    public  Long getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice( Long price) {
         this.price = price;
     }
 

@@ -2,6 +2,7 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.KoiType;
 import fall24.swp391.g1se1868.koiauction.repository.KoiTypeRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +26,15 @@ public class KoiTypeService {
     public KoiType saveKoiType(KoiType koiType) {
         return koiTypeRepository.save(koiType);
     }
+    public boolean existsById(Integer id) {
+        return koiTypeRepository.existsById(id);
+    }
+
 
     public void deleteKoiType(Integer id) {
-        koiTypeRepository.deleteById(id);
+        KoiType koiType = koiTypeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("KoiType with ID " + id + " not found."));
+        koiTypeRepository.delete(koiType);
     }
+
 }

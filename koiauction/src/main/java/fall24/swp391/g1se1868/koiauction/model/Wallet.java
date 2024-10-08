@@ -22,6 +22,9 @@ public class Wallet {
         this.amount = amount;
     }
 
+    public Wallet() {
+    }
+
     public Integer getId() {
         return id;
     }

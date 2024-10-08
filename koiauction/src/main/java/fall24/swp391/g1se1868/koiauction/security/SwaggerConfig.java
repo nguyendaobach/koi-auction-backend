@@ -21,7 +21,6 @@ public class SwaggerConfig {
         servers.add(new Server().url("http://localhost:8080"));
         servers.add(new Server().url("https://koi-auction-backend-dwe7hvbuhsdtgafe.southeastasia-01.azurewebsites.net"));
 
-
         return new OpenAPI()
                 .servers(servers)
                 .addSecurityItem(new SecurityRequirement()
