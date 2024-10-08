@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.KoiType;
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.service.KoiTypeService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,16 +38,16 @@ public class KoiTypeController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteKoiType(@PathVariable Integer id) {
+    public ResponseEntity<StringResponse> deleteKoiType(@PathVariable Integer id) {
         try {
             koiTypeService.deleteKoiType(id);
-            return ResponseEntity.ok("KoiType with ID " + id + " has been successfully deleted.");
+            return ResponseEntity.ok(new StringResponse("KoiType with ID " + id + " has been successfully deleted."));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("KoiType with ID " + id + " not found.");
+                    .body(new StringResponse("KoiType with ID " + id + " not found."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while trying to delete KoiType with ID " + id);
+                    .body(new StringResponse("An error occurred while trying to delete KoiType with ID " + id));
         }
     }
 
