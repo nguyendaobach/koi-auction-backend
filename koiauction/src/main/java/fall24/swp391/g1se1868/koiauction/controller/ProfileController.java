@@ -1,32 +1,31 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
-import fall24.swp391.g1se1868.koiauction.model.StringResponse;
+import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
-import fall24.swp391.g1se1868.koiauction.service.AuctionParticipantService;
+import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/api/auction-participant")
-public class AuctionParticipantController {
-    @Autowired
-    private AuctionParticipantService auctionParticipantService;
+import java.util.Optional;
 
-    @PostMapping("/participant")
-    public ResponseEntity<StringResponse> registerForAuction(@RequestParam Integer auctionId) {
+@RestController
+@RequestMapping("/api/user")
+public class ProfileController {
+    @Autowired
+    UserService userService;
+    @GetMapping("/get-profile")
+    public Optional<User> getUserById() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        String response = auctionParticipantService.registerForAuction(userId, auctionId);
-        return ResponseEntity.ok(new StringResponse(response));
+        return userService.getUserById(userId);
     }
 }

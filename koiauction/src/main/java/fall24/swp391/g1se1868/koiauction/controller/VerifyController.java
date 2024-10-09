@@ -1,5 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,42 +21,42 @@ public class VerifyController {
     UserService userService;
 
     @GetMapping("/verify-userName")
-    public ResponseEntity<String> verifyUserName(@RequestParam String userName) {
+    public ResponseEntity<StringResponse> verifyUserName(@RequestParam String userName) {
         boolean isAvailable = userService.verifyUserName(userName);
         if (isAvailable) {
-            return ResponseEntity.ok("Username is available");
+            return ResponseEntity.ok(new StringResponse("Username is available"));
         } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new StringResponse("Username is already taken"));
         }
     }
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
     @GetMapping("/verify-email")
-    public ResponseEntity<String> verifyEmail(@RequestParam String Email) {
+    public ResponseEntity<StringResponse> verifyEmail(@RequestParam String Email) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(Email);
         if(matcher.matches()) {
             boolean isAvailable = userService.verifyEmail(Email);
             if (isAvailable) {
-                return ResponseEntity.ok("Email is available");
+                return ResponseEntity.ok(new StringResponse("Email is available"));
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new StringResponse("Email is already taken"));
             }
         }else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is invalid format");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse("Email is invalid format"));
         }
     }
     @GetMapping("/verify-phone")
-    public ResponseEntity<String> verifyPhone(@RequestParam String Phone) {
+    public ResponseEntity<StringResponse> verifyPhone(@RequestParam String Phone) {
         String allCountryRegex = "^(\\+\\d{1,3}( )?)?((\\(\\d{1,3}\\))|\\d{1,3})[- .]?\\d{3,4}[- .]?\\d{4}$";
             if (Phone.matches(allCountryRegex)) {
                 boolean isAvailable = userService.verifyPhoneNumber(Phone);
                 if (isAvailable) {
-                    return ResponseEntity.ok("Phone number is available");
+                    return ResponseEntity.ok(new StringResponse("Phone number is available"));
                 } else {
-                    return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone number is already taken");
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(new StringResponse("Phone number is already taken"));
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Phone number is invalid format");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse("Phone number is invalid format"));
             }
         }
     }
