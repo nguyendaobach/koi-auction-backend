@@ -1,8 +1,8 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
-import fall24.swp391.g1se1868.koiauction.model.KoiFishUser;
-import fall24.swp391.g1se1868.koiauction.model.User;
-import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.KoiFish;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/koi-fish")
@@ -38,10 +35,18 @@ public class KoiFishController {
     }
 
 
+    @GetMapping("/{id}")
+    public ResponseEntity<KoiFishDetailDTO> getKoiFishById(@PathVariable Integer id) {
+        return koiFishService.getById(id);
+    }
+
+
 
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> customizeKoiFish(
-            @RequestParam(name = "fileImg", required = true) List<MultipartFile> fileImg,
+            @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
+            @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,
+            @RequestParam(name = "video", required = true) MultipartFile video,
             @RequestParam BigDecimal weight,
             @RequestParam String sex,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
@@ -50,12 +55,10 @@ public class KoiFishController {
             @RequestParam Integer countryID,
             @RequestParam Integer koiTypeID
     ) {
-        // Kiểm tra trọng lượng và chiều dài
         if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
             return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
         }
 
-        // Kiểm tra xác thực người dùng
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
@@ -67,16 +70,32 @@ public class KoiFishController {
         }
 
         try {
-            // Kiểm tra kiểu tệp của từng fileImg
-            for (MultipartFile file : fileImg) {
+            if (imageHeader.isEmpty()) {
+                return ResponseEntity.badRequest().body("Header image is required.");
+            }
+            if (!imageHeader.getContentType().toLowerCase().equals("image/png")) {
+                return ResponseEntity.badRequest().body("Header image must be in PNG format.");
+            }
+
+            if (video.isEmpty()) {
+                return ResponseEntity.badRequest().body("Video is required.");
+            }
+            if (!video.getContentType().toLowerCase().equals("video/mp4")) {
+                return ResponseEntity.badRequest().body("Video must be in MP4 format.");
+            }
+
+            for (MultipartFile file : imageDetail) {
+                if (file.isEmpty()) {
+                    return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
+                }
                 String contentType = file.getContentType();
-                if (contentType == null || (!contentType.toLowerCase().endsWith("image/png") && !contentType.toLowerCase().endsWith("video/mp4"))) {
-                    return ResponseEntity.badRequest().body("All files must be either PNG images or MP4 videos.");
+                if (contentType == null || !contentType.toLowerCase().equals("image/png")) {
+                    return ResponseEntity.badRequest().body("Each image detail must be in PNG format.");
                 }
             }
 
             // Lưu cá koi
-            return koiFishService.saveKoiFish(fileImg, weight, sex, birthday, description, length, countryID, koiTypeID);
+            return koiFishService.saveKoiFish(imageHeader,imageDetail,video, weight, sex, birthday, description, length, countryID, koiTypeID);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }

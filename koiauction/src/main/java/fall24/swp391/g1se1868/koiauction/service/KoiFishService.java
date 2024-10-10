@@ -1,6 +1,9 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishMediaDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
 import fall24.swp391.g1se1868.koiauction.repository.KoiMediaRepository;
 import jakarta.transaction.Transactional;
@@ -46,34 +49,42 @@ public class KoiFishService {
 
     public List<KoiFishUser> getAll() {
         List<KoiFish> koiFishList = koiFishRepository.findAll();
+
         return koiFishList.stream()
                 .map(koiFish -> {
-                    User user = koiFish.getUserID();
-                    UserKoifish userDTO = new UserKoifish(
-                            user.getUserName(),
-                            user.getFullName(),
-                            user.getEmail(),
-                            user.getAddress()
-                    );
+                    String fullName = koiFish.getUserID().getFullName();
+
+                    String countryName = koiFish.getCountryID().getCountry();
+
+                    String typeName = koiFish.getKoiTypeID().getTypeName();
+
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+
                     return new KoiFishUser(
                             koiFish.getId(),
-                            userDTO,
-                            koiFish.getCountryID().getId(),
-                            koiFish.getKoiTypeID().getId(),
+                            fullName,  // Lấy fullName của user
+                            countryName,  // Lấy tên nước thay vì ID
+                            typeName,  // Lấy tên loại cá thay vì ID
                             koiFish.getWeight(),
                             koiFish.getSex(),
                             koiFish.getBirthday(),
                             koiFish.getDescription(),
                             koiFish.getLength(),
-                            koiFish.getStatus()
+                            koiFish.getStatus(),
+                            headerImage.isPresent() ? headerImage.get().getUrl() : null  // URL hình ảnh header
                     );
                 })
                 .collect(Collectors.toList());
     }
 
+
+
+
     @Transactional
     public ResponseEntity<String> saveKoiFish(
-            List<MultipartFile> fileImages,
+            MultipartFile imageHeader,
+            List<MultipartFile> imageDetail,
+            MultipartFile video,
             BigDecimal weight,
             String sex,
             LocalDate birthday,
@@ -118,21 +129,34 @@ public class KoiFishService {
             KoiFish koiFish = new KoiFish(user, koiOrigin, koiType, weight, sex, birthday, description, length, status);
             KoiFish savedKoiFish = saveKoiFish(koiFish); // Lưu đối tượng KoiFish
 
-            for (MultipartFile fileImage : fileImages) {
-                if (fileImage != null) {
-                    String contentType = fileImage.getContentType();
-                    if (contentType == null || (!contentType.toLowerCase().endsWith("image/png") && !contentType.toLowerCase().endsWith("video/mp4"))) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File must be image or video");
-                    }
-
-                    String fileUrl = firebaseService.uploadImage(fileImage);
+            // Lưu imageHeader là "Header Video"
+            if (imageHeader != null) {
+                String fileUrl = firebaseService.uploadImage(imageHeader);
+                KoiMedia koiMedia = new KoiMedia();
+                koiMedia.setKoiID(savedKoiFish);
+                koiMedia.setUrl(fileUrl);
+                koiMedia.setMediaType("Header Image");
+                koiMediaRepository.save(koiMedia);
+            }
+            // Lưu imageDetail là "Image Detail"
+            for (MultipartFile detailImage : imageDetail) {
+                if (detailImage != null) {
+                    String fileUrl = firebaseService.uploadImage(detailImage);
                     KoiMedia koiMedia = new KoiMedia();
                     koiMedia.setKoiID(savedKoiFish);
                     koiMedia.setUrl(fileUrl);
-                    koiMedia.setMediaType(contentType.toLowerCase().endsWith("image/png") ? "Image" : "Video");
-
+                    koiMedia.setMediaType("Image Detail");
                     koiMediaRepository.save(koiMedia);
                 }
+            }
+            // Lưu video là "Video"
+            if (video != null) {
+                String fileUrl = firebaseService.uploadImage(video);
+                KoiMedia koiMedia = new KoiMedia();
+                koiMedia.setKoiID(savedKoiFish);
+                koiMedia.setUrl(fileUrl);
+                koiMedia.setMediaType("Video");
+                koiMediaRepository.save(koiMedia);
             }
             return ResponseEntity.status(HttpStatus.CREATED).body("KoiFish and KoiMedia saved successfully");
         } catch (IOException e) {
@@ -143,4 +167,38 @@ public class KoiFishService {
     }
 
 
+    public ResponseEntity<KoiFishDetailDTO> getById(Integer id) {
+        Optional<KoiFish> koiFishOpt = koiFishRepository.findById(id);
+
+        if (!koiFishOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        KoiFish koiFish = koiFishOpt.get();
+
+        String creatorFullName = koiFish.getUserID().getFullName();
+
+        KoiType koiType = koiFish.getKoiTypeID();
+
+        List<KoiFishMediaDTO> mediaList = koiMediaRepository.findByKoiID(koiFish)
+                .stream()
+                .map(media -> new KoiFishMediaDTO(media.getMediaType(), media.getUrl()))
+                .collect(Collectors.toList());
+
+        KoiFishDetailDTO koiFishDetail = new KoiFishDetailDTO(
+                koiFish.getId(),
+                creatorFullName,
+                koiType.getId(),
+                koiType.getTypeName(),
+                koiFish.getWeight(),
+                koiFish.getSex(),
+                koiFish.getBirthday(),
+                koiFish.getDescription(),
+                koiFish.getLength(),
+                koiFish.getStatus(),
+                mediaList
+        );
+
+        return ResponseEntity.ok(koiFishDetail);
+    }
 }
