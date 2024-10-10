@@ -49,40 +49,24 @@ public class SecurityConfig {
 
 
 
-//@Bean
-//public CorsFilter corsFilter() {
-//    CorsConfiguration config = new CorsConfiguration();
-//    config.addAllowedOrigin("*");
-//    config.addAllowedHeader("*");
-//    config.addAllowedMethod("*");
-//
-//    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//    source.registerCorsConfiguration("/**", config);
-//
-//    CorsFilter corsFilter = new CorsFilter(source);
-//
-//    return corsFilter;
-//}
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
         httpSecurity.cors(Customizer.withDefaults());
         httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
-                        .requestMatchers("/breeder").hasRole("BREEDER")
-                        .requestMatchers("/staff").hasRole("STAFF")
                         .requestMatchers("/api/user").hasRole("USER")
 
+                        .requestMatchers("/api/koi-fish/get-all").permitAll()
                         .requestMatchers("/api/security/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/koi-types", "/api/koi-types/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/koi-types", "/api/koi-types/{id}","/api/koi-origin","/api/koi-origin/{id}").permitAll()
 
                         .anyRequest().authenticated())
                         .sessionManagement(session ->
