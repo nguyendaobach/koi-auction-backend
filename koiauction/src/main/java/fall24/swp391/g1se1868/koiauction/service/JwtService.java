@@ -47,7 +47,7 @@ public class JwtService {
                 parseSignedClaims(token).
                 getPayload();
     }
-    public int getUserIdFromToken(String token) {
+    public Integer getUserIdFromToken(String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("userId", Integer.class);
     }
