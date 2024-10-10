@@ -16,6 +16,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     @Query("SELECT a FROM Auction a WHERE a.startTime <= CURRENT_TIMESTAMP AND a.endTime > CURRENT_TIMESTAMP AND a.status = 'Ongoing'")
     List<Auction> findOngoingAuctions();
 
+    @Query("SELECT a FROM Auction a WHERE a.startTime > CURRENT_TIMESTAMP AND a.status = 'Pending'")
+    List<Auction> getAllAuctionRequest();
+
+
     @Transactional
     @Query("SELECT a, u.fullName AS winnerName " +
             "FROM Auction a " +
@@ -26,8 +30,4 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
 
     @Query("SELECT a FROM Auction a WHERE a.winnerID = ?1")
     List<Auction> getAuctionbyWinnerID(int winnerID);
-
-
-
-
 }
