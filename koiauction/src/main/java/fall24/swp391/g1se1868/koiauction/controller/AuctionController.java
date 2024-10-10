@@ -92,4 +92,32 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return ResponseEntity.ok(new StringResponse(auctionService.addAuction(auctionRequest, userId)));
     }
+
+    @GetMapping("/get-auction-requets")
+        public List<AuctionWithKoi> getAuctionRequets(){
+            return auctionService.getAllActionRequest();
+        }
+
+    @PostMapping("/approve-auction/{auctionId}")
+    public ResponseEntity<Auction> approveAuction(@PathVariable Integer auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        Auction approvedAuction = auctionService.approveAuction(auctionId, userId);
+        return ResponseEntity.ok(approvedAuction);
+    }
+    @PostMapping("/reject-auction/{auctionId}")
+    public ResponseEntity<Auction> rejectAuction(@PathVariable Integer auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        Auction approvedAuction = auctionService.rejectAuction(auctionId, userId);
+        return ResponseEntity.ok(approvedAuction);
+    }
 }

@@ -116,4 +116,27 @@ public class AuctionService {
 
         return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
     }
+    public List<AuctionWithKoi> getAllActionRequest(){
+        List<Auction> list = auctionRepository.getAllAuctionRequest();
+        return convertToAuctionWithKoi(list);
+    }
+
+    public Auction approveAuction(Integer auctionId, Integer UserID) {
+        Auction auction = auctionRepository.getById(auctionId);
+        if (!auction.getStatus().equals("Pending")) {
+            throw new IllegalArgumentException("Auction must be in Pending status to be approved.");
+        }
+        auction.setStatus("Scheduled");
+        auction.setStaffID(UserID);
+        return auctionRepository.save(auction);
+    }
+    public Auction rejectAuction(Integer auctionId, Integer UserID) {
+        Auction auction = auctionRepository.getById(auctionId);
+        if (!auction.getStatus().equals("Pending")) {
+            throw new IllegalArgumentException("Auction must be in Pending status to be approved.");
+        }
+        auction.setStatus("Reject");
+        auction.setStaffID(UserID);
+        return auctionRepository.save(auction);
+    }
 }
