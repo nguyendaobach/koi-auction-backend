@@ -1,19 +1,37 @@
-package fall24.swp391.g1se1868.koiauction.model;
+package fall24.swp391.g1se1868.koiauction.model.koifishdto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class KoiFishUser {
     private Integer id;
-    private UserKoifish userID; // Sử dụng UserDTO
-    private Integer countryID;
-    private Integer koiTypeID;
+    private String userFullName;  // Chỉ chứa fullName của user
+    private String countryID;
+    private String koiTypeID;
     private BigDecimal weight;
     private String sex;
     private LocalDate birthday;
     private String description;
     private BigDecimal length;
     private String status;
+    private String headerImageUrl;  // URL của hình ảnh header
+
+    // Constructor với userFullName thay cho userDTO
+    public KoiFishUser(Integer id, String userFullName, String countryID, String koiTypeID,
+                       BigDecimal weight, String sex, LocalDate birthday,
+                       String description, BigDecimal length, String status, String headerImageUrl) {
+        this.id = id;
+        this.userFullName = userFullName;
+        this.countryID = countryID;
+        this.koiTypeID = koiTypeID;
+        this.weight = weight;
+        this.sex = sex;
+        this.birthday = birthday;
+        this.description = description;
+        this.length = length;
+        this.status = status;
+        this.headerImageUrl = headerImageUrl;
+    }
 
     public Integer getId() {
         return id;
@@ -23,27 +41,27 @@ public class KoiFishUser {
         this.id = id;
     }
 
-    public UserKoifish getUserID() {
-        return userID;
+    public String getUserFullName() {
+        return userFullName;
     }
 
-    public void setUserID(UserKoifish userID) {
-        this.userID = userID;
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
     }
 
-    public Integer getCountryID() {
+    public String getCountryID() {
         return countryID;
     }
 
-    public void setCountryID(Integer countryID) {
+    public void setCountryID(String countryID) {
         this.countryID = countryID;
     }
 
-    public Integer getKoiTypeID() {
+    public String getKoiTypeID() {
         return koiTypeID;
     }
 
-    public void setKoiTypeID(Integer koiTypeID) {
+    public void setKoiTypeID(String koiTypeID) {
         this.koiTypeID = koiTypeID;
     }
 
@@ -95,16 +113,11 @@ public class KoiFishUser {
         this.status = status;
     }
 
-    public KoiFishUser(Integer id, UserKoifish userID, Integer countryID, Integer koiTypeID, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status) {
-        this.id = id;
-        this.userID = userID;
-        this.countryID = countryID;
-        this.koiTypeID = koiTypeID;
-        this.weight = weight;
-        this.sex = sex;
-        this.birthday = birthday;
-        this.description = description;
-        this.length = length;
-        this.status = status;
+    public String getHeaderImageUrl() {
+        return headerImageUrl;
+    }
+
+    public void setHeaderImageUrl(String headerImageUrl) {
+        this.headerImageUrl = headerImageUrl;
     }
 }

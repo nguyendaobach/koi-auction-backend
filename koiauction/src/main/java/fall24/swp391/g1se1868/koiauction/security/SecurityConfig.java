@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
 
+                        .requestMatchers("/api/koi-fish/{id}").permitAll()
                         .requestMatchers("/api/koi-fish/get-all").permitAll()
                         .requestMatchers("/api/security/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()

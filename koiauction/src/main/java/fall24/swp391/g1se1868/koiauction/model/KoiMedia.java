@@ -14,13 +14,12 @@ public class KoiMedia {
     @JoinColumn(name = "KoiID")
     private KoiFish koiID;
 
-    @Nationalized
     @Column(name = "Url")
     private String url;
 
-    @Nationalized
     @Column(name = "MediaType", length = 50)
     private String mediaType;
+
 
     public Integer getId() {
         return id;
