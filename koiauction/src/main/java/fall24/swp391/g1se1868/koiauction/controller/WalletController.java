@@ -45,7 +45,7 @@ public class WalletController {
     }
 
     @PostMapping("/add-funds")
-    public ResponseEntity<StringResponse> addFunds(@RequestParam("amount") String amountStr) {
+    public ResponseEntity<StringResponse> addFunds(@RequestParam("amount") Long amountStr) {
         try {
             // Get authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -56,7 +56,7 @@ public class WalletController {
             int userId = userPrinciple.getId();
 
             // Parse and validate amount
-            long amount = Long.parseLong(amountStr) * 100;
+            long amount = amountStr * 100;
 
             String vnp_Version = "2.1.0";
             String vnp_Command = "pay";
