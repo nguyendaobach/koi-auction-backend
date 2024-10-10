@@ -8,6 +8,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -139,4 +143,15 @@ public class AuctionService {
         auction.setStaffID(UserID);
         return auctionRepository.save(auction);
     }
+    public void updateAuctionStatusOngoing() {
+        List<Auction> auctions = auctionRepository.findAll();
+        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
+        for (Auction auction : auctions) {
+            if (auction.getStartTime().isBefore(nowZoned.toInstant()) && auction.getStatus().equals("Scheduled")) {
+                auction.setStatus("Ongoing");
+                auctionRepository.save(auction);
+            }
+        }
+    }
+
 }

@@ -120,4 +120,5 @@ public class AuctionController {
         Auction approvedAuction = auctionService.rejectAuction(auctionId, userId);
         return ResponseEntity.ok(approvedAuction);
     }
+
 }
