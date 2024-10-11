@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -33,7 +35,8 @@ public class WalletService {
         Transaction transaction = new Transaction();
         transaction.setWalletID(wallet);
         transaction.setAmount(amount);
-        transaction.setTime(Instant.now());
+        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
+        transaction.setTime(nowZoned.toInstant());
         transaction.setTransactionType("Top-up");
         transaction.setStatus("Completed");
         transactionRepository.save(transaction);
@@ -60,7 +63,8 @@ public class WalletService {
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);  // Negative for deduction
-        payerTransaction.setTime(Instant.now());
+        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
+        payerTransaction.setTime(nowZoned.toInstant());
         payerTransaction.setAuctionID(null);
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");

@@ -55,11 +55,16 @@ public class SecurityConfig {
         httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
+                        .requestMatchers(HttpMethod.POST,"/api/auction/add-auction").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/koi-origin/add-koi-origin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-origin/delete/{id}").hasRole("ADMIN")
                         .requestMatchers("/api/admin-manager/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/auction/approve-auction/").hasRole("STAFF")
+                        .requestMatchers("/api/auction/get-auction-requets").hasRole("STAFF")
+                        .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
+
                         .requestMatchers("/api/user").hasRole("USER")
 
                         .requestMatchers("/api/koi-fish/get-koi-active").permitAll()
