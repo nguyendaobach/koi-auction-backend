@@ -40,7 +40,10 @@ public class KoiFishController {
         return koiFishService.getById(id);
     }
 
-
+    @GetMapping("/get-koi-active")
+    public List<KoiFishUser> getKoiActive(){
+        return koiFishService.getKoiActive();
+    }
 
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> customizeKoiFish(
