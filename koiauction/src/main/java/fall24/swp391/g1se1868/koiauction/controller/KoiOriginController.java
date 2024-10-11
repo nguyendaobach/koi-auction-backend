@@ -32,7 +32,7 @@ public class KoiOriginController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/add-koitype")
+    @PostMapping("/add-koi-origin")
     public ResponseEntity<KoiOrigin> createKoiType(@RequestParam String name) {
         KoiOrigin koiOrigin = new KoiOrigin(name);
         KoiOrigin savekoiOrigin = koiOriginService.saveKoiType(koiOrigin);
