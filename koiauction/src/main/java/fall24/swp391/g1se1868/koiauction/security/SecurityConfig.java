@@ -57,7 +57,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
-                        .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/koi-origin/add-koi-origin").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/koi-origin/delete/{id}").hasRole("ADMIN")
+                        .requestMatchers("/api/admin-manager/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
 
                         .requestMatchers("/api/koi-fish/get-koi-active").permitAll()
