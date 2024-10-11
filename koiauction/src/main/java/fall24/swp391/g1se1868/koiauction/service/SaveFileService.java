@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -26,10 +27,11 @@ public class SaveFileService {
         BlobId blobId = BlobId.of(storageBucket, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
         Blob blob = storage.create(blobInfo, file.getBytes());
-        String downloadUrl = blob.getMediaLink();
-        String signeUrl = blob.signUrl(730 * 3, TimeUnit.HOURS).toString();
 
-        return signeUrl;
+        // Đường dẫn công khai (Public URL)
+        String publicUrl = "https://firebasestorage.googleapis.com/v0/b/" + storageBucket + "/o/" + URLEncoder.encode(fileName, "UTF-8") + "?alt=media";
 
+        return publicUrl;  // Trả về Public URL
     }
+
 }
