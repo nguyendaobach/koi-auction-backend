@@ -58,10 +58,11 @@ public class KoiFishService {
 
                     String typeName = koiFish.getKoiTypeID().getTypeName();
 
-                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image");
 
                     return new KoiFishUser(
                             koiFish.getId(),
+                            koiFish.getKoiName(),
                             fullName,  // Lấy fullName của user
                             countryName,  // Lấy tên nước thay vì ID
                             typeName,  // Lấy tên loại cá thay vì ID
@@ -78,13 +79,12 @@ public class KoiFishService {
     }
 
 
-
-
     @Transactional
     public ResponseEntity<String> saveKoiFish(
             MultipartFile imageHeader,
             List<MultipartFile> imageDetail,
             MultipartFile video,
+            String name,
             BigDecimal weight,
             String sex,
             LocalDate birthday,
@@ -126,7 +126,7 @@ public class KoiFishService {
             KoiOrigin koiOrigin = optionalKoiOrigin.get();
 
             String status = "Active";
-            KoiFish koiFish = new KoiFish(user, koiOrigin, koiType, weight, sex, birthday, description, length, status);
+            KoiFish koiFish = new KoiFish(user,name, koiOrigin, koiType, weight, sex, birthday, description, length, status);
             KoiFish savedKoiFish = saveKoiFish(koiFish); // Lưu đối tượng KoiFish
 
             // Lưu imageHeader là "Header Video"
@@ -201,4 +201,38 @@ public class KoiFishService {
 
         return ResponseEntity.ok(koiFishDetail);
     }
+
+    public List<KoiFishUser> getKoiActive() {
+        // Lấy danh sách tất cả cá Koi từ repository
+        List<KoiFish> koiFishList = koiFishRepository.findAll();
+
+        // Lọc danh sách cá Koi theo trạng thái Active
+        return koiFishList.stream()
+                .filter(koiFish -> "Active".equalsIgnoreCase(koiFish.getStatus()))  // Lọc những cá Koi có trạng thái Active
+                .map(koiFish -> {
+                    String fullName = koiFish.getUserID().getFullName();
+                    String countryName = koiFish.getCountryID().getCountry();
+                    String typeName = koiFish.getKoiTypeID().getTypeName();
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+
+                    // Trả về đối tượng KoiFishUser với thông tin cá Koi và hình ảnh
+                    return new KoiFishUser(
+                            koiFish.getId(),
+                            koiFish.getKoiName(),
+                            fullName,  // Lấy fullName của user
+                            countryName,  // Lấy tên nước thay vì ID
+                            typeName,  // Lấy tên loại cá thay vì ID
+                            koiFish.getWeight(),
+                            koiFish.getSex(),
+                            koiFish.getBirthday(),
+                            koiFish.getDescription(),
+                            koiFish.getLength(),
+                            koiFish.getStatus(),
+                            headerImage.isPresent() ? headerImage.get().getUrl() : null  // URL hình ảnh header
+                    );
+                })
+                .collect(Collectors.toList());  // Trả về danh sách các cá Koi có trạng thái Active
+    }
+
+
 }

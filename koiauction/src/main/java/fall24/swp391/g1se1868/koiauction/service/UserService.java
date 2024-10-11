@@ -102,7 +102,7 @@ public class UserService {
             UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
             User user = userPrinciple.getUser();
 
-            if ("banned".equalsIgnoreCase(user.getStatus())) {
+            if ("UnActive".equalsIgnoreCase(user.getStatus())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User is banned and cannot log in.");
             }
 
@@ -116,7 +116,6 @@ public class UserService {
         }
     }
 
-
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -126,31 +125,6 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-
-    public User createUser(User user) {
-        user.setCreateAt(new Date().toInstant()); // Gán thời gian hiện tại
-        user.setUpdateAt(new Date().toInstant());
-        return userRepository.save(user);
-    }
-
-
-    public User updateUser(Integer id, User updatedUser) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User existingUser = optionalUser.get();
-            existingUser.setRole(updatedUser.getRole());
-            existingUser.setUserName(updatedUser.getUserName());
-            existingUser.setFullName(updatedUser.getFullName());
-            existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setPassword(updatedUser.getPassword());
-            existingUser.setAddress(updatedUser.getAddress());
-            existingUser.setUpdateAt(new Date().toInstant()); // Gán lại thời gian cập nhật
-            existingUser.setStatus(updatedUser.getStatus());
-            return userRepository.save(existingUser);
-        }
-        return null;
-    }
 
     public void banUser(Integer id) {
         userRepository.banUser(id);
@@ -162,11 +136,17 @@ public class UserService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             user.setRole(role);
-            return userRepository.save(user);
+            user.setUpdateAt(Instant.now()); // Cập nhật thời gian hiện tại
+            userRepository.save(user); // Lưu thay đổi
+            return user; // Trả về đối tượng User đã cập nhật
         }
-        return null;
+        return null; // Trả về null nếu không tìm thấy người dùng
     }
 
 
+
+    public void activeUser(Integer id) {
+        userRepository.activeUser(id);
+    }
 }
 
