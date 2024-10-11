@@ -58,7 +58,7 @@ public class KoiFishService {
 
                     String typeName = koiFish.getKoiTypeID().getTypeName();
 
-                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image");
 
                     return new KoiFishUser(
                             koiFish.getId(),
