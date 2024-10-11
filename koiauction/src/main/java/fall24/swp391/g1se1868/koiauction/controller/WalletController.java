@@ -74,7 +74,7 @@ public class WalletController {
             vnp_Params.put("vnp_OrderInfo", "Nạp tiền vào ví: " + vnp_TxnRef);
             vnp_Params.put("vnp_OrderType", orderType);
             vnp_Params.put("vnp_Locale", "vn");
-            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.getVnp_ReturnUrl());
+            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.getVnp_ReturnUrl() +  "?userId=" +userId);
             vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
             ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -118,13 +118,15 @@ public class WalletController {
         }
     }
     @GetMapping("/vnpay_return")
-    public ResponseEntity<StringResponse> handleVNPayReturn(@RequestParam Map<String, String> params) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-        int userId = userPrinciple.getId();
+    public ResponseEntity<StringResponse> handleVNPayReturn(@RequestParam Map<String, String> params,
+                                                            @RequestParam("userId") String UserId) {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new RuntimeException("User is not authenticated");
+//        }
+//        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+//        int userId = userPrinciple.getId();
+        int userId = Integer.parseInt(UserId);
         String vnp_TxnRef = params.get("vnp_TxnRef");
         String vnp_Amount = params.get("vnp_Amount");
         String vnp_ResponseCode = params.get("vnp_ResponseCode");
