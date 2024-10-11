@@ -55,8 +55,20 @@ public class KoiFish {
     @Column(name = "Status", length = 50)
     private String status;
 
-    public KoiFish(User userID, KoiOrigin countryID, KoiType koiTypeID, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status) {
+    @Column(name = "KoiName", length = 100)
+    private String koiName;
+
+    public String getKoiName() {
+        return koiName;
+    }
+
+    public void setKoiName(String koiName) {
+        this.koiName = koiName;
+    }
+
+    public KoiFish(User userID,String koiName, KoiOrigin countryID, KoiType koiTypeID, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status) {
         this.userID = userID;
+        this.koiName=koiName;
         this.countryID = countryID;
         this.koiTypeID = koiTypeID;
         this.weight = weight;

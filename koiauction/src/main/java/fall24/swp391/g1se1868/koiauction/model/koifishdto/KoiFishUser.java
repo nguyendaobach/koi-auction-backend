@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 public class KoiFishUser {
     private Integer id;
+    private String name;
     private String userFullName;  // Chỉ chứa fullName của user
     private String countryID;
     private String koiTypeID;
@@ -16,11 +17,9 @@ public class KoiFishUser {
     private String status;
     private String headerImageUrl;  // URL của hình ảnh header
 
-    // Constructor với userFullName thay cho userDTO
-    public KoiFishUser(Integer id, String userFullName, String countryID, String koiTypeID,
-                       BigDecimal weight, String sex, LocalDate birthday,
-                       String description, BigDecimal length, String status, String headerImageUrl) {
+    public KoiFishUser(Integer id, String name, String userFullName, String countryID, String koiTypeID, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status, String headerImageUrl) {
         this.id = id;
+        this.name = name;
         this.userFullName = userFullName;
         this.countryID = countryID;
         this.koiTypeID = koiTypeID;
@@ -31,6 +30,14 @@ public class KoiFishUser {
         this.length = length;
         this.status = status;
         this.headerImageUrl = headerImageUrl;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Integer getId() {

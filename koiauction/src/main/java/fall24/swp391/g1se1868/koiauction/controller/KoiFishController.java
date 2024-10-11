@@ -50,6 +50,7 @@ public class KoiFishController {
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
             @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,
             @RequestParam(name = "video", required = true) MultipartFile video,
+            @RequestParam String name,
             @RequestParam BigDecimal weight,
             @RequestParam String sex,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
@@ -98,7 +99,7 @@ public class KoiFishController {
             }
 
             // Lưu cá koi
-            return koiFishService.saveKoiFish(imageHeader,imageDetail,video, weight, sex, birthday, description, length, countryID, koiTypeID);
+            return koiFishService.saveKoiFish(imageHeader,imageDetail,video,name, weight, sex, birthday, description, length, countryID, koiTypeID);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
