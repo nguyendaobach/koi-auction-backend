@@ -22,11 +22,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Transactional
     @Modifying
-    @Query("update User u set u.status = 'banned' where u.id = ?1")
+    @Query("UPDATE User u SET u.status = 'UnActive', u.updateAt = CURRENT_TIMESTAMP WHERE u.id = ?1")
     void banUser(Integer id);
 
 
-
-
+    @Transactional
+    @Modifying
+    @Query("update User u set u.status = 'Active' , u.updateAt = CURRENT_TIMESTAMP where u.id = ?1")
+    void activeUser(Integer id);
 }
 

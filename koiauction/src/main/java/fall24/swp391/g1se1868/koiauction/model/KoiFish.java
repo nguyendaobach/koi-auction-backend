@@ -67,6 +67,10 @@ public class KoiFish {
         this.status = status;
     }
 
+    public KoiFish(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }
