@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auction/get-auction-requets").hasRole("STAFF")
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
-
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/koi-fish/{id}").permitAll()
                         .requestMatchers("/api/koi-fish/get-all").permitAll()
                         .requestMatchers("/api/security/**").permitAll()
