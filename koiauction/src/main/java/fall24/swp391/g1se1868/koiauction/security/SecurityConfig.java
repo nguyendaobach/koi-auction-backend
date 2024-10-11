@@ -50,19 +50,19 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
-        httpSecurity.cors(Customizer.withDefaults());
-        httpSecurity.csrf(customizer -> customizer.disable());
-        httpSecurity.authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
-                        .requestMatchers(HttpMethod.POST,"/api/auction/add-auction").hasRole("BREEDER")
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
+        http
+                .cors(cors -> cors.disable())  // Customize as needed
+                .csrf(csrf -> csrf.disable())  // Disable CSRF for stateless APIs
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(HttpMethod.POST, "/api/koi-fish/customize").hasRole("BREEDER")
+                        .requestMatchers(HttpMethod.POST, "/api/auction/add-auction").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers("/api/auction/approve-auction/").hasRole("STAFF")
-                        .requestMatchers("/api/auction/get-auction-requets").hasRole("STAFF")
+                        .requestMatchers("/api/auction/get-auction-requests").hasRole("STAFF")
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
-
                         .requestMatchers("/api/koi-fish/{id}").permitAll()
                         .requestMatchers("/api/koi-fish/get-all").permitAll()
                         .requestMatchers("/api/security/**").permitAll()
@@ -70,16 +70,21 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/koi-types", "/api/koi-types/{id}","/api/koi-origin","/api/koi-origin/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/koi-types", "/api/koi-types/{id}", "/api/koi-origin", "/api/koi-origin/{id}").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(authenticationEntryPoint)  // Custom handler for unauthenticated users
+                        .accessDeniedHandler(accessDeniedHandler)  // Custom handler for access denied cases
+                )
+                .sessionManagement(sessionManagement -> sessionManagement
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Stateless session
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-                        .anyRequest().authenticated())
-                        .sessionManagement(session ->
-                                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                )
-                        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        httpSecurity.httpBasic(Customizer.withDefaults());
-        return httpSecurity.build();
+        return http.build();
     }
+
 
 
     @Bean
