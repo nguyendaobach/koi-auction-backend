@@ -35,8 +35,9 @@ public class WalletService {
         Transaction transaction = new Transaction();
         transaction.setWalletID(wallet);
         transaction.setAmount(amount);
-        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
-        transaction.setTime(nowZoned.toInstant());
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+        transaction.setTime(now.toInstant());
         transaction.setTransactionType("Top-up");
         transaction.setStatus("Completed");
         transactionRepository.save(transaction);
@@ -63,8 +64,9 @@ public class WalletService {
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);  // Negative for deduction
-        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
-        payerTransaction.setTime(nowZoned.toInstant());
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+        payerTransaction.setTime(now.toInstant());
         payerTransaction.setAuctionID(null);
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");
@@ -87,7 +89,9 @@ public class WalletService {
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);
-        payerTransaction.setTime(Instant.now());
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+        payerTransaction.setTime(now.toInstant());
         payerTransaction.setTransactionType("Deposit");
         payerTransaction.setStatus("Completed");
         transactionRepository.save(payerTransaction);
@@ -97,6 +101,13 @@ public class WalletService {
     public void addUserWallet(Integer id){
         Wallet wallet=new Wallet(id,0L);
         walletRepository.save(wallet);
+    }
+
+    public static void main(String[] args) {
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+        System.out.println("Local time: " + now);  // In giờ địa phương
+        System.out.println("UTC time: " + now.toInstant());  // In giờ UTC
     }
 }
 

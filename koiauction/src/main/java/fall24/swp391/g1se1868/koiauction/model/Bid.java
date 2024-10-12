@@ -14,8 +14,8 @@ public class Bid {
     private Auction auctionID;
 
     @MapsId("bidderID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "BidderID", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "BidderID")
     private User bidderID;
 
     @Column(name = "Amount", precision = 10, scale = 2)
