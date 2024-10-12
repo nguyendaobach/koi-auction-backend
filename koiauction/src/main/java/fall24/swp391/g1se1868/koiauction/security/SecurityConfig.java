@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers("/api/auction/approve-auction/").hasRole("STAFF")
                         .requestMatchers("/api/auction/get-auction-requets").hasRole("STAFF")
+                        .requestMatchers("/api/admin-manager/users").hasRole("STAFF")
                         .requestMatchers("/api/admin-manager/users").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
 
