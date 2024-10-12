@@ -2,10 +2,12 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -13,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -103,26 +106,44 @@ public class UserService {
             User user = userPrinciple.getUser();
 
             if ("UnActive".equalsIgnoreCase(user.getStatus())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User is banned and cannot log in.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Your account has been suspended. Please contact support for further assistance.");
             }
 
             String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-            LoginResponse response = new LoginResponse(token, user.getUserName(),user.getFullName(),user.getRole(), user.getId());
+            LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId());
             return ResponseEntity.ok(response);
 
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username or password is incorrect.");
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Incorrect username or password. Please try again.");
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Your session has expired. Please log in again.");
+        }
+         catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Login failed. Please check your credentials and try again.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
         }
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> list= userRepository.findAll();
+        for(User listUser:list){
+            listUser.setPassword("***");
+        }
+        return list;
     }
 
 
     public Optional<User> getUserById(Integer id) {
-        return userRepository.findById(id);
+       Optional<User> user= userRepository.findById(id);
+       user.get().setPassword("***");
+       return user;
     }
 
 
