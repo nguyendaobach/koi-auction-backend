@@ -1,8 +1,12 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
+import fall24.swp391.g1se1868.koiauction.model.auction.AuctionWithMedia;
+import fall24.swp391.g1se1868.koiauction.model.auction.KoiAuctionResponseDTO;
+import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,28 +22,37 @@ public class AuctionController {
     @Autowired
     private AuctionService auctionService;
 
-    // Trả về tất cả các phiên đấu giá kèm theo thông tin cá Koi
+    @Autowired
+    private AuctionRepository auctionRepository;
+
+
     @GetMapping("/get-all")
-    public List<AuctionWithKoi> getAllAuctions() {
-        return auctionService.getAllAuctionsWithKoi();
+    public ResponseEntity<List<KoiAuctionResponseDTO>> getAuctionDetails() {
+        List<Auction> auctions=auctionRepository.findAll();
+        List<KoiAuctionResponseDTO> auctionDetails = auctionService.getAuctionDetails(auctions);
+        return new ResponseEntity<>(auctionDetails, HttpStatus.OK);
     }
 
-    // Lấy phiên đấu giá theo ID và kèm theo thông tin cá Koi
+//     Lấy phiên đấu giá theo ID và kèm theo thông tin cá Koi
     @GetMapping("/get-by-id")
-    public AuctionWithKoi getAuctionByID(@RequestParam int auctionId) {
+    public List<AuctionWithMedia> getAuctionByID(@RequestParam int auctionId) {
         return auctionService.getAuctionWithKoiByID(auctionId);
     }
 
     // Trả về các phiên đấu giá theo lịch trình kèm theo cá Koi
     @GetMapping("/on-schedule")
-    public List<AuctionWithKoi> getOnScheduleAuctions() {
-        return auctionService.getOnScheduleAuctionsWithKoi();
+    public ResponseEntity<List<KoiAuctionResponseDTO>> getOnScheduleAuctions() {
+        List<Auction> auctions=auctionRepository.findOnScheduleAuctions();
+        List<KoiAuctionResponseDTO> koiAuctionResponseDTOS=auctionService.getAuctionDetails(auctions);
+        return new ResponseEntity<>(koiAuctionResponseDTOS, HttpStatus.OK);
     }
 
     // Trả về các phiên đấu giá đang diễn ra kèm theo cá Koi
     @GetMapping("/on-going")
-    public List<AuctionWithKoi> getOngoingAuctions() {
-        return auctionService.getOnGoingAuctionsWithKoi();
+    public  ResponseEntity<List<KoiAuctionResponseDTO>> getOngoingAuctions() {
+        List<Auction> auctions = auctionRepository.findOngoingAuctions();
+        List<KoiAuctionResponseDTO> koiAuctionResponseDTOS=auctionService.getAuctionDetails(auctions);
+        return new ResponseEntity<>(koiAuctionResponseDTOS, HttpStatus.OK);
     }
 
     // Trả về các phiên đấu giá trong quá khứ kèm theo người chiến thắng
@@ -49,7 +62,7 @@ public class AuctionController {
     }
 
     @GetMapping("/participant-by-user")
-    public List<AuctionWithKoi> getAuctionParticipants() {
+    public List<AuctionWithMedia> getAuctionParticipants() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -61,7 +74,7 @@ public class AuctionController {
 
     // Trả về các phiên đấu giá mà người dùng đã thắng
     @GetMapping("/auction-by-winner")
-    public List<AuctionWithKoi> getWinnerAuctions() {
+    public List<KoiAuctionResponseDTO> getWinnerAuctions() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -70,8 +83,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.getWinnerAuctionByWinnerID(userId);
     }
-
-
+    
     @GetMapping("/check-participant-for-auction")
     public boolean checkParticipantForAuction(@RequestParam int auctionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -94,7 +106,7 @@ public class AuctionController {
     }
 
     @GetMapping("/get-auction-requets")
-        public List<AuctionWithKoi> getAuctionRequets(){
+        public List<KoiAuctionResponseDTO> getAuctionRequets(){
             return auctionService.getAllActionRequest();
         }
 

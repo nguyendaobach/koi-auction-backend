@@ -180,6 +180,8 @@ public class KoiFishService {
 
         KoiType koiType = koiFish.getKoiTypeID();
 
+        KoiOrigin koiOrigin=koiFish.getCountryID();
+
         List<KoiFishMediaDTO> mediaList = koiMediaRepository.findByKoiID(koiFish)
                 .stream()
                 .map(media -> new KoiFishMediaDTO(media.getMediaType(), media.getUrl()))
@@ -187,9 +189,10 @@ public class KoiFishService {
 
         KoiFishDetailDTO koiFishDetail = new KoiFishDetailDTO(
                 koiFish.getId(),
+                koiFish.getKoiName(),
                 creatorFullName,
-                koiType.getId(),
                 koiType.getTypeName(),
+                koiOrigin.getCountry(),
                 koiFish.getWeight(),
                 koiFish.getSex(),
                 koiFish.getBirthday(),
@@ -233,6 +236,9 @@ public class KoiFishService {
                 })
                 .collect(Collectors.toList());  // Trả về danh sách các cá Koi có trạng thái Active
     }
+
+
+
 
 
 }

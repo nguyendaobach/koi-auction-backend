@@ -6,9 +6,10 @@ import java.util.List;
 
 public class KoiFishDetailDTO {
     private Integer koiId;
+    private String koiName;
     private String creatorFullName;
-    private Integer koiTypeId;
     private String koiTypeName;
+    private String koiOriginName;
     private BigDecimal weight;
     private String sex;
     private LocalDate birthday;
@@ -17,20 +18,19 @@ public class KoiFishDetailDTO {
     private String status;
     private List<KoiFishMediaDTO> mediaList;  // Cập nhật thành danh sách chứa mediaType và url
 
-    public KoiFishDetailDTO(Integer koiId, String creatorFullName, Integer koiTypeId, String koiTypeName,
-                            BigDecimal weight, String sex, LocalDate birthday, String description,
-                            BigDecimal length, String status, List<KoiFishMediaDTO> mediaList) {
+    public KoiFishDetailDTO(Integer koiId, String koiName, String creatorFullName, String koiTypeName, String koiOriginName, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status, List<KoiFishMediaDTO> mediaList) {
         this.koiId = koiId;
+        this.koiName = koiName;
         this.creatorFullName = creatorFullName;
-        this.koiTypeId = koiTypeId;
         this.koiTypeName = koiTypeName;
+        this.koiOriginName = koiOriginName;
         this.weight = weight;
         this.sex = sex;
         this.birthday = birthday;
         this.description = description;
         this.length = length;
         this.status = status;
-        this.mediaList = mediaList;  // Cập nhật thành mediaList
+        this.mediaList = mediaList;
     }
 
     public Integer getKoiId() {
@@ -49,13 +49,6 @@ public class KoiFishDetailDTO {
         this.creatorFullName = creatorFullName;
     }
 
-    public Integer getKoiTypeId() {
-        return koiTypeId;
-    }
-
-    public void setKoiTypeId(Integer koiTypeId) {
-        this.koiTypeId = koiTypeId;
-    }
 
     public String getKoiTypeName() {
         return koiTypeName;
@@ -63,6 +56,14 @@ public class KoiFishDetailDTO {
 
     public void setKoiTypeName(String koiTypeName) {
         this.koiTypeName = koiTypeName;
+    }
+
+    public String getKoiOriginName() {
+        return koiOriginName;
+    }
+
+    public void setKoiOriginName(String koiOriginName) {
+        this.koiOriginName = koiOriginName;
     }
 
     public BigDecimal getWeight() {
@@ -99,6 +100,14 @@ public class KoiFishDetailDTO {
 
     public BigDecimal getLength() {
         return length;
+    }
+
+    public String getKoiName() {
+        return koiName;
+    }
+
+    public void setKoiName(String koiName) {
+        this.koiName = koiName;
     }
 
     public void setLength(BigDecimal length) {
