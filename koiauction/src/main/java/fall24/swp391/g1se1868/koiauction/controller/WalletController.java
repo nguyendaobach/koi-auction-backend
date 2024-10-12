@@ -6,14 +6,19 @@ import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.model.Wallet;
 import fall24.swp391.g1se1868.koiauction.service.WalletService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -45,9 +50,10 @@ public class WalletController {
     }
 
     @PostMapping("/add-funds")
-    public ResponseEntity<StringResponse> addFunds(@RequestParam("amount") Long amountStr) {
+    public ResponseEntity<StringResponse> addFunds(@RequestParam("amount") Long amountStr,
+                                                   @RequestParam("callbackUrl") String callbackUrl) {
         try {
-            // Get authenticated user
+            // Lấy user đã được xác thực
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
                 throw new RuntimeException("User is not authenticated");
@@ -55,8 +61,8 @@ public class WalletController {
             UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
             int userId = userPrinciple.getId();
 
-            // Parse and validate amount
-            long amount = amountStr * 100;
+            // Tính toán và xác thực số tiền
+            long amount = amountStr * 100;  // Lưu amount với đơn vị VND (x100 để thành VND nhỏ nhất)
 
             String vnp_Version = "2.1.0";
             String vnp_Command = "pay";
@@ -74,7 +80,9 @@ public class WalletController {
             vnp_Params.put("vnp_OrderInfo", "Nạp tiền vào ví: " + vnp_TxnRef);
             vnp_Params.put("vnp_OrderType", orderType);
             vnp_Params.put("vnp_Locale", "vn");
-            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.getVnp_ReturnUrl() +  "?userId=" +userId);
+
+            // Thêm callbackUrl vào VNPay
+            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.getVnp_ReturnUrl() + "?userId=" + userId + "&callbackUrl=" + URLEncoder.encode(callbackUrl, StandardCharsets.UTF_8));
             vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
             ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -85,6 +93,7 @@ public class WalletController {
             String vnp_ExpireDate = now.plusMinutes(15).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
             vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
+            // Tạo URL thanh toán
             List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
             Collections.sort(fieldNames);
             StringBuilder hashData = new StringBuilder();
@@ -106,37 +115,74 @@ public class WalletController {
                     }
                 }
             }
+
             String queryUrl = query.toString();
             String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.getSecretKey(), hashData.toString());
             queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
             String paymentUrl = VNPayConfig.getVnp_PayUrl() + "?" + queryUrl;
 
+            // Trả về URL thanh toán cho Frontend
             return ResponseEntity.ok(new StringResponse(paymentUrl));
+
         } catch (Exception e) {
-            // Log the exception
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new StringResponse("An error occurred: " + e.getMessage()));
+            // Log lỗi
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new StringResponse("An error occurred: " + e.getMessage()));
         }
     }
+
     @GetMapping("/vnpay_return")
-    public ResponseEntity<StringResponse> handleVNPayReturn(@RequestParam Map<String, String> params,
-                                                            @RequestParam("userId") String UserId) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            throw new RuntimeException("User is not authenticated");
-//        }
-//        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-//        int userId = userPrinciple.getId();
-        int userId = Integer.parseInt(UserId);
+    public void handleVNPayReturn(
+            @RequestParam Map<String, String> params,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String callbackUrl,
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        String vnp_ResponseCode = params.get("vnp_ResponseCode");
         String vnp_TxnRef = params.get("vnp_TxnRef");
         String vnp_Amount = params.get("vnp_Amount");
-        String vnp_ResponseCode = params.get("vnp_ResponseCode");
 
-        if ("00".equals(vnp_ResponseCode)) {
-            walletService.addFunds(userId, Long.parseLong(vnp_Amount) / 100);
-            return ResponseEntity.ok(new StringResponse("Nạp tiền thành công!"));
-        } else {
-            return ResponseEntity.badRequest().body(new StringResponse("Giao dịch thất bại: Mã phản hồi " + vnp_ResponseCode));
+        boolean isSuccess = "00".equals(vnp_ResponseCode);
+
+        try {
+            if (isSuccess && userId != null) {
+                walletService.addFunds(Integer.parseInt(userId), Long.parseLong(vnp_Amount) / 100);
+            }
+
+            String redirectUrl;
+            if (callbackUrl != null && !callbackUrl.isEmpty()) {
+                if (!callbackUrl.startsWith("http://") && !callbackUrl.startsWith("https://")) {
+                    callbackUrl = "http://" + callbackUrl;
+                }
+                redirectUrl = UriComponentsBuilder.fromUriString(callbackUrl)
+                        .queryParam("success", isSuccess)
+                        .queryParam("txnRef", vnp_TxnRef)
+                        .queryParam("amount", Long.parseLong(vnp_Amount) / 100)
+                        .toUriString();
+            } else {
+                redirectUrl = UriComponentsBuilder.fromUriString("/api/payment/result")
+                        .queryParam("success", isSuccess)
+                        .queryParam("txnRef", vnp_TxnRef)
+                        .queryParam("amount", Long.parseLong(vnp_Amount) / 100)
+                        .toUriString();
+            }
+            response.sendRedirect(redirectUrl);
+        } catch (Exception e) {
+            // Log lỗi
+            response.sendRedirect("/error");
         }
+    }
+
+    @GetMapping("/result")
+    public String paymentResult(@RequestParam boolean success,
+                                @RequestParam String txnRef,
+                                @RequestParam long amount,
+                                Model model) {
+        model.addAttribute("success", success);
+        model.addAttribute("txnRef", txnRef);
+        model.addAttribute("amount", amount);
+        return "payment-result";  // Trả về tên của view template
     }
 
     @PostMapping("/payment")
