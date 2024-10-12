@@ -62,6 +62,7 @@ public class KoiFishService {
 
                     return new KoiFishUser(
                             koiFish.getId(),
+                            koiFish.getKoiName(),
                             fullName,  // Lấy fullName của user
                             countryName,  // Lấy tên nước thay vì ID
                             typeName,  // Lấy tên loại cá thay vì ID
@@ -83,6 +84,7 @@ public class KoiFishService {
             MultipartFile imageHeader,
             List<MultipartFile> imageDetail,
             MultipartFile video,
+            String name,
             BigDecimal weight,
             String sex,
             LocalDate birthday,
@@ -124,7 +126,7 @@ public class KoiFishService {
             KoiOrigin koiOrigin = optionalKoiOrigin.get();
 
             String status = "Active";
-            KoiFish koiFish = new KoiFish(user, koiOrigin, koiType, weight, sex, birthday, description, length, status);
+            KoiFish koiFish = new KoiFish(user,name, koiOrigin, koiType, weight, sex, birthday, description, length, status);
             KoiFish savedKoiFish = saveKoiFish(koiFish); // Lưu đối tượng KoiFish
 
             // Lưu imageHeader là "Header Video"
@@ -178,6 +180,8 @@ public class KoiFishService {
 
         KoiType koiType = koiFish.getKoiTypeID();
 
+        KoiOrigin koiOrigin=koiFish.getCountryID();
+
         List<KoiFishMediaDTO> mediaList = koiMediaRepository.findByKoiID(koiFish)
                 .stream()
                 .map(media -> new KoiFishMediaDTO(media.getMediaType(), media.getUrl()))
@@ -185,9 +189,10 @@ public class KoiFishService {
 
         KoiFishDetailDTO koiFishDetail = new KoiFishDetailDTO(
                 koiFish.getId(),
+                koiFish.getKoiName(),
                 creatorFullName,
-                koiType.getId(),
                 koiType.getTypeName(),
+                koiOrigin.getCountry(),
                 koiFish.getWeight(),
                 koiFish.getSex(),
                 koiFish.getBirthday(),
@@ -216,6 +221,7 @@ public class KoiFishService {
                     // Trả về đối tượng KoiFishUser với thông tin cá Koi và hình ảnh
                     return new KoiFishUser(
                             koiFish.getId(),
+                            koiFish.getKoiName(),
                             fullName,  // Lấy fullName của user
                             countryName,  // Lấy tên nước thay vì ID
                             typeName,  // Lấy tên loại cá thay vì ID
@@ -230,6 +236,9 @@ public class KoiFishService {
                 })
                 .collect(Collectors.toList());  // Trả về danh sách các cá Koi có trạng thái Active
     }
+
+
+
 
 
 }

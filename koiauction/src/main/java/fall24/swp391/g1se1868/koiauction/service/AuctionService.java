@@ -1,21 +1,22 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
-import fall24.swp391.g1se1868.koiauction.repository.AuctionKoiRepository;
-import fall24.swp391.g1se1868.koiauction.repository.AuctionParticipantRepository;
-import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
+import fall24.swp391.g1se1868.koiauction.model.auction.AuctionWithMedia;
+import fall24.swp391.g1se1868.koiauction.model.auction.KoiAuctionResponseDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
+import fall24.swp391.g1se1868.koiauction.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AuctionService {
@@ -29,36 +30,53 @@ public class AuctionService {
     @Autowired
     private AuctionParticipantRepository auctionParticipantRepository;
 
-    public List<AuctionWithKoi> getAllAuctionsWithKoi() {
+    @Autowired
+    private BidRepository bidRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private KoiMediaRepository koiMediaRepository;
+
+    public Auction getAuctionById(Integer auctionId) {
+        return auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new IllegalArgumentException("Auction not found with ID: " + auctionId));
+    }
+
+    public List<KoiAuctionResponseDTO> getAllAuctionsWithKoi() {
         List<Auction> auctions = auctionRepository.findAll();
-        return convertToAuctionWithKoi(auctions);
+        return getAuctionDetails(auctions);
     }
 
-    public AuctionWithKoi getAuctionWithKoiByID(Integer id) {
-        Auction auction = auctionRepository.getById(id);
-        List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(id);
-        return new AuctionWithKoi(auction, koiFishList);
-    }
+    public List<AuctionWithMedia> getAuctionWithKoiByID(Integer id) {
+        Optional<Auction> auctionOptional = auctionRepository.findById(id);
+        List<Auction> auctions = new ArrayList<>();
 
-    public List<AuctionWithKoi> getOnScheduleAuctionsWithKoi() {
-        List<Auction> auctions = auctionRepository.findOnScheduleAuctions();
-        return convertToAuctionWithKoi(auctions);
-    }
-
-    public List<AuctionWithKoi> getOnGoingAuctionsWithKoi() {
-        List<Auction> auctions = auctionRepository.findOngoingAuctions();
-        return convertToAuctionWithKoi(auctions);
-    }
-
-
-    private List<AuctionWithKoi> convertToAuctionWithKoi(List<Auction> auctions) {
-        List<AuctionWithKoi> auctionWithKoiList = new ArrayList<>();
-        for (Auction auction : auctions) {
-            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
-            auctionWithKoiList.add(new AuctionWithKoi(auction, koiFishList));
+// Kiểm tra nếu auction có tồn tại (trong Optional)
+        if (auctionOptional.isPresent()) {
+            Auction auction = auctionOptional.get();  // Lấy đối tượng Auction
+            auctions.add(auction);  // Thêm Auction vào danh sách auctions
+        } else {
+            throw new RuntimeException("Auction not found with id: " + id);  // Ném ngoại lệ nếu không tìm thấy Auction
         }
-        return auctionWithKoiList;
+
+// Bạn có thể thêm các thông tin khác vào response ở đây
+
+        return convertToAuctionWithKoiAll(auctions);  // Chuyển đổi danh sách auction sang DTO và trả về
+
     }
+
+    public List<KoiAuctionResponseDTO> getOnScheduleAuctionsWithKoi() {
+        List<Auction> auctions = auctionRepository.findOnScheduleAuctions();
+        return getAuctionDetails(auctions);
+    }
+
+    public List<KoiAuctionResponseDTO> getOnGoingAuctionsWithKoi() {
+        List<Auction> auctions = auctionRepository.findOngoingAuctions();
+        return getAuctionDetails(auctions);
+    }
+
 
     public List<Map<String, Object>> getPastAuctionsWithWinnerName() {
         List<Object[]> results = auctionRepository.findPastAuctionsWithWinnerName();
@@ -75,13 +93,14 @@ public class AuctionService {
         return pastAuctions;
     }
 
-    public List<AuctionWithKoi> getAuctionsParticipantByUser(int UserID){
+
+    public List<AuctionWithMedia> getAuctionsParticipantByUser(int UserID){
         List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(UserID);
-        return convertToAuctionWithKoi(auctionParticipantRepository.findAuctionsByIds(auctionIds));
+        return convertToAuctionWithKoiAll(auctionParticipantRepository.findAuctionsByIds(auctionIds));
     }
 
-    public List<AuctionWithKoi> getWinnerAuctionByWinnerID(int WinnerID){
-        return convertToAuctionWithKoi(auctionRepository.getAuctionbyWinnerID(WinnerID));
+    public List<KoiAuctionResponseDTO> getWinnerAuctionByWinnerID(int WinnerID){
+        return getAuctionDetails(auctionRepository.getAuctionbyWinnerID(WinnerID));
     }
 
     public boolean isUserParticipantForAuction(int userId, int auctionId) {
@@ -120,9 +139,9 @@ public class AuctionService {
 
         return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
     }
-    public List<AuctionWithKoi> getAllActionRequest(){
+    public List<KoiAuctionResponseDTO> getAllActionRequest(){
         List<Auction> list = auctionRepository.getAllAuctionRequest();
-        return convertToAuctionWithKoi(list);
+        return getAuctionDetails(list);
     }
 
     public Auction approveAuction(Integer auctionId, Integer UserID) {
@@ -152,6 +171,149 @@ public class AuctionService {
                 auctionRepository.save(auction);
             }
         }
+    }
+    public void determineWinner(Auction auction) {
+        List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
+
+        if (bids.isEmpty()) {
+            System.out.println("No bids found for auction: " + auction.getId());
+            return;
+        }
+
+        // Assuming the highest bid wins (for ascending auction)
+        Bid highestBid = bids.stream().max((b1, b2) -> Long.compare(b1.getAmount(), b2.getAmount())).orElse(null);
+
+        if (highestBid != null) {
+            auction.setWinnerID(highestBid.getBidderID().getId()); // Set the auction winner
+            System.out.println("Winner determined for auction " + auction.getId() + ": " + highestBid.getBidderID().getFullName());
+        }
+    }
+    // Dummy method for returning deposits to participants
+    private void returnDepositsToLosers(Auction auction) {
+        // Logic for returning deposits
+        System.out.println("Deposits returned for auction: " + auction.getId());
+    }
+
+    // Dummy method for sending payment requests to the winner
+    private void requestPaymentFromWinner(Auction auction) {
+        // Logic for requesting payment from the winner
+        System.out.println("Payment request sent to winner for auction: " + auction.getId());
+    }
+
+    // Logic to handle other auction end tasks like returning deposits, requiring payments, etc.
+    public void processEndOfAuctionTasks(Auction auction) {
+        // Example logic to return deposits to all participants who didn't win
+        returnDepositsToLosers(auction);
+
+        // Example logic to send payment requests to the winner
+        requestPaymentFromWinner(auction);
+
+        System.out.println("End-of-auction tasks completed for auction " + auction.getId());
+    }
+
+    public void closeAuction(Auction auction) {
+        // Set auction status to Closed
+        auction.setStatus("Closed");
+
+        // Determine the winner based on the highest bid
+        determineWinner(auction);
+
+        // Notify all users about the auction closure and winner
+        messagingTemplate.convertAndSend("/topic/auction/" + auction.getId() + "/status", auction);
+
+        // Additional tasks like returning deposits or requesting payments
+        processEndOfAuctionTasks(auction);
+
+        // Save auction state
+        auctionRepository.save(auction);
+    }
+    private List<AuctionWithMedia> convertToAuctionWithKoiAll(List<Auction> auctions) {
+        List<AuctionWithMedia> auctionWithMediaList = new ArrayList<>();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        for (Auction auction : auctions) {
+            // Kiểm tra xem người dùng đã đăng nhập chưa
+            if (authentication == null || !authentication.isAuthenticated() ) {
+                auction.setStatus("Please Login or Register to see more");
+            } else {
+                List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+                List<KoiFishWithMediaAll> koiFishWithMediaAllList = new ArrayList<>();
+
+                for (KoiFish koiFish : koiFishList) {
+                    List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
+
+                    User user = koiFish.getUserID();
+                    if (user != null) {
+                        user.setPassword("0");
+                    }
+
+                    KoiFishWithMediaAll koiFishWithMediaAll = new KoiFishWithMediaAll(koiFish, koiMediaList);
+                    koiFishWithMediaAllList.add(koiFishWithMediaAll);
+                }
+
+                auctionWithMediaList.add(new AuctionWithMedia(auction, koiFishWithMediaAllList));
+            }
+        }
+
+        // If the user is not authenticated, return the auctions with updated status
+        for (Auction auction : auctions) {
+            auctionWithMediaList.add(new AuctionWithMedia(auction, new ArrayList<>()));
+        }
+
+        return auctionWithMediaList;
+    }
+
+    public List<KoiAuctionResponseDTO> getAuctionDetails(List<Auction>auctions) {
+        List<KoiAuctionResponseDTO> responseList = new ArrayList<>();
+
+        for (Auction auction : auctions) {
+            // Tìm kiếm tất cả các KoiFish liên quan đến phiên đấu giá này
+            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+
+            for (KoiFish koiFish : koiFishList) {
+                // Tìm kiếm ảnh Header Image từ bảng KoiMedia
+                KoiMedia headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image")
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+
+                // Tính thời gian còn lại của phiên đấu giá
+                Duration duration = Duration.between(Instant.now(), auction.getEndTime());
+                String timeLeft = duration.toHoursPart() + " Hours " + duration.toMinutesPart() + " Minutes";
+
+                // Tạo đối tượng DTO với dữ liệu cần thiết
+                KoiAuctionResponseDTO response = new KoiAuctionResponseDTO();
+                response.setKoiName(koiFish.getKoiName() + " – koi #" + koiFish.getId());
+                response.setVariety(koiFish.getKoiTypeID().getTypeName());
+                response.setStartingBid(auction.getStartingPrice()+" VND");
+                response.setEstimatedValue(auction.getFinalPrice()+" VND"); // Dùng giá cuối nếu có
+                response.setBreederName(koiFish.getUserID().getFullName()); // Tên nhà lai tạo
+                response.setSex(koiFish.getSex());
+                response.setBornIn(String.valueOf(koiFish.getBirthday().getYear()));
+                response.setSize(String.valueOf(koiFish.getLength()));
+                response.setTimeLeft(timeLeft);
+                response.setImageUrl(headerImage != null ? headerImage.getUrl() : "No image available");
+
+                // Kiểm tra xem người dùng đã đăng nhập hay chưa
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+                    // Người dùng đã đăng nhập
+                    response.setAction("Place a Bid");
+                } else {
+                    // Người dùng chưa đăng nhập
+                    response.setAction("Login / Register to Bid");
+                }
+
+                // Thêm auctionId
+                response.setAuctionId(auction.getId());
+
+                // Thêm vào danh sách kết quả
+                responseList.add(response);
+            }
+        }
+        return responseList;
     }
 
 }
