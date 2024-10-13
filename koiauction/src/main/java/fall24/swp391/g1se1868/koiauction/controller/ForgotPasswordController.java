@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
@@ -79,41 +80,71 @@ public class ForgotPasswordController {
 
 
     @PostMapping("/verifyOtp/{otp}/{email}")
-    public ResponseEntity<StringResponse> verifyOTP(@PathVariable Integer otp, @PathVariable String email) {
+    public ResponseEntity<StringResponse> verifyOtp(@PathVariable Integer otp, @PathVariable String email) {
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Please enter invalid email"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Invalid email."));
         }
 
+        // Tìm OTP và kiểm tra
         ForgotPassword fp = forgotpasswordRepository.findByOtpAndUser(otp, user)
-                .orElseThrow(() -> new UsernameNotFoundException("Invalid OTP for mail: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid OTP for email: " + email));
 
+        // Kiểm tra OTP hết hạn
         if (fp.getExpirationDate().before(Date.from(Instant.now()))) {
             forgotpasswordRepository.deleteById(fp.getFpid());
-            return new ResponseEntity<>(new StringResponse("OTP has expired!"), HttpStatus.EXPECTATION_FAILED);
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new StringResponse("OTP has expired."));
         }
 
-        return ResponseEntity.ok(new StringResponse("OTP verified!"));
+        // Nếu OTP hợp lệ, tạo mật khẩu mới
+        String newPassword = generateRandomPassword();
+        String encodedPassword = encoder.encode(newPassword);
+
+        // Cập nhật mật khẩu mới trong cơ sở dữ liệu
+        userRepository.updatePassword(email, encodedPassword);
+
+        // Gửi mật khẩu mới qua email
+        MailBody mailBody = MailBody.builder()
+                .to(email)
+                .text("Your password has been reset. Your new password is: " + newPassword)
+                .subject("New Password")
+                .build();
+        emailService.sendSimpleMessage(mailBody);
+
+        // Xóa bản ghi ForgotPassword sau khi hoàn tất
+        forgotpasswordRepository.deleteById(fp.getFpid());
+
+        return ResponseEntity.ok(new StringResponse("OTP verified! New password has been sent to your email."));
     }
 
 
 
 
-    @PostMapping("/changePassword/{email}")
-    public ResponseEntity<StringResponse> changePasswordHandler(@RequestBody ChangePassword changePassword, @PathVariable String email){
-        if(!Objects.equals(changePassword.password(),changePassword.repeatPassword())){
-            return new ResponseEntity<>(new StringResponse("Please enter the password again"), HttpStatus.EXPECTATION_FAILED);
-        }
-        String encodePasword = encoder.encode(changePassword.password());
-        userRepository.updatePassword(email,encodePasword);
-        return ResponseEntity.ok(new StringResponse("Password has been changed"));
-    }
-
-
+//    @PostMapping("/changePassword/{email}")
+//    public ResponseEntity<StringResponse> changePasswordHandler(@RequestBody ChangePassword changePassword, @PathVariable String email){
+//        if(!Objects.equals(changePassword.password(),changePassword.repeatPassword())){
+//            return new ResponseEntity<>(new StringResponse("Please enter the password again"), HttpStatus.EXPECTATION_FAILED);
+//        }
+//        String encodePasword = encoder.encode(changePassword.password());
+//        userRepository.updatePassword(email,encodePasword);
+//        return ResponseEntity.ok(new StringResponse("Password has been changed"));
+//    }
+//
+//
     private Integer otpGenerator(){
         Random random=new Random();
         return random.nextInt(100_000,999_999);
+    }
+    private String generateRandomPassword() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder password = new StringBuilder();
+
+        for (int i = 0; i < 10; i++) {  // Mật khẩu dài 10 ký tự
+            password.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        return password.toString();
     }
 
 }

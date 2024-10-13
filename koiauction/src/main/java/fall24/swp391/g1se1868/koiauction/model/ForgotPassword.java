@@ -26,4 +26,5 @@ public class ForgotPassword {
     @OneToOne
     @JoinColumn(name = "userId", referencedColumnName = "UserID") // Chỉ định rõ tên cột khóa ngoại
     private User user;
+
 }
