@@ -72,7 +72,6 @@ public class UserController {
     }
 
 
-
     private boolean isValidRole(String role) {
         return role.equals("User") || role.equals("Breeder") || role.equals("Staff") || role.equals("Admin");
     }

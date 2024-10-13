@@ -169,5 +169,7 @@ public class UserService {
     public void activeUser(Integer id) {
         userRepository.activeUser(id);
     }
+
+
 }
 

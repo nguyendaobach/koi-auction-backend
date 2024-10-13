@@ -30,5 +30,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Modifying
     @Query("update User u set u.status = 'Active' , u.updateAt = CURRENT_TIMESTAMP where u.id = ?1")
     void activeUser(Integer id);
+
+
+
 }
 
