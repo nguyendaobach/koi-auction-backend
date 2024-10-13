@@ -8,7 +8,6 @@ import fall24.swp391.g1se1868.koiauction.repository.ForgotpasswordRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import fall24.swp391.g1se1868.koiauction.service.ChangePassword;
 import fall24.swp391.g1se1868.koiauction.service.EmailService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
@@ -28,12 +26,9 @@ import java.util.Random;
 @RequestMapping("/api/forgot-password")
 public class ForgotPasswordController {
 
-    private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
-
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final UserRepository userRepository;
-
     private final EmailService emailService;
-
     private final ForgotpasswordRepository forgotpasswordRepository;
 
     @Autowired
@@ -49,102 +44,74 @@ public class ForgotPasswordController {
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Please enter invalid email"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Invalid email address."));
         }
 
-        // Tìm và xóa bản ghi ForgotPassword cũ (nếu có)
-        Optional<ForgotPassword> existingForgotPassword = forgotpasswordRepository.findUser(user);
-        if (existingForgotPassword.isPresent()) {
-            ForgotPassword fpToDelete = existingForgotPassword.get();
-            forgotpasswordRepository.deleteByFpid(fpToDelete.getFpid());
-            System.out.println("Deleted existing ForgotPassword record: " + fpToDelete.getFpid());
-        }
+        forgotpasswordRepository.findUser(user).ifPresent(fp -> {
+            forgotpasswordRepository.deleteByFpid(fp.getFpid());
+            System.out.println("Deleted existing ForgotPassword record: " + fp.getFpid());
+        });
+
         int otp = otpGenerator();
         MailBody mailBody = MailBody.builder()
                 .to(email)
-                .text("This is the OTP for your Forgot Password request " + otp)
+                .text("This is the OTP for your Forgot Password request: " + otp)
                 .subject("OTP for Forgot Password")
                 .build();
-        // Tạo và lưu mới một bản ghi ForgotPassword
+
         ForgotPassword forgotPassword = ForgotPassword.builder()
                 .otp(otp)
-                .expirationDate(new Date(System.currentTimeMillis() + 70 * 1000))
+                .expirationDate(Date.from(Instant.now().plusSeconds(70))) // 70 seconds expiration
                 .user(user)
                 .build();
+
         emailService.sendSimpleMessage(mailBody);
         forgotpasswordRepository.save(forgotPassword);
 
-        return ResponseEntity.ok(new StringResponse("Email sent successfully"));
+        return ResponseEntity.ok(new StringResponse("Email sent successfully."));
     }
 
+    @PostMapping("/verifyAndChangePassword/{otp}/{email}")
+    public ResponseEntity<StringResponse> verifyAndChangePassword(
+            @PathVariable Integer otp,
+            @PathVariable String email,
+            @RequestBody ChangePassword changePassword) {
 
-
-    @PostMapping("/verifyOtp/{otp}/{email}")
-    public ResponseEntity<StringResponse> verifyOtp(@PathVariable Integer otp, @PathVariable String email) {
         User user = userRepository.findByEmail(email);
-
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Invalid email."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new StringResponse("Invalid email address."));
         }
 
-        // Tìm OTP và kiểm tra
-        ForgotPassword fp = forgotpasswordRepository.findByOtpAndUser(otp, user)
-                .orElseThrow(() -> new UsernameNotFoundException("Invalid OTP for email: " + email));
+        Optional<ForgotPassword> optionalForgotPassword = forgotpasswordRepository.findByOtpAndUser(otp, user);
+        if (optionalForgotPassword.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new StringResponse("Invalid OTP for email: " + email));
+        }
 
-        // Kiểm tra OTP hết hạn
+        ForgotPassword fp = optionalForgotPassword.get();
+
         if (fp.getExpirationDate().before(Date.from(Instant.now()))) {
-            forgotpasswordRepository.deleteById(fp.getFpid());
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new StringResponse("OTP has expired."));
+            forgotpasswordRepository.deleteById(fp.getFpid()); // Xóa bản ghi nếu OTP hết hạn
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new StringResponse("OTP has expired."));
         }
 
-        // Nếu OTP hợp lệ, tạo mật khẩu mới
-        String newPassword = generateRandomPassword();
-        String encodedPassword = encoder.encode(newPassword);
+        if (!Objects.equals(changePassword.password(), changePassword.repeatPassword())) {
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new StringResponse("Passwords do not match. Please try again."));
+        }
 
-        // Cập nhật mật khẩu mới trong cơ sở dữ liệu
+        String encodedPassword = encoder.encode(changePassword.password());
         userRepository.updatePassword(email, encodedPassword);
 
-        // Gửi mật khẩu mới qua email
-        MailBody mailBody = MailBody.builder()
-                .to(email)
-                .text("Your password has been reset. Your new password is: " + newPassword)
-                .subject("New Password")
-                .build();
-        emailService.sendSimpleMessage(mailBody);
+        forgotpasswordRepository.delete(fp);
 
-        // Xóa bản ghi ForgotPassword sau khi hoàn tất
-        forgotpasswordRepository.deleteById(fp.getFpid());
-
-        return ResponseEntity.ok(new StringResponse("OTP verified! New password has been sent to your email."));
+        return ResponseEntity.ok(new StringResponse("Password has been changed successfully."));
     }
 
-
-
-
-//    @PostMapping("/changePassword/{email}")
-//    public ResponseEntity<StringResponse> changePasswordHandler(@RequestBody ChangePassword changePassword, @PathVariable String email){
-//        if(!Objects.equals(changePassword.password(),changePassword.repeatPassword())){
-//            return new ResponseEntity<>(new StringResponse("Please enter the password again"), HttpStatus.EXPECTATION_FAILED);
-//        }
-//        String encodePasword = encoder.encode(changePassword.password());
-//        userRepository.updatePassword(email,encodePasword);
-//        return ResponseEntity.ok(new StringResponse("Password has been changed"));
-//    }
-//
-//
-    private Integer otpGenerator(){
-        Random random=new Random();
-        return random.nextInt(100_000,999_999);
-    }
-    private String generateRandomPassword() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private Integer otpGenerator() {
         Random random = new Random();
-        StringBuilder password = new StringBuilder();
-
-        for (int i = 0; i < 10; i++) {  // Mật khẩu dài 10 ký tự
-            password.append(characters.charAt(random.nextInt(characters.length())));
-        }
-        return password.toString();
+        return random.nextInt(100_000, 999_999); // Sinh OTP từ 100000 đến 999999
     }
-
 }
