@@ -7,6 +7,7 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
 import fall24.swp391.g1se1868.koiauction.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,10 @@ public class AuctionService {
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    @Lazy
+    private BidService bidService;
 
     @Autowired
     private KoiMediaRepository koiMediaRepository;
@@ -173,23 +178,23 @@ public class AuctionService {
             }
         }
     }
-    public void determineWinner(Auction auction) {
+    public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
-
         if (bids.isEmpty()) {
             System.out.println("No bids found for auction: " + auction.getId());
-            return;
+            return null;
         }
-
-        // Assuming the highest bid wins (for ascending auction)
-        Bid highestBid = bids.stream().max((b1, b2) -> Long.compare(b1.getAmount(), b2.getAmount())).orElse(null);
-
+        Bid highestBid = bids.stream()
+                .max((b1, b2) -> Long.compare(b1.getAmount(), b2.getAmount()))
+                .orElse(null);
         if (highestBid != null) {
-            auction.setWinnerID(highestBid.getBidderID().getId()); // Set the auction winner
+            auction.setWinnerID(highestBid.getBidderID().getId());
             System.out.println("Winner determined for auction " + auction.getId() + ": " + highestBid.getBidderID().getFullName());
+            return highestBid.getBidderID().getId();
         }
+        return null;
     }
-    // Dummy method for returning deposits to participants
+
     private void returnDepositsToLosers(Auction auction) {
         // Logic for returning deposits
         System.out.println("Deposits returned for auction: " + auction.getId());
@@ -203,61 +208,42 @@ public class AuctionService {
 
     // Logic to handle other auction end tasks like returning deposits, requiring payments, etc.
     public void processEndOfAuctionTasks(Auction auction) {
-        // Example logic to return deposits to all participants who didn't win
         returnDepositsToLosers(auction);
-
-        // Example logic to send payment requests to the winner
         requestPaymentFromWinner(auction);
-
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
 
     public void closeAuction(Auction auction) {
-        // Set auction status to Closed
         auction.setStatus("Closed");
-
-        // Determine the winner based on the highest bid
-        determineWinner(auction);
-
-        // Notify all users about the auction closure and winner
+        int winnerID = determineWinner(auction);
+        long finalPrice = bidService.getCurrentPrice(auction.getId());
+        auction.setFinalPrice(finalPrice);
+        auction.setWinnerID(winnerID);
         messagingTemplate.convertAndSend("/topic/auction/" + auction.getId() + "/status", auction);
-
-        // Additional tasks like returning deposits or requesting payments
         processEndOfAuctionTasks(auction);
-
-        // Save auction state
         auctionRepository.save(auction);
     }
     private List<AuctionWithMedia> convertToAuctionWithKoiAll(List<Auction> auctions) {
         List<AuctionWithMedia> auctionWithMediaList = new ArrayList<>();
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         for (Auction auction : auctions) {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (authentication == null || !authentication.isAuthenticated() ) {
                 auction.setStatus("Please Login or Register to see more");
             } else {
                 List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
                 List<KoiFishWithMediaAll> koiFishWithMediaAllList = new ArrayList<>();
-
                 for (KoiFish koiFish : koiFishList) {
                     List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
-
                     User user = koiFish.getUserID();
                     if (user != null) {
                         user.setPassword("0");
                     }
-
                     KoiFishWithMediaAll koiFishWithMediaAll = new KoiFishWithMediaAll(koiFish, koiMediaList);
                     koiFishWithMediaAllList.add(koiFishWithMediaAll);
                 }
-
                 auctionWithMediaList.add(new AuctionWithMedia(auction, koiFishWithMediaAllList));
             }
         }
-
-        // If the user is not authenticated, return the auctions with updated status
         for (Auction auction : auctions) {
             auctionWithMediaList.add(new AuctionWithMedia(auction, new ArrayList<>()));
         }
