@@ -16,6 +16,10 @@ public class UserRegister {
         this.password = password;
         this.address = address;
     }
+
+    public UserRegister() {
+    }
+
     public String getUserName() {
         return userName;
     }
