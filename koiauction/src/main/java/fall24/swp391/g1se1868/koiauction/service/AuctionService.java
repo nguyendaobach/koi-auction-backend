@@ -60,12 +60,30 @@ public class AuctionService {
         Optional<Auction> auctionOptional = auctionRepository.findById(id);
         List<Auction> auctions = new ArrayList<>();
 
+<<<<<<< Updated upstream
 // Kiểm tra nếu auction có tồn tại (trong Optional)
         if (auctionOptional.isPresent()) {
             Auction auction = auctionOptional.get();  // Lấy đối tượng Auction
             auctions.add(auction);  // Thêm Auction vào danh sách auctions
         } else {
             throw new RuntimeException("Auction not found with id: " + id);  // Ném ngoại lệ nếu không tìm thấy Auction
+=======
+    public List<AuctionWithKoi> getOnScheduleAuctionsWithKoi() {
+        List<Auction> auctions = auctionRepository.findOnScheduleAuctions();
+        return convertToAuctionWithKoi(auctions);
+    }
+
+    public List<AuctionWithKoi> getOnGoingAuctionsWithKoi() {
+        List<Auction> auctions = auctionRepository.findOngoingAuctions();
+        return convertToAuctionWithKoi(auctions);
+    }
+
+    private List<AuctionWithKoi> convertToAuctionWithKoi(List<Auction> auctions) {
+        List<AuctionWithKoi> auctionWithKoiList = new ArrayList<>();
+        for (Auction auction : auctions) {
+            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+            auctionWithKoiList.add(new AuctionWithKoi(auction, koiFishList));
+>>>>>>> Stashed changes
         }
 
 // Bạn có thể thêm các thông tin khác vào response ở đây

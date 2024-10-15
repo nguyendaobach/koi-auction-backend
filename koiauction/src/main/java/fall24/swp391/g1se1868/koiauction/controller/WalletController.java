@@ -62,7 +62,7 @@ public class WalletController {
             int userId = userPrinciple.getId();
 
             // Tính toán và xác thực số tiền
-            long amount = amountStr * 100;  // Lưu amount với đơn vị VND (x100 để thành VND nhỏ nhất)
+            long amount = amountStr * 100;
 
             String vnp_Version = "2.1.0";
             String vnp_Command = "pay";
