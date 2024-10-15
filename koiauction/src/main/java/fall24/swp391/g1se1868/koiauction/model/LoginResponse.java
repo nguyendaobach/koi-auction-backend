@@ -8,12 +8,12 @@ package fall24.swp391.g1se1868.koiauction.model;
         private String Role;
         private Integer userId;
 
-        public LoginResponse(String token, String username,String fullname, String role, Integer userId) {
+        public LoginResponse(String token, String username, String fullname, String role, Integer userId, String s) {
             this.token = token;
             this.userId=userId;
             this.username = username;
             this.fullname = fullname;
-            Role = role;
+            this.Role = role;
         }
 
         public String getFullname() {
