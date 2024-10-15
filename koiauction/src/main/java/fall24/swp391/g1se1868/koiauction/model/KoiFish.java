@@ -29,9 +29,6 @@ public class KoiFish {
     private KoiType koiTypeID;
 
 
-//    @Column(name = "BreederID")
-//    private Integer breederID;
-
     @Column(name = "Weight", precision = 10, scale = 2)
     private BigDecimal weight;
 
