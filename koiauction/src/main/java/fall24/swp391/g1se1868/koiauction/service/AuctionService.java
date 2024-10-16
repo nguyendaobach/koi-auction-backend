@@ -9,6 +9,7 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
 import fall24.swp391.g1se1868.koiauction.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +18,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -44,6 +44,10 @@ public class AuctionService {
     private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
+    @Lazy
+    private BidService bidService;
+
+    @Autowired
     private KoiMediaRepository koiMediaRepository;
 
     public Auction getAuctionById(Integer auctionId) {
@@ -55,20 +59,37 @@ public class AuctionService {
     public List<AuctionWithMedia> getAuctionWithKoiByID(Integer id) {
         Optional<Auction> auctionOptional = auctionRepository.findById(id);
         List<Auction> auctions = new ArrayList<>();
-
-// Kiểm tra nếu auction có tồn tại (trong Optional)
         if (auctionOptional.isPresent()) {
             Auction auction = auctionOptional.get();  // Lấy đối tượng Auction
             auctions.add(auction);  // Thêm Auction vào danh sách auctions
         } else {
-            throw new RuntimeException("Auction not found with id: " + id);  // Ném ngoại lệ nếu không tìm thấy Auction
+            throw new RuntimeException("Auction not found with id: " + id);
         }
-
-// Bạn có thể thêm các thông tin khác vào response ở đây
-
-        return convertToAuctionWithKoiAll(auctions);  // Chuyển đổi danh sách auction sang DTO và trả về
-
+        return convertToAuctionWithKoiAll(auctions);
     }
+//    }// Ném ngoại lệ nếu không tìm thấy Auction
+//    public List<AuctionWithKoi> getOnScheduleAuctionsWithKoi() {
+//        List<Auction> auctions = auctionRepository.findOnScheduleAuctions();
+//        return convertToAuctionWithKoi(auctions);
+//    }
+//
+//    public List<AuctionWithKoi> getOnGoingAuctionsWithKoi() {
+//        List<Auction> auctions = auctionRepository.findOngoingAuctions();
+//        return convertToAuctionWithKoi(auctions);
+//    }
+
+//    private List<AuctionWithKoi> convertToAuctionWithKoi(List<Auction> auctions) {
+//        List<AuctionWithKoi> auctionWithKoiList = new ArrayList<>();
+//        for (Auction auction : auctions) {
+//            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+//            auctionWithKoiList.add(new AuctionWithKoi(auction, koiFishList));
+//        }
+//
+//// Bạn có thể thêm các thông tin khác vào response ở đây
+//
+//        return convertToAuctionWithKoiAll(auctions);  // Chuyển đổi danh sách auction sang DTO và trả về
+//
+//    }
 
 
 
@@ -171,23 +192,23 @@ public class AuctionService {
             }
         }
     }
-    public void determineWinner(Auction auction) {
+    public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
-
         if (bids.isEmpty()) {
             System.out.println("No bids found for auction: " + auction.getId());
-            return;
+            return null;
         }
-
-        // Assuming the highest bid wins (for ascending auction)
-        Bid highestBid = bids.stream().max((b1, b2) -> Long.compare(b1.getAmount(), b2.getAmount())).orElse(null);
-
+        Bid highestBid = bids.stream()
+                .max((b1, b2) -> Long.compare(b1.getAmount(), b2.getAmount()))
+                .orElse(null);
         if (highestBid != null) {
-            auction.setWinnerID(highestBid.getBidderID().getId()); // Set the auction winner
+            auction.setWinnerID(highestBid.getBidderID().getId());
             System.out.println("Winner determined for auction " + auction.getId() + ": " + highestBid.getBidderID().getFullName());
+            return highestBid.getBidderID().getId();
         }
+        return null;
     }
-    // Dummy method for returning deposits to participants
+
     private void returnDepositsToLosers(Auction auction) {
         // Logic for returning deposits
         System.out.println("Deposits returned for auction: " + auction.getId());
@@ -201,61 +222,42 @@ public class AuctionService {
 
     // Logic to handle other auction end tasks like returning deposits, requiring payments, etc.
     public void processEndOfAuctionTasks(Auction auction) {
-        // Example logic to return deposits to all participants who didn't win
         returnDepositsToLosers(auction);
-
-        // Example logic to send payment requests to the winner
         requestPaymentFromWinner(auction);
-
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
 
     public void closeAuction(Auction auction) {
-        // Set auction status to Closed
         auction.setStatus("Closed");
-
-        // Determine the winner based on the highest bid
-        determineWinner(auction);
-
-        // Notify all users about the auction closure and winner
+        int winnerID = determineWinner(auction);
+        long finalPrice = bidService.getCurrentPrice(auction.getId());
+        auction.setFinalPrice(finalPrice);
+        auction.setWinnerID(winnerID);
         messagingTemplate.convertAndSend("/topic/auction/" + auction.getId() + "/status", auction);
-
-        // Additional tasks like returning deposits or requesting payments
         processEndOfAuctionTasks(auction);
-
-        // Save auction state
         auctionRepository.save(auction);
     }
     private List<AuctionWithMedia> convertToAuctionWithKoiAll(List<Auction> auctions) {
         List<AuctionWithMedia> auctionWithMediaList = new ArrayList<>();
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         for (Auction auction : auctions) {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (authentication == null || !authentication.isAuthenticated() ) {
                 auction.setStatus("Please Login or Register to see more");
             } else {
                 List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
                 List<KoiFishWithMediaAll> koiFishWithMediaAllList = new ArrayList<>();
-
                 for (KoiFish koiFish : koiFishList) {
                     List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
-
                     User user = koiFish.getUserID();
                     if (user != null) {
                         user.setPassword("0");
                     }
-
                     KoiFishWithMediaAll koiFishWithMediaAll = new KoiFishWithMediaAll(koiFish, koiMediaList);
                     koiFishWithMediaAllList.add(koiFishWithMediaAll);
                 }
-
                 auctionWithMediaList.add(new AuctionWithMedia(auction, koiFishWithMediaAllList));
             }
         }
-
-        // If the user is not authenticated, return the auctions with updated status
         for (Auction auction : auctions) {
             auctionWithMediaList.add(new AuctionWithMedia(auction, new ArrayList<>()));
         }
@@ -357,11 +359,7 @@ public class AuctionService {
 
             responseList.add(response); // Thêm đối tượng vào danh sách
         }
-
         // Trả về đối tượng Page chứa danh sách KoiFishAuctionAll
         return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
     }
-
-
-
 }

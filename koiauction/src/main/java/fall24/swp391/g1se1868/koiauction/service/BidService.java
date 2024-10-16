@@ -30,50 +30,50 @@ public class BidService {
     private SimpMessagingTemplate messagingTemplate;
 
     public Bid placeBid(Bid bid, int userId) {
-        // Ensure that the BidId is initialized
         if (bid.getId() == null) {
             bid.setId(new BidId());
         }
-
-        // Get the auction from the bid object
-        Auction auction = bid.getAuctionID();  // Use getAuction() instead of getAuctionID()
-
-        // Check if the auction is ongoing
+        Auction auction = bid.getAuctionID();
         if (!auction.getStatus().equals("Ongoing")) {
             throw new IllegalStateException("Auction is not Ongoing.");
         }
-
-        // Check if the user is registered for the auction
         if (!auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auction.getId())) {
             throw new IllegalArgumentException("User is not registered for the auction.");
         }
-
-        // Set the bidder ID
-        bid.setBidderID(new User(userId));  // Assuming you have a User constructor that accepts userId
-
-        // Set the current time for the bid
+        Long currentPrice = getCurrentPrice(auction.getId());
+        Long stepPrice = auction.getBidStep();
+        Long nextPrice;
+        if(currentPrice == auction.getStartingPrice()){
+            nextPrice = currentPrice;
+        }else{
+            nextPrice = currentPrice + stepPrice;
+        }
+        if (bid.getAmount() < nextPrice) {
+            throw new IllegalArgumentException("Bid must be at least the current highest bid plus the step price.");
+        }
+        bid.setBidderID(new User(userId));
+        bid.getId().setAuctionID(auction.getId());
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
-        bid.getId().setTime(now.toInstant());  // Ensure the BidId is initialized
-
-        // Set the auction ID in the BidId if needed
-        bid.getId().setAuctionID(auction.getId());  // Set auction ID in BidId
-
-        // Save the bid and notify updates
+        bid.getId().setTime(now.toInstant());
         Bid savedBid = bidRepository.save(bid);
         notifyBidUpdates(auction.getId());
-
+        if (bid.getAmount().equals(auction.getBuyoutPrice())) {
+            auctionService.closeAuction(auction);
+        }
         return savedBid;
     }
+    public Long getCurrentPrice(int auctionID){
+        return bidRepository.findHighestBidByAuctionId(auctionID).orElse(auctionService.getAuctionById(auctionID).getStartingPrice());
+    }
 
-    // Method to get all bids for an auction
+
     public List<Bid> getAllBidsForAuction(Integer auctionId) {
         return bidRepository.findByAuctionID(auctionId);
     }
-
-    // Notify users about auction bid updates
     public void notifyBidUpdates(Integer auctionId) {
         List<Bid> updatedBids = getAllBidsForAuction(auctionId);
         messagingTemplate.convertAndSend("/topic/auction/" + auctionId, updatedBids);
     }
 }
+
