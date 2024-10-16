@@ -67,30 +67,6 @@ public class AuctionService {
         }
         return convertToAuctionWithKoiAll(auctions);
     }
-//    }// Ném ngoại lệ nếu không tìm thấy Auction
-//    public List<AuctionWithKoi> getOnScheduleAuctionsWithKoi() {
-//        List<Auction> auctions = auctionRepository.findOnScheduleAuctions();
-//        return convertToAuctionWithKoi(auctions);
-//    }
-//
-//    public List<AuctionWithKoi> getOnGoingAuctionsWithKoi() {
-//        List<Auction> auctions = auctionRepository.findOngoingAuctions();
-//        return convertToAuctionWithKoi(auctions);
-//    }
-
-//    private List<AuctionWithKoi> convertToAuctionWithKoi(List<Auction> auctions) {
-//        List<AuctionWithKoi> auctionWithKoiList = new ArrayList<>();
-//        for (Auction auction : auctions) {
-//            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
-//            auctionWithKoiList.add(new AuctionWithKoi(auction, koiFishList));
-//        }
-//
-//// Bạn có thể thêm các thông tin khác vào response ở đây
-//
-//        return convertToAuctionWithKoiAll(auctions);  // Chuyển đổi danh sách auction sang DTO và trả về
-//
-//    }
-
 
 
     public List<Map<String, Object>> getPastAuctionsWithWinnerName() {

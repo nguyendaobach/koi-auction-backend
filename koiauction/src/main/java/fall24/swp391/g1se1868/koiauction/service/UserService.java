@@ -95,7 +95,13 @@ public class UserService {
     }
 
     public ResponseEntity<?> login(UserLogin userLogin) {
+
+        if(userLogin.getUserName().contains("@")){
+            User user1 = userRepository.findByEmail(userLogin.getUserName());
+            userLogin.setUserName(user1.getUserName());
+        }
         try {
+
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userLogin.getUserName(), userLogin.getPassword())
             );
