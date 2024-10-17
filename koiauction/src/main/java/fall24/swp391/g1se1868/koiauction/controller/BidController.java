@@ -57,7 +57,7 @@ public class BidController {
         }
     }
 
-    @RequestMapping("/get-all")
+    @GetMapping("/get-all")
     public List<Bid> getAllBid(@RequestParam int auctionId) {
         return bidService.getAllBidsForAuction(auctionId);
     }
