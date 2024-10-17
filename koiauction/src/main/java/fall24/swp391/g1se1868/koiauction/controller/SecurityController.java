@@ -99,40 +99,35 @@ public class SecurityController {
             // Lấy URL ảnh
             String photoUrl = rootNode.path("photos").get(0).path("url").asText();
 
-            User user= userRepository.findByEmail(email);
+            User user = userRepository.findByEmail(email);
 
-            if(user!=null){
+            if (user != null) {
                 String token = jwtService.generateToken(user.getUserName(), user.getId());
 
                 LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.");
                 return ResponseEntity.ok(response);
-            }else {
+            } else {
                 User newUser = new User();
                 newUser.setUserName(username);
                 newUser.setFullName(displayName);
                 newUser.setEmail(email);
-                String password=encoder.encode(String.valueOf(randomInt));
-                newUser.setPassword(encoder.encode(password));
-                newUser.setCreateAt(Instant.now());
-                newUser.setUpdateAt(Instant.now());
+                String password = encoder.encode(String.valueOf(randomInt));
+                newUser.setPassword(password); // Không cần mã hóa lại
                 newUser.setRole("User");
-                newUser.setStatus("Active");
-                userRepository.save(user);
 
+                // Lưu người dùng mới vào cơ sở dữ liệu
+                userRepository.save(newUser);
 
+                // Tạo token cho người dùng mới
                 String token = jwtService.generateToken(newUser.getUserName(), newUser.getId());
-
-                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "Registered successfully: Please complete your profile.");
+                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.");
                 return ResponseEntity.ok(response);
             }
-
-
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse("Error at "+e.getMessage()));
+            // Xử lý ngoại lệ
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing profile response");
         }
     }
-
 }
 
 
