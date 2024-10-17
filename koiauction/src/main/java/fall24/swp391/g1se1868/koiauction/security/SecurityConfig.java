@@ -54,8 +54,8 @@ public class SecurityConfig {
         httpSecurity.cors(Customizer.withDefaults());
         httpSecurity.csrf(customizer -> customizer.disable());
         httpSecurity.authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.GET,"/api/admin-manager/users/**").hasRole("STAFF")
-                        .requestMatchers(HttpMethod.GET,"/api/admin-manager/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin-manager/users/**").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/api/admin-manager/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
@@ -65,7 +65,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auction/staff/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/staff/**").hasRole("STAFF")
                         .requestMatchers("/api/auction/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin-manager/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
                         .requestMatchers("/api/auction/{}").permitAll()
                         .requestMatchers("/api/auction/filter").permitAll()
