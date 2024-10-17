@@ -114,6 +114,7 @@ public class SecurityController {
                 String password = encoder.encode(String.valueOf(randomInt));
                 newUser.setPassword(password); // Không cần mã hóa lại
                 newUser.setRole("User");
+                newUser.setStatus("Active");
 
                 // Lưu người dùng mới vào cơ sở dữ liệu
                 userRepository.save(newUser);
