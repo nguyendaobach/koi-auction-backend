@@ -47,7 +47,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        // If username is present and there is no current authentication
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = context.getBean(UserDetailService.class).loadUserByUsername(username);
 

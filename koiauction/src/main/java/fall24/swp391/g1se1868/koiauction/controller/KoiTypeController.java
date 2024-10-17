@@ -30,14 +30,14 @@ public class KoiTypeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/add-koitype")
+    @PostMapping
     public ResponseEntity<KoiType> createKoiType(@RequestParam String name) {
         KoiType koiType = new KoiType(name);
         KoiType savedKoiType = koiTypeService.saveKoiType(koiType);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedKoiType);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<StringResponse> deleteKoiType(@PathVariable Integer id) {
         try {
             koiTypeService.deleteKoiType(id);

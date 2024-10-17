@@ -32,14 +32,14 @@ public class KoiOriginController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/add-koi-origin")
+    @PostMapping
     public ResponseEntity<KoiOrigin> createKoiType(@RequestParam String name) {
         KoiOrigin koiOrigin = new KoiOrigin(name);
         KoiOrigin savekoiOrigin = koiOriginService.saveKoiType(koiOrigin);
         return ResponseEntity.status(HttpStatus.CREATED).body(savekoiOrigin);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<StringResponse> deleteKoiType(@PathVariable Integer id) {
         try {
             koiOriginService.deleteKoiType(id);
