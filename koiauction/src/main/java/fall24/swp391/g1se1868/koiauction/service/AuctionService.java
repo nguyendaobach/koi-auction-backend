@@ -234,9 +234,6 @@ public class AuctionService {
                 auctionWithMediaList.add(new AuctionWithMedia(auction, koiFishWithMediaAllList));
             }
         }
-        for (Auction auction : auctions) {
-            auctionWithMediaList.add(new AuctionWithMedia(auction, new ArrayList<>()));
-        }
 
         return auctionWithMediaList;
     }

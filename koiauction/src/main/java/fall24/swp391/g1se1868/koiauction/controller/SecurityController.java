@@ -36,9 +36,15 @@ public class SecurityController {
     String randomInt = String.valueOf(random.nextInt());
 
     @PostMapping("/register")
-    public StringResponse register(@RequestBody UserRegister user){
-        return new StringResponse(userService.register(user));
+    public ResponseEntity<StringResponse> register(@RequestBody UserRegister user) {
+        try {
+            String message = userService.register(user);
+            return new ResponseEntity<>(new StringResponse(message), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLogin user) {
