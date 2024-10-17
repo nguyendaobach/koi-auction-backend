@@ -18,6 +18,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -49,6 +52,9 @@ public class AuctionService {
 
     @Autowired
     private KoiMediaRepository koiMediaRepository;
+
+    @Autowired
+    private EmitterService emitterService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -338,4 +344,53 @@ public class AuctionService {
         // Trả về đối tượng Page chứa danh sách KoiFishAuctionAll
         return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
     }
+
+    public void closeAuctionv2(Auction auction) {
+        // Set auction status to closed
+        auction.setStatus("Closed");
+
+        // Determine the winner of the auction
+        int winnerID = determineWinner(auction);
+        long finalPrice = bidService.getCurrentPrice(auction.getId());
+
+        // Update auction with final price and winner
+        auction.setFinalPrice(finalPrice);
+        auction.setWinnerID(winnerID);
+
+        // Notify all auction participants
+        List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
+
+        for (AuctionParticipant participant : participants) {
+            int participantId = participant.getUserID().getId();
+            SseEmitter emitter = emitterService.createEmitter(participantId); // Assuming you store SSE emitters per user
+
+            if (emitter != null) {
+                try {
+                    if (participantId == winnerID) {
+                        // Notify the winner
+                        emitter.send(SseEmitter.event()
+                                .name("auction-winner")
+                                .data("Congratulations! You have won the auction with a final bid of " + finalPrice));
+                    } else {
+                        // Notify the non-winners
+                        emitter.send(SseEmitter.event()
+                                .name("auction-ended")
+                                .data("The auction has ended. The winning bid was " + finalPrice + ". Better luck next time!"));
+                    }
+                    emitter.complete();
+                } catch (IOException e) {
+                    emitter.completeWithError(e); // Handle emitter error
+                }
+            }
+        }
+
+        // Handle other auction closure tasks
+        processEndOfAuctionTasks(auction);
+
+        // Save the updated auction status
+        auctionRepository.save(auction);
+    }
+
+
+
 }
