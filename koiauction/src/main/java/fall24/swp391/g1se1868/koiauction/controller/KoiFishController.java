@@ -29,11 +29,6 @@ public class KoiFishController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/get-all")
-    List<KoiFishUser> getAll(){
-        return koiFishService.getAll();
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<KoiFishDetailDTO> getKoiFishById(@PathVariable Integer id) {
