@@ -63,8 +63,6 @@ public class AuctionController {
     }
 
 
-
-
     @GetMapping("/admin")
     public ResponseEntity<Map<String, Object>> getAuctionDetails(
             @RequestParam(defaultValue = "0") int page,
