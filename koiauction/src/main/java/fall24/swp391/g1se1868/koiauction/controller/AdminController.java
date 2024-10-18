@@ -1,5 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
+import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import fall24.swp391.g1se1868.koiauction.model.Wallet;
 import fall24.swp391.g1se1868.koiauction.repository.TransactionRepository;
@@ -7,6 +8,8 @@ import fall24.swp391.g1se1868.koiauction.repository.WalletRepository;
 import fall24.swp391.g1se1868.koiauction.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -37,8 +40,16 @@ public class AdminController {
 
 
     @GetMapping("/transaction/{id}")
-    public Transaction getTransactionById(@PathVariable Integer id) {
-        return transactionService.getTransactionById(id);
+    public ResponseEntity<?> getTransactionById(@PathVariable Integer id) {
+        System.out.println("Requested transaction ID: " + id); // Ghi lại ID được yêu cầu
+        Transaction transaction = transactionService.getTransactionById(id);
+
+        if (transaction != null) {
+            return ResponseEntity.ok(transaction);
+        }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new StringResponse("Giao dịch không tìm thấy"));
+
     }
 
     @GetMapping("/transaction/by-amount")
