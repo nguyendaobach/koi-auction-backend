@@ -6,6 +6,7 @@ import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
+import fall24.swp391.g1se1868.koiauction.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,9 @@ public class SecurityController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private WalletService walletService;
 
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
@@ -115,11 +119,15 @@ public class SecurityController {
                 newUser.setPassword(password); // Không cần mã hóa lại
                 newUser.setRole("User");
                 newUser.setStatus("Active");
+                newUser.setCreateAt(Instant.now());
+                newUser.setUpdateAt(Instant.now());
+                newUser.setPhoneNumber("");
+                newUser.setAddress("");
 
-                // Lưu người dùng mới vào cơ sở dữ liệu
-                userRepository.save(newUser);
-
-                // Tạo token cho người dùng mới
+                if (userRepository.save(newUser) != null) {
+                    walletService.addUserWallet(newUser.getId());
+                    // Tạo token cho người dùng mới
+                }
                 String token = jwtService.generateToken(newUser.getUserName(), newUser.getId());
                 LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.");
                 return ResponseEntity.ok(response);
