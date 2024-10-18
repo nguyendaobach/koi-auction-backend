@@ -20,7 +20,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -312,7 +311,22 @@ public class AuctionService {
                 // Trả về đối tượng Page chứa danh sách DTO
                 return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
             }
+    public List<KoiAuctionResponseDTO> getAuctionDetails(List<Auction> auctionPage) {
+        List<KoiAuctionResponseDTO> responseList = new ArrayList<>();
 
+        for (Auction auction : auctionPage) {
+            List<Integer> koiFishIds = auctionKoiRepository.findKoiFishByAuctionId(auction.getId())
+                    .stream()
+                    .map(KoiFish::getId)
+                    .collect(Collectors.toList());
+
+            KoiAuctionResponseDTO response = new KoiAuctionResponseDTO(auction, koiFishIds);
+            responseList.add(response);
+        }
+
+        // Trả về đối tượng Page chứa danh sách DTO
+        return responseList;
+    }
 
     public Page<KoiFishAuctionAll> getAllAuction(Page<Auction> auctionPage) {
         List<KoiFishAuctionAll> responseList = new ArrayList<>();

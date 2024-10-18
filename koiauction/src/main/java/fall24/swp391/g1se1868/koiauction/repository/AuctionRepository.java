@@ -19,7 +19,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     @Query("SELECT a FROM Auction a WHERE a.startTime <= CURRENT_TIMESTAMP AND a.endTime > CURRENT_TIMESTAMP AND a.status = 'Ongoing'")
     Page<Auction> findOngoingAuctions(Pageable pageable);
 
-    @Query("SELECT a FROM Auction a WHERE a.startTime > CURRENT_TIMESTAMP AND a.status = 'Pending'")
+    @Query("SELECT a FROM Auction a WHERE a.status = 'Pending'")
     Page<Auction> getAllAuctionRequest(Pageable pageable);
 
 
@@ -57,5 +57,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
 
 
     @Query("SELECT a FROM Auction a")
-    Page<Auction> findAllAdmin(Pageable pageable);
+    List<Auction> findAllAdmin();
+
+
 }

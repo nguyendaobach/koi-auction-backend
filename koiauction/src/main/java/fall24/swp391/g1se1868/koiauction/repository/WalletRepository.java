@@ -8,8 +8,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface WalletRepository extends JpaRepository<Wallet, Long> {
+public interface WalletRepository extends JpaRepository<Wallet, Integer> {
     @Query("SELECT w FROM Wallet w WHERE w.userID = ?1")
     Optional<Wallet> findbyuserid(Integer userId);
 
+    @Query("SELECT SUM(w.amount) FROM Wallet w")
+    Long getTotalBalance();
 }
