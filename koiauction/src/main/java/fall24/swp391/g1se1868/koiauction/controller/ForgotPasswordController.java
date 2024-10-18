@@ -71,10 +71,10 @@ public class ForgotPasswordController {
         return ResponseEntity.ok(new StringResponse("Email sent successfully."));
     }
 
-    @PostMapping("/verifyAndChangePassword/")
+    @PostMapping("/verifyAndChangePassword")
     public ResponseEntity<StringResponse> verifyAndChangePassword(
-            @RequestParam Integer otp,
-            @RequestParam String email,
+            @RequestBody Integer otp,
+            @RequestBody String email,
             @RequestBody ChangePassword changePassword) {
 
         User user = userRepository.findByEmail(email);
