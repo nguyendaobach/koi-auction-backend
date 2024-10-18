@@ -7,16 +7,19 @@ import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
+import fall24.swp391.g1se1868.koiauction.service.BidService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +35,9 @@ public class AuctionController {
 
     @Autowired
     private AuctionRepository auctionRepository;
+
+    @Autowired
+    private BidService bidService;
 
 
 
