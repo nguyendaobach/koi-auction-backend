@@ -1,5 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
 
@@ -14,7 +15,7 @@ public class Transaction {
     @Column(name = "TransactionID", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "WalletID")
     private Wallet walletID;
 
@@ -34,13 +35,6 @@ public class Transaction {
     @Column(name="TransactionType")
     private String transactionType;
 
-    public String getTransactionType() {
-        return transactionType;
-    }
-
-    public void setTransactionType(String transactionType) {
-        this.transactionType = transactionType;
-    }
 
     public Integer getId() {
         return id;
@@ -90,4 +84,11 @@ public class Transaction {
         this.status = status;
     }
 
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
+    }
 }

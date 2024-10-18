@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auction/staff/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/staff/**").hasRole("STAFF")
                         .requestMatchers("/api/auction/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin").hasRole("ADMIN")
                         .requestMatchers("/api/user").hasRole("USER")
                         .requestMatchers("/api/auction/{}").permitAll()
                         .requestMatchers("/api/auction/filter").permitAll()
