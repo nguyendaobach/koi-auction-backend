@@ -7,6 +7,7 @@ import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiInfo;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
 import fall24.swp391.g1se1868.koiauction.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -54,7 +55,7 @@ public class AuctionService {
     private KoiMediaRepository koiMediaRepository;
 
     @Autowired
-    private EmitterService emitterService;
+    AuctionSchedulerService auctionSchedulerService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -123,8 +124,20 @@ public class AuctionService {
         auction.setAuctionFee(500000L);
         auction.setBidStep(request.getBidStep());
         auction.setStatus("Pending");
-
+        auction.setCreateAt(Instant.now());
         Auction savedAuction = auctionRepository.save(auction);
+        if(savedAuction != null) {
+            try {
+                Instant startTime = auction.getStartTime();
+                Instant endTime = auction.getEndTime();
+                auctionSchedulerService.scheduleStartAuction(auction.getId(), startTime);
+                auctionSchedulerService.scheduleCloseAuction(auction.getId(), endTime);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+
+        }
 
         for (Integer koiId : request.getKoiIds()) {
             AuctionKoi auctionKoi = new AuctionKoi();
@@ -157,6 +170,9 @@ public class AuctionService {
     }
     public Auction rejectAuction(Integer auctionId, Integer UserID) {
         Auction auction = auctionRepository.getById(auctionId);
+        if(auction==null){
+            throw  new EntityNotFoundException("Auction not found");
+        }
         if (!auction.getStatus().equals("Pending")) {
             throw new IllegalArgumentException("Auction must be in Pending status to be approved.");
         }
@@ -211,10 +227,12 @@ public class AuctionService {
 
     public void closeAuction(Auction auction) {
         auction.setStatus("Closed");
-        int winnerID = determineWinner(auction);
+        if(determineWinner(auction)!=null) {
+            int winnerID = determineWinner(auction);
+            auction.setWinnerID(winnerID);
+        }
         long finalPrice = bidService.getCurrentPrice(auction.getId());
         auction.setFinalPrice(finalPrice);
-        auction.setWinnerID(winnerID);
         messagingTemplate.convertAndSend("/topic/auction/" + auction.getId() + "/status", auction);
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
@@ -342,52 +360,22 @@ public class AuctionService {
         return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
     }
 
-    public void closeAuctionv2(Auction auction) {
-        // Set auction status to closed
-        auction.setStatus("Closed");
-
-        // Determine the winner of the auction
-        int winnerID = determineWinner(auction);
-        long finalPrice = bidService.getCurrentPrice(auction.getId());
-
-        // Update auction with final price and winner
-        auction.setFinalPrice(finalPrice);
-        auction.setWinnerID(winnerID);
-
-        // Notify all auction participants
-        List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
-
-        for (AuctionParticipant participant : participants) {
-            int participantId = participant.getUserID().getId();
-            SseEmitter emitter = emitterService.createEmitter(participantId); // Assuming you store SSE emitters per user
-
-            if (emitter != null) {
-                try {
-                    if (participantId == winnerID) {
-                        // Notify the winner
-                        emitter.send(SseEmitter.event()
-                                .name("auction-winner")
-                                .data("Congratulations! You have won the auction with a final bid of " + finalPrice));
-                    } else {
-                        // Notify the non-winners
-                        emitter.send(SseEmitter.event()
-                                .name("auction-ended")
-                                .data("The auction has ended. The winning bid was " + finalPrice + ". Better luck next time!"));
-                    }
-                    emitter.complete();
-                } catch (IOException e) {
-                    emitter.completeWithError(e); // Handle emitter error
-                }
-            }
+    @Transactional
+    public void startAuction(Integer auctionId) {
+        Auction auction = auctionRepository.findById(auctionId).orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+        if (auction.getStatus().equals("Scheduled")) {
+            auction.setStatus("Ongoing");
+            auctionRepository.save(auction);
+            System.out.println("Auction " + auctionId + " started.");
+        }else{
+            rejectAuction(auctionId,-1);
+            System.out.println("Auction " + auctionId + " didn't approved.");
         }
-
-        // Handle other auction closure tasks
-        processEndOfAuctionTasks(auction);
-
-        // Save the updated auction status
-        auctionRepository.save(auction);
     }
 
+    public static void main(String[] args) {
+        System.out.println(Instant.now());
+    }
 
 
 }
