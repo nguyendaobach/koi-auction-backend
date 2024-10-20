@@ -18,6 +18,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -51,7 +54,7 @@ public class AuctionService {
     private KoiMediaRepository koiMediaRepository;
 
     @Autowired
-    private KoiFishRepository koiFishRepository;
+    private EmitterService emitterService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -124,33 +127,16 @@ public class AuctionService {
         Auction savedAuction = auctionRepository.save(auction);
 
         for (Integer koiId : request.getKoiIds()) {
-            // Lấy cá Koi từ cơ sở dữ liệu
-            Optional<KoiFish> koiFishOptional = koiFishRepository.findById(koiId);
+            AuctionKoi auctionKoi = new AuctionKoi();
+            AuctionKoiId auctionKoiId = new AuctionKoiId();
 
-            // Kiểm tra xem cá Koi có tồn tại không và trạng thái của nó
-            if (koiFishOptional.isPresent()) {
-                KoiFish koiFish = koiFishOptional.get();
+            auctionKoiId.setAuctionID(savedAuction.getId());
+            auctionKoiId.setKoiID(koiId);
 
-                if (!"Active".equalsIgnoreCase(koiFish.getStatus())) {
-                    // Trả về cho frontend cá Koi đã được bán
-                    return "Koi have sold";
-                }
-
-                // Tạo và lưu đối tượng AuctionKoi nếu cá Koi đang hoạt động
-                AuctionKoi auctionKoi = new AuctionKoi();
-                AuctionKoiId auctionKoiId = new AuctionKoiId();
-
-                auctionKoiId.setAuctionID(savedAuction.getId());
-                auctionKoiId.setKoiID(koiId);
-
-                auctionKoi.setId(auctionKoiId);
-                auctionKoi.setAuctionID(savedAuction);
-                auctionKoi.setKoiID(koiFish); // Sử dụng cá Koi đã lấy từ cơ sở dữ liệu
-                auctionKoiRepository.save(auctionKoi);
-            } else {
-                // Trả về cho frontend nếu cá Koi không tồn tại
-                return "Koi not available";
-            }
+            auctionKoi.setId(auctionKoiId);
+            auctionKoi.setAuctionID(savedAuction);
+            auctionKoi.setKoiID(new KoiFish(koiId));
+            auctionKoiRepository.save(auctionKoi);
         }
 
         return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
@@ -325,91 +311,98 @@ public class AuctionService {
         return responseList;
     }
 
-//    public Page<KoiFishAuctionAll> getAllAuction(Page<Auction> auctionPage) {
-//        List<KoiFishAuctionAll> responseList = new ArrayList<>();
-//
-//        for (Auction auction : auctionPage.getContent()) {
-//            // Lấy danh sách cá Koi liên quan đến phiên đấu giá
-//            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
-//
-//            // Nếu không có KoiFish nào thì bỏ qua phiên đấu giá này
-//            if (koiFishList.isEmpty()) {
-//                continue; // Hoặc bạn có thể xử lý theo cách khác
-//            }
-//
-//            // Tạo danh sách thông tin cá Koi
-//            List<KoiInfo> koiInfoList = new ArrayList<>();
-//            for (KoiFish koiFish : koiFishList) {
-//                // Lấy hình ảnh cho cá Koi
-//                KoiMedia headerImageMedia = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image").orElse(null);
-//                String headerImageUrl = headerImageMedia != null ? headerImageMedia.getUrl() : null;
-//
-//                // Tạo đối tượng KoiInfo và thêm vào danh sách
-//                KoiInfo koiInfo = new KoiInfo(
-//                        koiFish.getId(), // ID cá Koi
-//                        koiFish.getKoiName(), // Tên cá Koi
-//                        headerImageUrl // Hình ảnh cá Koi
-//                );
-//                koiInfoList.add(koiInfo);
-//            }
-//
-//            // Tạo đối tượng KoiFishAuctionAll với danh sách thông tin cá Koi
-//            KoiFishAuctionAll response = new KoiFishAuctionAll(
-//                    auction.getId(), // ID phiên đấu giá
-//                    auction.getStartingPrice(), // Danh sách thông tin cá Koi
-//                    auction.getStatus(), // Giá khởi điểm
-//                    auction.getFinalPrice(), // Giá mua đứt
-//                    auction.getStartTime(), // Giá cuối cùng
-//                    auction.getEndTime(),
-//                    auction.getAuctionMethod(),// Bước giá
-//                    koiInfoList // Thời gian kết thúc
-//            );
-//
-//            responseList.add(response); // Thêm đối tượng vào danh sách
-//        }
-//        // Trả về đối tượng Page chứa danh sách KoiFishAuctionAll
-//        return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
-//    }
-public Page<KoiFishAuctionAll> getAllAuction(Page<Auction> auctionPage) {
-    List<KoiFishAuctionAll> responseList = new ArrayList<>();
+    public Page<KoiFishAuctionAll> getAllAuction(Page<Auction> auctionPage) {
+        List<KoiFishAuctionAll> responseList = new ArrayList<>();
 
-    for (Auction auction : auctionPage.getContent()) {
-        // Lấy danh sách cá Koi liên quan đến phiên đấu giá
-        List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+        for (Auction auction : auctionPage.getContent()) {
+            // Lấy danh sách cá Koi liên quan đến phiên đấu giá
+            List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
 
-        // Tạo danh sách thông tin cá Koi
-        List<KoiInfo> koiInfoList = new ArrayList<>();
-        for (KoiFish koiFish : koiFishList) {
-            // Lấy hình ảnh cho cá Koi
-            KoiMedia headerImageMedia = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image").orElse(null);
-            String headerImageUrl = headerImageMedia != null ? headerImageMedia.getUrl() : null;
+            // Nếu không có KoiFish nào thì bỏ qua phiên đấu giá này
+            if (koiFishList.isEmpty()) {
+                continue; // Hoặc bạn có thể xử lý theo cách khác
+            }
 
-            // Tạo đối tượng KoiInfo và thêm vào danh sách
-            KoiInfo koiInfo = new KoiInfo(
-                    koiFish.getId(), // ID cá Koi
-                    koiFish.getKoiName(), // Tên cá Koi
-                    headerImageUrl // Hình ảnh cá Koi
+            // Tạo danh sách thông tin cá Koi
+            List<KoiInfo> koiInfoList = new ArrayList<>();
+            for (KoiFish koiFish : koiFishList) {
+                // Lấy hình ảnh cho cá Koi
+                KoiMedia headerImageMedia = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image").orElse(null);
+                String headerImageUrl = headerImageMedia != null ? headerImageMedia.getUrl() : null;
+
+                // Tạo đối tượng KoiInfo và thêm vào danh sách
+                KoiInfo koiInfo = new KoiInfo(
+                        koiFish.getId(), // ID cá Koi
+                        koiFish.getKoiName(), // Tên cá Koi
+                        headerImageUrl // Hình ảnh cá Koi
+                );
+                koiInfoList.add(koiInfo);
+            }
+
+            // Tạo đối tượng KoiFishAuctionAll với danh sách thông tin cá Koi
+            KoiFishAuctionAll response = new KoiFishAuctionAll(
+                    auction.getId(), // ID phiên đấu giá
+                    auction.getStartingPrice(), // Danh sách thông tin cá Koi
+                    auction.getStatus(), // Giá khởi điểm
+                    auction.getFinalPrice(), // Giá mua đứt
+                    auction.getStartTime(), // Giá cuối cùng
+                    auction.getEndTime(),
+                    auction.getAuctionMethod(),// Bước giá
+                    koiInfoList // Thời gian kết thúc
             );
-            koiInfoList.add(koiInfo);
+
+            responseList.add(response); // Thêm đối tượng vào danh sách
         }
-
-        // Tạo đối tượng KoiFishAuctionAll với danh sách thông tin cá Koi (có thể là rỗng)
-        KoiFishAuctionAll response = new KoiFishAuctionAll(
-                auction.getId(), // ID phiên đấu giá
-                auction.getStartingPrice(), // Giá khởi điểm
-                auction.getStatus(), // Trạng thái
-                auction.getFinalPrice(), // Giá mua đứt
-                auction.getStartTime(), // Thời gian bắt đầu
-                auction.getEndTime(), // Thời gian kết thúc
-                auction.getAuctionMethod(), // Phương thức đấu giá
-                koiInfoList // Danh sách thông tin cá Koi (có thể là rỗng)
-        );
-
-        responseList.add(response); // Thêm đối tượng vào danh sách
+        // Trả về đối tượng Page chứa danh sách KoiFishAuctionAll
+        return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
     }
 
-    // Trả về đối tượng Page chứa danh sách KoiFishAuctionAll
-    return new PageImpl<>(responseList, auctionPage.getPageable(), auctionPage.getTotalElements());
-}
+    public void closeAuctionv2(Auction auction) {
+        // Set auction status to closed
+        auction.setStatus("Closed");
+
+        // Determine the winner of the auction
+        int winnerID = determineWinner(auction);
+        long finalPrice = bidService.getCurrentPrice(auction.getId());
+
+        // Update auction with final price and winner
+        auction.setFinalPrice(finalPrice);
+        auction.setWinnerID(winnerID);
+
+        // Notify all auction participants
+        List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
+
+        for (AuctionParticipant participant : participants) {
+            int participantId = participant.getUserID().getId();
+            SseEmitter emitter = emitterService.createEmitter(participantId); // Assuming you store SSE emitters per user
+
+            if (emitter != null) {
+                try {
+                    if (participantId == winnerID) {
+                        // Notify the winner
+                        emitter.send(SseEmitter.event()
+                                .name("auction-winner")
+                                .data("Congratulations! You have won the auction with a final bid of " + finalPrice));
+                    } else {
+                        // Notify the non-winners
+                        emitter.send(SseEmitter.event()
+                                .name("auction-ended")
+                                .data("The auction has ended. The winning bid was " + finalPrice + ". Better luck next time!"));
+                    }
+                    emitter.complete();
+                } catch (IOException e) {
+                    emitter.completeWithError(e); // Handle emitter error
+                }
+            }
+        }
+
+        // Handle other auction closure tasks
+        processEndOfAuctionTasks(auction);
+
+        // Save the updated auction status
+        auctionRepository.save(auction);
+    }
+
+
 
 }
