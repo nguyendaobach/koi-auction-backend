@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.model.auction.AuctionWithMedia;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiAuctionResponseDTO;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
+import fall24.swp391.g1se1868.koiauction.service.AuctionSchedulerService;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
 import fall24.swp391.g1se1868.koiauction.service.BidService;
@@ -20,7 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +39,7 @@ public class AuctionController {
     private AuctionRepository auctionRepository;
 
     @Autowired
-    private BidService bidService;
+    private AuctionSchedulerService auctionSchedulerService;
 
 
 
@@ -187,7 +189,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
-    @PostMapping("/breeder")
+    @PostMapping("/breeder/add-auction")
     public ResponseEntity<StringResponse> addAuction(AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -195,6 +197,14 @@ public class AuctionController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
+        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null ||
+                auctionRequest.getBidStep() < 10000 || auctionRequest.getStartingPrice() < 10000 || auctionRequest.getBuyoutPrice() < 1000) {
+            return ResponseEntity.badRequest().body(new StringResponse("Price values must be greater than 10000 and not null"));
+        }
+        if (auctionRequest.getStartTime() == null || auctionRequest.getEndTime() == null ||
+                auctionRequest.getStartTime().isBefore(Instant.now()) || auctionRequest.getEndTime().isBefore(Instant.now())) {
+            return ResponseEntity.badRequest().body(new StringResponse("Time invalid"));
+        }
         return ResponseEntity.ok(new StringResponse(auctionService.addAuction(auctionRequest, userId)));
     }
     @DeleteMapping("/breeder")
