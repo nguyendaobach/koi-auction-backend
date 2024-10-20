@@ -238,7 +238,12 @@ public class KoiFishService {
     }
 
 
-
-
-
+    public String delete(Integer id) {
+        if(koiFishRepository.findById(id)!=null){
+            koiFishRepository.delete(id);
+            return "Koi Fish removed succesfully";
+        }else {
+            return "Koi Id not found";
+        }
+    }
 }

@@ -106,4 +106,9 @@ public class KoiFishController {
         }
     }
 
+    @DeleteMapping()
+    public String delete(@RequestParam Integer id){
+        return koiFishService.delete(id);
+    }
+
 }

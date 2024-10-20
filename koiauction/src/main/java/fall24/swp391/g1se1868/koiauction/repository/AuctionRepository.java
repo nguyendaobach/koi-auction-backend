@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import fall24.swp391.g1se1868.koiauction.model.Auction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -59,5 +60,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     @Query("SELECT a FROM Auction a")
     List<Auction> findAllAdmin();
 
-
+    @Modifying
+    @Transactional
+    @Query("UPDATE Auction k SET k.status = 'Cancelled' WHERE k.id = :id")
+    String delete(@Param("id") Integer id);
 }

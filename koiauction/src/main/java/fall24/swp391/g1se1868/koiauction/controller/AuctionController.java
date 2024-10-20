@@ -207,6 +207,10 @@ public class AuctionController {
         }
         return ResponseEntity.ok(new StringResponse(auctionService.addAuction(auctionRequest, userId)));
     }
+    @DeleteMapping("/breeder")
+    public String DeleteAuction(@RequestParam Integer id){
+        return auctionService.deleteAuction(id);
+    }
 
     @GetMapping("/staff/get-auction-request")
     public ResponseEntity<Page<KoiAuctionResponseDTO>> getAllAuctionRequest(
