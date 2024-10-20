@@ -41,12 +41,21 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
             @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String OrderStartDate) { // Mô tả
+            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
 
         Pageable pageable = PageRequest.of(page, size);
 
-        // Lấy danh sách đấu giá theo điều kiện status, method và desc
-        Page<Auction> auctionPage = auctionRepository.findAll(status, method, OrderStartDate, pageable);
+        Page<Auction> auctionPage = null;
+        if (desc.equals("DESC")) {
+            auctionPage = auctionRepository.findAllDesc(status, method, pageable);
+        } else {
+            auctionPage = auctionRepository.findAllAsc(status, method, pageable);
+        }
+
+        // Log thông tin về phiên đấu giá
+        System.out.println("Request page: " + page + ", size: " + size);
+        System.out.println("Total elements: " + auctionPage.getTotalElements());
+        System.out.println("Auctions on page " + page + ": " + auctionPage.getContent().size());
 
         // Gọi service để lấy thông tin chi tiết
         Page<KoiFishAuctionAll> auctionDetails = auctionService.getAllAuction(auctionPage);

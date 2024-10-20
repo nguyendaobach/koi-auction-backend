@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -35,9 +36,13 @@ public class KoiFishController {
         return koiFishService.getById(id);
     }
 
-    @GetMapping("/get-koi-active")
+    @GetMapping("/koi-active")
     public List<KoiFishUser> getKoiActive(){
         return koiFishService.getKoiActive();
+    }
+    @GetMapping()
+    public List<KoiFishUser> getAll(){
+        return koiFishService.getAll();
     }
 
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -54,6 +59,7 @@ public class KoiFishController {
             @RequestParam Integer countryID,
             @RequestParam Integer koiTypeID
     ) {
+        List<String> allowedFormats = Arrays.asList("image/png", "image/jpeg", "image/jpg", "image/gif", "image/bmp", "image/webp", "image/tiff");
         if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
             return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
         }
@@ -72,8 +78,8 @@ public class KoiFishController {
             if (imageHeader.isEmpty()) {
                 return ResponseEntity.badRequest().body("Header image is required.");
             }
-            if (!imageHeader.getContentType().toLowerCase().equals("image/png")) {
-                return ResponseEntity.badRequest().body("Header image must be in PNG format.");
+            if (!allowedFormats.contains(imageHeader.getContentType().toLowerCase())) {
+                return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
             }
 
             if (video.isEmpty()) {
@@ -88,8 +94,8 @@ public class KoiFishController {
                     return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
                 }
                 String contentType = file.getContentType();
-                if (contentType == null || !contentType.toLowerCase().equals("image/png")) {
-                    return ResponseEntity.badRequest().body("Each image detail must be in PNG format.");
+                if (!allowedFormats.contains(imageHeader.getContentType().toLowerCase())) {
+                    return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
                 }
             }
 
