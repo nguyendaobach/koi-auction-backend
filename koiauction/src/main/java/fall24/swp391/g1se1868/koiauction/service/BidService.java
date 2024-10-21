@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
-import fall24.swp391.g1se1868.koiauction.model.Auction;
-import fall24.swp391.g1se1868.koiauction.model.Bid;
-import fall24.swp391.g1se1868.koiauction.model.BidId;
-import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionParticipantRepository;
 import fall24.swp391.g1se1868.koiauction.repository.BidRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,8 +78,16 @@ public class BidService {
     }
 
     public void notifyBidUpdates(Integer auctionId) {
-        List<Bid> updatedBids = getAllBidsForAuction(auctionId);
-        messagingTemplate.convertAndSend("/topic/auction/" + auctionId, updatedBids);
+        // Lấy danh sách tất cả các Bid của phiên đấu giá, bao gồm thông tin tên của người đấu giá
+        List<BidResponseDTO> updatedBids = bidRepository.findBidsWithUserDetails(auctionId);
+
+        // Gửi thông tin cập nhật qua WebSocket cho tất cả người tham gia phiên đấu giá
+        messagingTemplate.convertAndSend("/topic/auction/" + auctionId + "/bids", updatedBids);
+    }
+
+
+    public List<BidResponseDTO> getBidsWithUserDetails(Integer auctionId) {
+        return bidRepository.findBidsWithUserDetails(auctionId);
     }
 }
 
