@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import fall24.swp391.g1se1868.koiauction.model.Wallet;
 import fall24.swp391.g1se1868.koiauction.repository.TransactionRepository;
 import fall24.swp391.g1se1868.koiauction.repository.WalletRepository;
+import fall24.swp391.g1se1868.koiauction.service.StatisticsService;
 import fall24.swp391.g1se1868.koiauction.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -30,6 +32,10 @@ public class AdminController {
 
     @Autowired
     private WalletRepository walletRepository;
+
+    @Autowired
+    private StatisticsService statisticsService;
+
 
     @GetMapping("/transaction")
     public List<Transaction> getAllTransactions() {
@@ -87,4 +93,17 @@ public class AdminController {
     public Optional<Wallet> walletss(@PathVariable Integer id){
         return walletRepository.findById(id);
     }
+    @GetMapping("/statistics/users-per-month")
+    public ResponseEntity<Map<String, Integer>> getUsersPerMonth() {
+        Map<String, Integer> usersPerMonth = statisticsService.getUsersPerMonth();
+        return ResponseEntity.ok(usersPerMonth);
+    }
+
+
+    @GetMapping("/statistics/transactions-per-month")
+    public ResponseEntity<Map<String, Integer>> getTransactionsPerMonth() {
+        Map<String, Integer> transactionsPerMonth = statisticsService.getTransactionsPerMonth();
+        return ResponseEntity.ok(transactionsPerMonth);
+    }
+
 }

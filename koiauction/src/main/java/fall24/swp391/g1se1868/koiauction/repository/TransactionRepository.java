@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.repository;
 import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -18,5 +19,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     // Tìm giao dịch giữa hai mốc thời gian
     List<Transaction> findByTimeBetween(Instant startTime, Instant endTime);
     List<Transaction> findByTransactionType(String transactionType);
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE MONTH(t.time) = :month AND YEAR(t.time) = :year")
+    int countTransactionsByMonth(@Param("month") int month, @Param("year") int year);
+
 
 }
