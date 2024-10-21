@@ -61,7 +61,6 @@ public class AuctionService {
                 .orElseThrow(() -> new IllegalArgumentException("Auction not found with ID: " + auctionId));
     }
 
-
     public List<AuctionWithMedia> getAuctionWithKoiByID(Integer id) {
         Optional<Auction> auctionOptional = auctionRepository.findById(id);
         List<Auction> auctions = new ArrayList<>();
@@ -141,16 +140,13 @@ public class AuctionService {
         for (Integer koiId : request.getKoiIds()) {
             AuctionKoi auctionKoi = new AuctionKoi();
             AuctionKoiId auctionKoiId = new AuctionKoiId();
-
             auctionKoiId.setAuctionID(savedAuction.getId());
             auctionKoiId.setKoiID(koiId);
-
             auctionKoi.setId(auctionKoiId);
             auctionKoi.setAuctionID(savedAuction);
             auctionKoi.setKoiID(new KoiFish(koiId));
             auctionKoiRepository.save(auctionKoi);
         }
-
         return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
     }
     public Page<KoiAuctionResponseDTO> getAllActionRequest(Pageable pageable) {
@@ -225,17 +221,45 @@ public class AuctionService {
     }
 
     public void closeAuction(Auction auction) {
+        // Đặt trạng thái đấu giá thành 'Closed'
         auction.setStatus("Closed");
-        if(determineWinner(auction)!=null) {
-            int winnerID = determineWinner(auction);
+
+        // Xác định người chiến thắng
+        Integer winnerID = determineWinner(auction);
+        if (winnerID != null) {
             auction.setWinnerID(winnerID);
+
+            // Lấy giá cuối cùng
+            long finalPrice = bidService.getCurrentPrice(auction.getId());
+            auction.setFinalPrice(finalPrice);
+
+            // Thông báo tới người thắng (thêm 'type': 'winner')
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("winner", winnerID, "Chúc mừng! Bạn đã chiến thắng cuộc đấu giá với giá " + finalPrice + "!"));
         }
-        long finalPrice = bidService.getCurrentPrice(auction.getId());
-        auction.setFinalPrice(finalPrice);
-        messagingTemplate.convertAndSend("/topic/auction/" + auction.getId() + "/status", auction);
+
+        // Gửi thông báo tới tất cả những người tham gia rằng đấu giá đã kết thúc
+        List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
+        for (Bid bid : bids) {
+            int bidderID = bid.getBidderID().getId();
+            if (bidderID != winnerID) {
+                // Thông báo cho người không thắng cuộc (thêm 'type': 'loser')
+                messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                        new AuctionNotification("loser", bidderID, "Cuộc đấu giá đã kết thúc. Bạn đã không thắng cuộc đấu giá này."));
+            }
+        }
+
+        // Gửi thông báo về trạng thái của đấu giá cho tất cả mọi người (thêm 'type': 'status')
+        messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                new AuctionNotification("status", null, "Đấu giá đã kết thúc."));
+
+        // Thực hiện các tác vụ kết thúc cuộc đấu giá
         processEndOfAuctionTasks(auction);
+
+        // Lưu lại trạng thái đấu giá đã cập nhật
         auctionRepository.save(auction);
     }
+
     private List<AuctionWithMedia> convertToAuctionWithKoiAll(List<Auction> auctions) {
         List<AuctionWithMedia> auctionWithMediaList = new ArrayList<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

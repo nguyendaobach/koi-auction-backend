@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.Bid;
 import fall24.swp391.g1se1868.koiauction.model.BidRequest;
+import fall24.swp391.g1se1868.koiauction.model.BidResponseDTO;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import fall24.swp391.g1se1868.koiauction.service.BidService;
@@ -58,8 +59,8 @@ public class BidController {
     }
 
     @GetMapping("/get-all")
-    public List<Bid> getAllBid(@RequestParam int auctionId) {
-        return bidService.getAllBidsForAuction(auctionId);
+    public List<BidResponseDTO> getAllBid(@RequestParam int auctionId) {
+        return bidService.getBidsWithUserDetails(auctionId);
     }
 
 }

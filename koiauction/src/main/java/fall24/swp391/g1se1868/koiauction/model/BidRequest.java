@@ -4,7 +4,6 @@ public class BidRequest {
     private Integer auctionId;
     private Long amount;
 
-    // Getters and setters
     public Integer getAuctionId() {
         return auctionId;
     }

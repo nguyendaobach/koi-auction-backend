@@ -149,7 +149,6 @@ public class WalletController {
             if (isSuccess && userId != null) {
                 walletService.addFunds(Integer.parseInt(userId), Long.parseLong(vnp_Amount) / 100);
             }
-
             String redirectUrl;
             if (callbackUrl != null && !callbackUrl.isEmpty()) {
                 if (!callbackUrl.startsWith("http://") && !callbackUrl.startsWith("https://")) {
@@ -169,8 +168,13 @@ public class WalletController {
             }
             response.sendRedirect(redirectUrl);
         } catch (Exception e) {
-            // Log lỗi
-            response.sendRedirect("/error");
+            String redirectUrl;
+            redirectUrl = UriComponentsBuilder.fromUriString("/api/payment/result")
+                    .queryParam("success", false)
+                    .queryParam("txnRef", vnp_TxnRef)
+                    .queryParam("amount", Long.parseLong(vnp_Amount) / 100)
+                    .toUriString();
+            response.sendRedirect(redirectUrl);
         }
     }
 
