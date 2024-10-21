@@ -70,7 +70,7 @@ public class KoiFishController {
         // Nếu không có người dùng xác thực hoặc không phải ROLE_BREEDER, trả về tất cả cá Koi
         return koiFishService.getAll();
     }
-    
+
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> customizeKoiFish(
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
