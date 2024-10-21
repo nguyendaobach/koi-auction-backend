@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
-import fall24.swp391.g1se1868.koiauction.model.Auction;
-import fall24.swp391.g1se1868.koiauction.model.Bid;
-import fall24.swp391.g1se1868.koiauction.model.BidId;
-import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionParticipantRepository;
 import fall24.swp391.g1se1868.koiauction.repository.BidRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +62,7 @@ public class BidService {
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
         bid.getId().setTime(now.toInstant());
         Bid savedBid = bidRepository.save(bid);
-        notifyBidUpdates(auction.getId());
+        notifyBidUpdates(auction.getId(), savedBid);
         if (bid.getAmount().equals(auction.getBuyoutPrice())) {
             auctionService.closeAuction(auction);
         }
@@ -80,9 +77,20 @@ public class BidService {
         return bidRepository.findByAuctionID(auctionId);
     }
 
-    public void notifyBidUpdates(Integer auctionId) {
-        List<Bid> updatedBids = getAllBidsForAuction(auctionId);
-        messagingTemplate.convertAndSend("/topic/auction/" + auctionId, updatedBids);
+    public void notifyBidUpdates(Integer auctionId, Bid bid) {
+        // Tạo đối tượng BidResponseDTO
+        BidResponseDTO bidResponse = new BidResponseDTO();
+        bidResponse.setAuctionId(auctionId);
+        bidResponse.setBidderId(bid.getBidderID().getId());
+        bidResponse.setBidTime(bid.getId().getTime());
+        bidResponse.setAmount(bid.getAmount());
+        bidResponse.setFullName(bid.getBidderID().getFullName());
+        messagingTemplate.convertAndSend("/topic/auction/" + auctionId + "/bids", bidResponse);
+    }
+
+
+    public List<BidResponseDTO> getBidsWithUserDetails(Integer auctionId) {
+        return bidRepository.findBidsWithUserDetails(auctionId);
     }
 }
 
