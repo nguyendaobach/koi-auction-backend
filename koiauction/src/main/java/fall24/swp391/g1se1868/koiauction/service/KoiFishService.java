@@ -258,7 +258,7 @@ public class KoiFishService {
                     String fullName = koiFish.getUserID().getFullName();
                     String countryName = koiFish.getCountryID().getCountry();
                     String typeName = koiFish.getKoiTypeID().getTypeName();
-                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image");
 
                     // Trả về đối tượng KoiFishUser với thông tin cá Koi và hình ảnh
                     return new KoiFishUser(
