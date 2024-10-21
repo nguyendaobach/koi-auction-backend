@@ -18,6 +18,9 @@ public class BidResponseDTO {
         this.fullName = fullName;
     }
 
+    public BidResponseDTO() {
+    }
+
     // Getters and setters
     public Integer getAuctionId() {
         return auctionId;
