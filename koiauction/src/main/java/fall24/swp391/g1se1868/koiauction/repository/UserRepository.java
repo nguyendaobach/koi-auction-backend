@@ -4,9 +4,12 @@ import fall24.swp391.g1se1868.koiauction.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
@@ -31,6 +34,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("update User u set u.status = 'Active' , u.updateAt = CURRENT_TIMESTAMP where u.id = ?1")
     void activeUser(Integer id);
 
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createAt BETWEEN :start AND :end")
+    int countUsersByMonth(@Param("start") Instant start, @Param("end") Instant end);
 
 
 }

@@ -62,7 +62,7 @@ public class BidService {
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
         bid.getId().setTime(now.toInstant());
         Bid savedBid = bidRepository.save(bid);
-        notifyBidUpdates(auction.getId());
+        notifyBidUpdates(auction.getId(), savedBid);
         if (bid.getAmount().equals(auction.getBuyoutPrice())) {
             auctionService.closeAuction(auction);
         }
@@ -77,12 +77,15 @@ public class BidService {
         return bidRepository.findByAuctionID(auctionId);
     }
 
-    public void notifyBidUpdates(Integer auctionId) {
-        // Lấy danh sách tất cả các Bid của phiên đấu giá, bao gồm thông tin tên của người đấu giá
-        List<BidResponseDTO> updatedBids = bidRepository.findBidsWithUserDetails(auctionId);
-
-        // Gửi thông tin cập nhật qua WebSocket cho tất cả người tham gia phiên đấu giá
-        messagingTemplate.convertAndSend("/topic/auction/" + auctionId + "/bids", updatedBids);
+    public void notifyBidUpdates(Integer auctionId, Bid bid) {
+        // Tạo đối tượng BidResponseDTO
+        BidResponseDTO bidResponse = new BidResponseDTO();
+        bidResponse.setAuctionId(auctionId);
+        bidResponse.setBidderId(bid.getBidderID().getId());
+        bidResponse.setBidTime(bid.getId().getTime());
+        bidResponse.setAmount(bid.getAmount());
+        bidResponse.setFullName(bid.getBidderID().getFullName());
+        messagingTemplate.convertAndSend("/topic/auction/" + auctionId + "/bids", bidResponse);
     }
 
 

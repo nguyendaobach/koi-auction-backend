@@ -41,8 +41,6 @@ public class AuctionController {
     @Autowired
     private AuctionSchedulerService auctionSchedulerService;
 
-
-
     @GetMapping("/filter")
     public ResponseEntity<Map<String, Object>> getAllAuction(
             @RequestParam(defaultValue = "0") int page,
@@ -97,50 +95,6 @@ public class AuctionController {
         return auctionService.getAuctionWithKoiByID(auctionId);
     }
 
-    // Trả về các phiên đấu giá theo lịch trình kèm theo cá Koi
-//    @GetMapping("/admin/on-schedule")
-//    public ResponseEntity<Map<String, Object>> getOnScheduleAuctions(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        // Tạo Pageable object
-//        Pageable pageable = PageRequest.of(page, size);
-//
-//        // Lấy danh sách auction có phân trang từ repository
-//        Page<Auction> auctionPage = auctionRepository.findOnScheduleAuctions(pageable);
-//
-//        // Chuyển đổi đối tượng Page<Auction> thành Page<KoiAuctionResponseDTO>
-//        Page<KoiAuctionResponseDTO> koiAuctionResponseDTOS = auctionService.getAuctionDetails(auctionPage);
-//
-//        // Tạo một Map để chứa thông tin phản hồi
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("auctions", koiAuctionResponseDTOS.getContent()); // Danh sách phiên đấu giá
-//        response.put("currentPage", koiAuctionResponseDTOS.getNumber()); // Trang hiện tại
-//        response.put("totalPages", koiAuctionResponseDTOS.getTotalPages()); // Tổng số trang
-//        response.put("totalElements", koiAuctionResponseDTOS.getTotalElements()); // Tổng số phần tử
-//
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-//    }
-
-
-//    @GetMapping("/admin/on-going")
-//    public ResponseEntity<Map<String, Object>> getOngoingAuctions(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<Auction> auctions = auctionRepository.findOngoingAuctions(pageable);
-//        Page<KoiAuctionResponseDTO> koiAuctionResponseDTOS = auctionService.getAuctionDetails(auctions);
-//
-//        // Tạo một Map để chứa thông tin phản hồi
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("auctions", koiAuctionResponseDTOS.getContent()); // Danh sách phiên đấu giá
-//        response.put("currentPage", koiAuctionResponseDTOS.getNumber()); // Trang hiện tại
-//        response.put("totalPages", koiAuctionResponseDTOS.getTotalPages()); // Tổng số trang
-//        response.put("totalElements", koiAuctionResponseDTOS.getTotalElements()); // Tổng số phần tử
-//
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-//    }
 
     // Trả về các phiên đấu giá trong quá khứ kèm theo người chiến thắng
     @GetMapping("/past")

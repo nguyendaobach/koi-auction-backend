@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface KoiFishRepository extends JpaRepository<KoiFish,Integer> {
 
@@ -14,4 +16,6 @@ public interface KoiFishRepository extends JpaRepository<KoiFish,Integer> {
     @Transactional
     @Query("UPDATE KoiFish k SET k.status = 'Removed' WHERE k.id = :id")
     void delete(Integer id);
+
+    List<KoiFish> findByUserID_Id(Integer userID); // Tìm Koi theo BreederID
 }
