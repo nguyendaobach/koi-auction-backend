@@ -415,5 +415,12 @@ public class AuctionService {
         System.out.println(Instant.now());
     }
 
-
+    public String deleteAuction(Integer id) {
+        if(auctionRepository.findById(id)!=null){
+            auctionRepository.delete(id);
+            return "Delete successfully";
+        }else {
+            return "Auction id not found";
+        }
+    }
 }

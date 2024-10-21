@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import fall24.swp391.g1se1868.koiauction.model.Auction;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,30 +35,33 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     @Query("SELECT a FROM Auction a WHERE a.winnerID = ?1")
     Page<Auction> getAuctionbyWinnerID(int winnerID, Pageable pageable);
 
-//    @Query("SELECT a FROM Auction a WHERE (?1 IS NULL OR a.status IN ?1) " +
-//            "AND (?2 IS NULL OR a.auctionMethod IN ?2) " +
-//            "AND a.status <> 'Pending' " +
-//            "ORDER BY " +
-//            "CASE WHEN ?3 = 'DESC' THEN a.startTime END DESC, " +
-//            "CASE WHEN ?3 <> 'DESC' THEN a.startTime END ASC")
-//    Page<Auction> findAll(List<String> status, List<String> method, String desc, Pageable pageable);
+        @Query("SELECT a FROM Auction a WHERE " +
+                "(COALESCE(:status, NULL) IS NULL OR a.status IN :status) " +
+                "AND (COALESCE(:method, NULL) IS NULL OR a.auctionMethod IN :method) " +
+                "AND a.status <> 'Pending' " +
+                "AND a.status <> 'Reject' " +
+                "ORDER BY a.startTime DESC")
+        Page<Auction> findAllDesc(@Param("status") List<String> status,
+                                  @Param("method") List<String> method,
+                                  Pageable pageable);
 
+            @Query("SELECT a FROM Auction a WHERE " +
+                    "(COALESCE(:status, NULL) IS NULL OR a.status IN :status) " +
+                    "AND (COALESCE(:method, NULL) IS NULL OR a.auctionMethod IN :method) " +
+                    "AND a.status <> 'Pending' " +
+                    "AND a.status <> 'Reject' " +
+                    "ORDER BY a.startTime ASC")
+            Page<Auction> findAllAsc(@Param("status") List<String> status,
+                                     @Param("method") List<String> method,
+                                     Pageable pageable);
 
-    @Query("SELECT a FROM Auction a WHERE (:status IS NULL OR a.status IN :status) " +
-            "AND (:method IS NULL OR a.auctionMethod IN :method) " +
-            "AND a.status <> 'Pending' " +
-            "AND a.status <> 'Reject' " +
-            "ORDER BY " +
-            "CASE WHEN :desc = 'DESC' THEN a.startTime END DESC, " +
-            "CASE WHEN :desc <> 'DESC' THEN a.startTime END ASC")
-    Page<Auction> findAll(@Param("status") List<String> status,
-                          @Param("method") List<String> method,
-                          @Param("desc") String desc,
-                          Pageable pageable);
 
 
     @Query("SELECT a FROM Auction a")
     List<Auction> findAllAdmin();
 
-
+    @Modifying
+    @Transactional
+    @Query("UPDATE Auction k SET k.status = 'Cancelled' WHERE k.id = :id")
+    String delete(@Param("id") Integer id);
 }
