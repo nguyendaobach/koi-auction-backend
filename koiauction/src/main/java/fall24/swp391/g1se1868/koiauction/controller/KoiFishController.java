@@ -1,9 +1,12 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.KoiFish;
+import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
+import fall24.swp391.g1se1868.koiauction.service.UserDetailService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,6 +33,9 @@ public class KoiFishController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserDetailService userDetailService;
+
 
     @GetMapping("/{id}")
     public ResponseEntity<KoiFishDetailDTO> getKoiFishById(@PathVariable Integer id) {
@@ -37,14 +43,34 @@ public class KoiFishController {
     }
 
     @GetMapping("/koi-active")
-    public List<KoiFishUser> getKoiActive(){
+    public List<KoiFishUser> getKoiActive() {
         return koiFishService.getKoiActive();
     }
+
     @GetMapping()
-    public List<KoiFishUser> getAll(){
+    public List<KoiFishUser> getAll() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrinciple userPrinciple = null;
+
+        // Kiểm tra xem người dùng đã xác thực chưa
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserPrinciple) {
+            userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        }
+
+        // Nếu người dùng đã xác thực
+        if (userPrinciple != null) {
+            User user = userPrinciple.getUser();
+
+            // Nếu người dùng có vai trò ROLE_BREEDER, lấy danh sách cá Koi của Breeder
+            if (user.getRole().equals("ROLE_BREEDER")) {
+                return koiFishService.getAllBreeder(user.getId());
+            }
+        }
+
+        // Nếu không có người dùng xác thực hoặc không phải ROLE_BREEDER, trả về tất cả cá Koi
         return koiFishService.getAll();
     }
-
+    
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> customizeKoiFish(
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,

@@ -246,4 +246,36 @@ public class KoiFishService {
             return "Koi Id not found";
         }
     }
+
+
+    public List<KoiFishUser> getAllBreeder(Integer id) {
+
+    List<KoiFish> koiFishList=koiFishRepository.findByUserID_Id(id);
+        // Lọc danh sách cá Koi theo trạng thái Active
+        return koiFishList.stream()
+                .filter(koiFish -> "Active".equalsIgnoreCase(koiFish.getStatus()))  // Lọc những cá Koi có trạng thái Active
+                .map(koiFish -> {
+                    String fullName = koiFish.getUserID().getFullName();
+                    String countryName = koiFish.getCountryID().getCountry();
+                    String typeName = koiFish.getKoiTypeID().getTypeName();
+                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Video");
+
+                    // Trả về đối tượng KoiFishUser với thông tin cá Koi và hình ảnh
+                    return new KoiFishUser(
+                            koiFish.getId(),
+                            koiFish.getKoiName(),
+                            fullName,  // Lấy fullName của user
+                            countryName,  // Lấy tên nước thay vì ID
+                            typeName,  // Lấy tên loại cá thay vì ID
+                            koiFish.getWeight(),
+                            koiFish.getSex(),
+                            koiFish.getBirthday(),
+                            koiFish.getDescription(),
+                            koiFish.getLength(),
+                            koiFish.getStatus(),
+                            headerImage.isPresent() ? headerImage.get().getUrl() : null  // URL hình ảnh header
+                    );
+                })
+                .collect(Collectors.toList());  // Trả về danh sách các cá Koi có trạng thái Active
+    }
 }
