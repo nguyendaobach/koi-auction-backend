@@ -80,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/forgot-password/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/koi-fish/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
+                        .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

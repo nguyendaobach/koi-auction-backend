@@ -173,6 +173,22 @@ public class UserService {
         userRepository.activeUser(id);
     }
 
-
+    public User updateProfile(ProfileUpdateRequest profileUpdateRequest, int userID) {
+        Optional<User> userOptional = userRepository.findById(userID);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setUserName(profileUpdateRequest.getUserName());
+            user.setFullName(profileUpdateRequest.getFullName());
+            user.setPhoneNumber(profileUpdateRequest.getPhoneNumber());
+            user.setAddress(profileUpdateRequest.getAddress());
+            user.setUpdateAt(Instant.now());
+            userRepository.save(user);
+            return user;
+        }
+        return null;
+    }
+    public int getNewUsers(Integer day, Integer month, Integer year) {
+        return userRepository.countNewUsers(day, month, year);
+    }
 }
 
