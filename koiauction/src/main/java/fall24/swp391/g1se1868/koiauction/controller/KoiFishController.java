@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/koi-fish")
@@ -105,6 +106,11 @@ public class KoiFishController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
         }
 
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        Integer userId = userPrinciple.getId();
+        
+        User user = new User(userId) ;
+
         try {
             // Kiểm tra imageHeader
             if (imageHeader.isEmpty()) {
@@ -134,7 +140,7 @@ public class KoiFishController {
             }
 
             // Lưu cá koi
-            return koiFishService.saveKoiFish(imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
+            return koiFishService.saveKoiFish(user,imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
         } catch (Exception e) {
