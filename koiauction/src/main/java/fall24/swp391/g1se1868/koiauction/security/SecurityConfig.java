@@ -35,17 +35,17 @@ public class SecurityConfig {
     @Autowired
      JwtFilter jwtFilter;
 
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(Arrays.asList("*"));
-//        configuration.setAllowedMethods(Arrays.asList("*"));
-//        configuration.setAllowedHeaders(Arrays.asList("*"));
-//        configuration.setAllowCredentials(false);
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(false);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
 
 
@@ -56,7 +56,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.GET, "/api/admin-manager/users/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/api/admin-manager/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize").hasRole("BREEDER")
+                        .requestMatchers(HttpMethod.POST,"/api/koi-fish/customize-koi-fish").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.DELETE,"/api/koi-fish").hasRole("BREEDER")
                         .requestMatchers(HttpMethod.DELETE,"/api/koi-fish").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/koi-types/add-koitype").hasRole("ADMIN")

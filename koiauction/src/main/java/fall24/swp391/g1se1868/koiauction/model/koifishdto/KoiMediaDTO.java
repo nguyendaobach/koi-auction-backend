@@ -1,10 +1,10 @@
 package fall24.swp391.g1se1868.koiauction.model.koifishdto;
 
-public class KoiFishMediaDTO {
+public class KoiMediaDTO {
     private String mediaType;
     private String url;
 
-    public KoiFishMediaDTO(String mediaType, String url) {
+    public KoiMediaDTO(String mediaType, String url) {
         this.mediaType = mediaType;
         this.url = url;
     }
