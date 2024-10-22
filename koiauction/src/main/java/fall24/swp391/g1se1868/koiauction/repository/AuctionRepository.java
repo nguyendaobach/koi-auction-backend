@@ -60,6 +60,31 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
                              Pageable pageable);
 
 
+    @Query("SELECT DISTINCT a FROM Auction a " +
+            "INNER JOIN AuctionKoi ak ON a.id = ak.id.auctionID " +
+            "INNER JOIN KoiFish k ON ak.koiID.id = k.id " +
+            "WHERE (COALESCE(:status, NULL) IS NULL OR a.status IN :status) " +
+            "AND (COALESCE(:method, NULL) IS NULL OR a.auctionMethod IN :method) " +
+            "AND a.breederID = :BreederId " +
+            "ORDER BY a.startTime DESC")
+    Page<Auction> findAllOwnerDesc(@Param("status") List<String> status,
+                              @Param("method") List<String> method,
+                              @Param("BreederId") Integer BreederId,
+                              Pageable pageable);
+
+    @Query("SELECT DISTINCT a FROM Auction a " +
+            "INNER JOIN AuctionKoi ak ON a.id = ak.id.auctionID " +
+            "INNER JOIN KoiFish k ON ak.koiID.id = k.id " +
+            "WHERE (COALESCE(:status, NULL) IS NULL OR a.status IN :status) " +
+            "AND (COALESCE(:method, NULL) IS NULL OR a.auctionMethod IN :method) " +
+            "AND a.breederID = :BreederId " +
+            "ORDER BY a.startTime ASC")
+    Page<Auction> findAllOwnerAsc(@Param("status") List<String> status,
+                             @Param("method") List<String> method,
+                                  @Param("BreederId") Integer BreederId,
+                             Pageable pageable);
+
+
 
     @Query("SELECT a FROM Auction a")
     List<Auction> findAllAdmin();
