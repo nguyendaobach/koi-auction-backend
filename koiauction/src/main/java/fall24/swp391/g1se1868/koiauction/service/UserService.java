@@ -187,7 +187,8 @@ public class UserService {
         }
         return null;
     }
-
-
+    public int getNewUsers(Integer day, Integer month, Integer year) {
+        return userRepository.countNewUsers(day, month, year);
+    }
 }
 
