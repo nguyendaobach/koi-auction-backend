@@ -16,9 +16,9 @@ public class KoiFishDetailDTO {
     private String description;
     private BigDecimal length;
     private String status;
-    private List<KoiFishMediaDTO> mediaList;  // Cập nhật thành danh sách chứa mediaType và url
+    private List<KoiMediaDTO> mediaList;  // Cập nhật thành danh sách chứa mediaType và url
 
-    public KoiFishDetailDTO(Integer koiId, String koiName, String creatorFullName, String koiTypeName, String koiOriginName, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status, List<KoiFishMediaDTO> mediaList) {
+    public KoiFishDetailDTO(Integer koiId, String koiName, String creatorFullName, String koiTypeName, String koiOriginName, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status, List<KoiMediaDTO> mediaList) {
         this.koiId = koiId;
         this.koiName = koiName;
         this.creatorFullName = creatorFullName;
@@ -122,11 +122,11 @@ public class KoiFishDetailDTO {
         this.status = status;
     }
 
-    public List<KoiFishMediaDTO> getMediaList() {
+    public List<KoiMediaDTO> getMediaList() {
         return mediaList;
     }
 
-    public void setMediaList(List<KoiFishMediaDTO> mediaList) {
+    public void setMediaList(List<KoiMediaDTO> mediaList) {
         this.mediaList = mediaList;
     }
 

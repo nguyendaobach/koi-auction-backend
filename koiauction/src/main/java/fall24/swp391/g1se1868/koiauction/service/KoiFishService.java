@@ -2,7 +2,7 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
-import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishMediaDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
 import fall24.swp391.g1se1868.koiauction.repository.KoiMediaRepository;
@@ -182,9 +182,9 @@ public class KoiFishService {
 
         KoiOrigin koiOrigin=koiFish.getCountryID();
 
-        List<KoiFishMediaDTO> mediaList = koiMediaRepository.findByKoiID(koiFish)
+        List<KoiMediaDTO> mediaList = koiMediaRepository.findByKoiID(koiFish)
                 .stream()
-                .map(media -> new KoiFishMediaDTO(media.getMediaType(), media.getUrl()))
+                .map(media -> new KoiMediaDTO(media.getMediaType(), media.getUrl()))
                 .collect(Collectors.toList());
 
         KoiFishDetailDTO koiFishDetail = new KoiFishDetailDTO(
