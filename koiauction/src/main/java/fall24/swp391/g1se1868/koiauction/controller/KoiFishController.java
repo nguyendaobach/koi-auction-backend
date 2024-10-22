@@ -8,6 +8,7 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
 import fall24.swp391.g1se1868.koiauction.service.UserDetailService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
+import io.jsonwebtoken.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -71,6 +72,7 @@ public class KoiFishController {
         return koiFishService.getAll();
     }
 
+    @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> customizeKoiFish(
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
@@ -86,10 +88,13 @@ public class KoiFishController {
             @RequestParam Integer koiTypeID
     ) {
         List<String> allowedFormats = Arrays.asList("image/png", "image/jpeg", "image/jpg", "image/gif", "image/bmp", "image/webp", "image/tiff");
+
+        // Kiểm tra giá trị weight và length
         if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
             return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
         }
 
+        // Kiểm tra xác thực người dùng
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
@@ -101,6 +106,7 @@ public class KoiFishController {
         }
 
         try {
+            // Kiểm tra imageHeader
             if (imageHeader.isEmpty()) {
                 return ResponseEntity.badRequest().body("Header image is required.");
             }
@@ -108,6 +114,7 @@ public class KoiFishController {
                 return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
             }
 
+            // Kiểm tra video
             if (video.isEmpty()) {
                 return ResponseEntity.badRequest().body("Video is required.");
             }
@@ -115,22 +122,26 @@ public class KoiFishController {
                 return ResponseEntity.badRequest().body("Video must be in MP4 format.");
             }
 
+            // Kiểm tra từng tệp trong imageDetail
             for (MultipartFile file : imageDetail) {
                 if (file.isEmpty()) {
                     return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
                 }
                 String contentType = file.getContentType();
-                if (!allowedFormats.contains(imageHeader.getContentType().toLowerCase())) {
-                    return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
+                if (!allowedFormats.contains(contentType.toLowerCase())) {
+                    return ResponseEntity.badRequest().body("Each detail image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
                 }
             }
 
             // Lưu cá koi
-            return koiFishService.saveKoiFish(imageHeader,imageDetail,video,name, weight, sex, birthday, description, length, countryID, koiTypeID);
+            return koiFishService.saveKoiFish(imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
+
 
     @DeleteMapping()
     public String delete(@RequestParam Integer id){

@@ -1,11 +1,12 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
-import fall24.swp391.g1se1868.koiauction.model.auction.AuctionWithMedia;
+import fall24.swp391.g1se1868.koiauction.model.auction.AuctionDetailDTO;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiAuctionResponseDTO;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiInfo;
-import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiDataDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
 import fall24.swp391.g1se1868.koiauction.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -13,15 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import java.io.IOException;
-import java.time.Duration;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -56,22 +54,24 @@ public class AuctionService {
     @Autowired
     AuctionSchedulerService auctionSchedulerService;
 
+    @Autowired
+    UserRepository userRepository;
+
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new IllegalArgumentException("Auction not found with ID: " + auctionId));
     }
 
-    public List<AuctionWithMedia> getAuctionWithKoiByID(Integer id) {
+    public AuctionDetailDTO getAuctionWithKoiByID(Integer id) {
         Optional<Auction> auctionOptional = auctionRepository.findById(id);
-        List<Auction> auctions = new ArrayList<>();
         if (auctionOptional.isPresent()) {
-            Auction auction = auctionOptional.get();  // Lấy đối tượng Auction
-            auctions.add(auction);  // Thêm Auction vào danh sách auctions
+            Auction auction = auctionOptional.get();
+            return convertToAuctionDetailDTO(auction);
         } else {
             throw new RuntimeException("Auction not found with id: " + id);
         }
-        return convertToAuctionWithKoiAll(auctions);
     }
+
 
 
     public List<Map<String, Object>> getPastAuctionsWithWinnerName() {
@@ -90,10 +90,17 @@ public class AuctionService {
     }
 
 
-    public List<AuctionWithMedia> getAuctionsParticipantByUser(int UserID){
-        List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(UserID);
-        return convertToAuctionWithKoiAll(auctionParticipantRepository.findAuctionsByIds(auctionIds));
+    public AuctionDetailDTO getAuctionsParticipantByUser(int userId) {
+        List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(userId);
+        if (!auctionIds.isEmpty()) {
+            // Giả sử bạn chỉ muốn lấy một phiên đấu giá đầu tiên từ danh sách
+            Integer auctionId = auctionIds.get(0);
+            return getAuctionWithKoiByID(auctionId); // Gọi phương thức đã sửa để lấy thông tin chi tiết
+        } else {
+            throw new RuntimeException("No auctions found for user ID: " + userId);
+        }
     }
+
 
     public Page<KoiAuctionResponseDTO> getWinnerAuctionByWinnerID(int winnerID, Pageable pageable) {
         // Lấy danh sách các phiên đấu giá đã thắng với phân trang
@@ -260,65 +267,63 @@ public class AuctionService {
         auctionRepository.save(auction);
     }
 
-    private List<AuctionWithMedia> convertToAuctionWithKoiAll(List<Auction> auctions) {
-        List<AuctionWithMedia> auctionWithMediaList = new ArrayList<>();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        for (Auction auction : auctions) {
-            if (authentication == null || !authentication.isAuthenticated() ) {
-                auction.setStatus("Please Login or Register to see more");
-            } else {
-                List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
-                List<KoiFishWithMediaAll> koiFishWithMediaAllList = new ArrayList<>();
-                for (KoiFish koiFish : koiFishList) {
-                    List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
-                    User user = koiFish.getUserID();
-                    if (user != null) {
-                        user.setPassword("0");
-                    }
-                    KoiFishWithMediaAll koiFishWithMediaAll = new KoiFishWithMediaAll(koiFish, koiMediaList);
-                    koiFishWithMediaAllList.add(koiFishWithMediaAll);
-                }
-                auctionWithMediaList.add(new AuctionWithMedia(auction, koiFishWithMediaAllList));
-            }
+    private AuctionDetailDTO convertToAuctionDetailDTO(Auction auction) {
+        AuctionDetailDTO auctionDTO = new AuctionDetailDTO();
+        auctionDTO.setId(auction.getId());
+        auctionDTO.setBreederID(auction.getBreederID());
+
+        // Lấy thông tin Breeder theo BreederID
+        User breeder = userRepository.findById(auction.getBreederID())
+                .orElseThrow(() -> new RuntimeException("Breeder not found with id: " + auction.getBreederID()));
+        auctionDTO.setBreederFullName(breeder.getFullName());
+
+        auctionDTO.setStaffID(auction.getStaffID());
+        auctionDTO.setWinnerID(auction.getWinnerID());
+        auctionDTO.setAuctionMethod(auction.getAuctionMethod());
+        auctionDTO.setStartTime(auction.getStartTime());
+        auctionDTO.setEndTime(auction.getEndTime());
+        auctionDTO.setBreederDeposit(auction.getBreederDeposit());
+        auctionDTO.setBidderDeposit(auction.getBidderDeposit());
+        auctionDTO.setStartingPrice(auction.getStartingPrice());
+        auctionDTO.setBuyoutPrice(auction.getBuyoutPrice());
+        auctionDTO.setFinalPrice(auction.getFinalPrice());
+        auctionDTO.setBidStep(auction.getBidStep());
+        auctionDTO.setAuctionFee(auction.getAuctionFee());
+        auctionDTO.setCreateAt(auction.getCreateAt());
+        auctionDTO.setStatus(auction.getStatus());
+
+        // Lấy danh sách KoiFish và media tương ứng
+        List<KoiFish> koiFishList = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+        List<KoiDataDTO> koiDataList = new ArrayList<>();
+
+        for (KoiFish koiFish : koiFishList) {
+            KoiDataDTO koiDataDTO = new KoiDataDTO();
+            koiDataDTO.setId(koiFish.getId());
+            koiDataDTO.setCountry(koiFish.getCountryID().getCountry()); // Lấy tên quốc gia
+            koiDataDTO.setKoiType(koiFish.getKoiTypeID().getTypeName()); // Lấy loại cá
+            koiDataDTO.setWeight(koiFish.getWeight());
+            koiDataDTO.setSex(koiFish.getSex());
+            koiDataDTO.setBirthday(koiFish.getBirthday());
+            koiDataDTO.setDescription(koiFish.getDescription());
+            koiDataDTO.setLength(koiFish.getLength());
+            koiDataDTO.setStatus(koiFish.getStatus());
+            koiDataDTO.setKoiName(koiFish.getKoiName());
+
+            // Lấy danh sách media cho từng KoiFish
+            List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
+            List<KoiMediaDTO> koiMediaDTOs = koiMediaList.stream()
+                    .map(media -> new KoiMediaDTO( media.getUrl(), media.getMediaType()))
+                    .collect(Collectors.toList());
+            koiDataDTO.setKoiMedia(koiMediaDTOs);
+
+            koiDataList.add(koiDataDTO);
         }
 
-        return auctionWithMediaList;
+        auctionDTO.setKoiData(koiDataList);
+        return auctionDTO;
     }
 
-//    public List<KoiAuctionResponseDTO> getAuctionDetails(List<Auction> auctions) {
-//        List<KoiAuctionResponseDTO> responseList = new ArrayList<>();
-//
-//        for (Auction auction : auctions) {
-//            // Lấy danh sách ID của các KoiFish liên quan đến phiên đấu giá
-//            List<Integer> koiFishIds = auctionKoiRepository.findKoiFishByAuctionId(auction.getId())
-//                    .stream()
-//                    .map(KoiFish::getId)
-//                    .collect(Collectors.toList());
-//
-//            // Tạo đối tượng DTO
-//            KoiAuctionResponseDTO response = new KoiAuctionResponseDTO(
-//                    auction.getId(),
-//                    koiFishIds.isEmpty() ? null : koiFishIds.get(0), // Lấy BreederId từ KoiFish đầu tiên
-//                    auction.getStartTime().toString(),
-//                    auction.getEndTime().toString(),
-//                    auction.getStaffID() != null ? auction.getStaffID() : null,
-//                    auction.getWinnerID() != null ? auction.getWinnerID(): null,
-//                    auction.getStatus(),
-//                    auction.getStartingPrice() ,
-//                    auction.getFinalPrice() != null ? auction.getFinalPrice() + " VND" : "N/A",
-//                    koiFishIds.isEmpty() ? null : koiFishIds.get(0).getUserID().getFullName(), // BreederName
-//                    koiFishIds.isEmpty() ? null : koiFishIds.get(0).getSex(),
-//                    koiFishIds.isEmpty() ? null : String.valueOf(koiFishIds.get(0).getBirthday().getYear()),
-//                    koiFishIds.isEmpty() ? null : String.valueOf(koiFishIds.get(0).getLength()),
-//                    Duration.between(Instant.now(), auction.getEndTime()).toHoursPart() + " Hours " + Duration.between(Instant.now(), auction.getEndTime()).toMinutesPart() + " Minutes",
-//                    SecurityContextHolder.getContext().getAuthentication() != null ? "Place a Bid" : "Login / Register to Bid",
-//                    koiFishIds // Danh sách ID của KoiFish
-//            );
-//
-//            responseList.add(response);
-//        }
-//        return responseList;
-//    }
+
             public Page<KoiAuctionResponseDTO> getAuctionDetails(Page<Auction> auctionPage) {
                 List<KoiAuctionResponseDTO> responseList = new ArrayList<>();
 

@@ -1,29 +1,23 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
-import fall24.swp391.g1se1868.koiauction.model.auction.AuctionWithMedia;
+import fall24.swp391.g1se1868.koiauction.model.auction.AuctionDetailDTO;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiAuctionResponseDTO;
 import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.service.AuctionSchedulerService;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
-import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
-import fall24.swp391.g1se1868.koiauction.service.BidService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,11 +83,11 @@ public class AuctionController {
     }
 
 
-    //     Lấy phiên đấu giá theo ID và kèm theo thông tin cá Koi
     @GetMapping("/{id}")
-    public List<AuctionWithMedia> getAuctionByID(@RequestParam int auctionId) {
+    public AuctionDetailDTO getAuctionByID(@RequestParam int auctionId) {
         return auctionService.getAuctionWithKoiByID(auctionId);
     }
+
 
 
     // Trả về các phiên đấu giá trong quá khứ kèm theo người chiến thắng
@@ -103,7 +97,7 @@ public class AuctionController {
     }
 
     @GetMapping("/user/participant-by-user")
-    public List<AuctionWithMedia> getAuctionParticipants() {
+    public AuctionDetailDTO getAuctionParticipants() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -112,6 +106,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.getAuctionsParticipantByUser(userId);
     }
+
 
     @GetMapping("/user/auction-by-winner")
     public ResponseEntity<Page<KoiAuctionResponseDTO>> getWinnerAuctions(

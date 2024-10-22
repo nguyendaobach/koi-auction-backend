@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.model.auction;
 
 import fall24.swp391.g1se1868.koiauction.model.Auction;
-import fall24.swp391.g1se1868.koiauction.model.KoiFish;
-import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishMediaDTO;
-import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishWithMediaAll;
 
 import java.util.List;
 
