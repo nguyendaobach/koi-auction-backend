@@ -78,10 +78,8 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
-                        .requestMatchers("/api/bidv2/*/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/koi-fish/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
-
                         .anyRequest().authenticated())
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
