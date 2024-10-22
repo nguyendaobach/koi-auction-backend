@@ -62,7 +62,7 @@ public class KoiFishController {
             User user = userPrinciple.getUser();
 
             // Nếu người dùng có vai trò ROLE_BREEDER, lấy danh sách cá Koi của Breeder
-            if (user.getRole().equals("ROLE_BREEDER")) {
+            if (user.getRole().equalsIgnoreCase("breeder")) {
                 return koiFishService.getAllBreeder(user.getId());
             }
         }
