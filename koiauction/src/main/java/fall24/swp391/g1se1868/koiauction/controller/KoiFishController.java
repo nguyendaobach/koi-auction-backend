@@ -108,7 +108,7 @@ public class KoiFishController {
 
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         Integer userId = userPrinciple.getId();
-        
+
         User user = new User(userId) ;
 
         try {
