@@ -109,7 +109,6 @@ public class AuctionService {
     }
     @Transactional
     public String addAuction(AuctionRequest request,int breerderID) {
-
         Auction auction = new Auction();
         auction.setBreederID(breerderID);
         auction.setAuctionMethod(request.getAuctionMethod());
@@ -423,4 +422,38 @@ public class AuctionService {
             return "Auction id not found";
         }
     }
+    public Long getRevenue(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getRevenueByDay(day, month, year);
+        } else if (month != null && year != null) {
+            return auctionRepository.getRevenueByMonth(month, year);
+        } else if (year != null) {
+            return auctionRepository.getRevenueByYear(year);
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+    public Long getCountAuction(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getCountAuctionByDay(day, month, year);
+        } else if (month != null && year != null) {
+            return auctionRepository.getCountAuctionByMonth(month, year);
+        } else if (year != null) {
+            return auctionRepository.getCountAuctionByYear(year);
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+    public Long getCountAuctionWithFinishedStatus(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getCountAuctionByDayAndStatus(day, month, year, "Finished");
+        } else if (month != null && year != null) {
+            return auctionRepository.getCountAuctionByMonthAndStatus(month, year, "Finished");
+        } else if (year != null) {
+            return auctionRepository.getCountAuctionByYearAndStatus(year, "Finished");
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+
 }
