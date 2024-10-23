@@ -7,6 +7,8 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
 import fall24.swp391.g1se1868.koiauction.repository.KoiMediaRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class KoiFishService {
+
+
 
     @Autowired
     private KoiFishRepository koiFishRepository;
@@ -85,6 +89,7 @@ public class KoiFishService {
 
     @Transactional
     public ResponseEntity<String> saveKoiFish(
+            User user,
             MultipartFile imageHeader,
             List<MultipartFile> imageDetail,
             MultipartFile video,
@@ -98,6 +103,7 @@ public class KoiFishService {
             Integer koiTypeId) {
 
         try {
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
@@ -116,6 +122,7 @@ public class KoiFishService {
             if (!optionalUser.isPresent()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
             }
+
 
             Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
             if (!optionalKoiType.isPresent()) {
