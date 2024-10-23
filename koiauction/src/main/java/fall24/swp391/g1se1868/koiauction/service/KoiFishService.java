@@ -6,6 +6,7 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
 import fall24.swp391.g1se1868.koiauction.repository.KoiMediaRepository;
+import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -46,6 +47,9 @@ public class KoiFishService {
 
     @Autowired
     private KoiMediaRepository koiMediaRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public KoiFish saveKoiFish(KoiFish koiFish) {
         return koiFishRepository.save(koiFish);
@@ -99,6 +103,26 @@ public class KoiFishService {
             Integer koiTypeId) {
 
         try {
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
+            }
+
+            if (!authentication.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+            }
+
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            User user=userPrinciple.getUser();
+            Integer userId=user.getId();
+
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (!optionalUser.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
 
             Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
             if (!optionalKoiType.isPresent()) {
