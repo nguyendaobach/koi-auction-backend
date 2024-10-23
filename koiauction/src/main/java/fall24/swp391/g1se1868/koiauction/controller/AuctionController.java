@@ -84,8 +84,8 @@ public class AuctionController {
 
 
     @GetMapping("/{id}")
-    public AuctionDetailDTO getAuctionByID(@RequestParam int auctionId) {
-        return auctionService.getAuctionWithKoiByID(auctionId);
+    public AuctionDetailDTO getAuctionByID(@PathVariable int id) {
+        return auctionService.getAuctionWithKoiByID(id);
     }
 
 

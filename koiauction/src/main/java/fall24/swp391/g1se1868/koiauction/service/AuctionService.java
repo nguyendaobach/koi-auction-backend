@@ -140,8 +140,6 @@ public class AuctionService {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
-
         }
 
         for (Integer koiId : request.getKoiIds()) {
@@ -312,7 +310,7 @@ public class AuctionService {
             // Lấy danh sách media cho từng KoiFish
             List<KoiMedia> koiMediaList = koiMediaRepository.findByKoiID(koiFish);
             List<KoiMediaDTO> koiMediaDTOs = koiMediaList.stream()
-                    .map(media -> new KoiMediaDTO( media.getUrl(), media.getMediaType()))
+                    .map(media -> new KoiMediaDTO(media.getMediaType(),media.getUrl()))
                     .collect(Collectors.toList());
             koiDataDTO.setKoiMedia(koiMediaDTOs);
 

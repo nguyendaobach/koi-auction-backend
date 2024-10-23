@@ -6,6 +6,7 @@ import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
 import fall24.swp391.g1se1868.koiauction.repository.KoiMediaRepository;
+import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,9 @@ public class KoiFishService {
 
     @Autowired
     private KoiMediaRepository koiMediaRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public KoiFish saveKoiFish(KoiFish koiFish) {
         return koiFishRepository.save(koiFish);
@@ -105,13 +109,13 @@ public class KoiFishService {
             }
 
             UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-            Integer userId = userPrinciple.getId();
+            User user=userPrinciple.getUser();
+            Integer userId=user.getId();
 
-            Optional<User> optionalUser = userService.getUserById(userId);
+            Optional<User> optionalUser = userRepository.findById(userId);
             if (!optionalUser.isPresent()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
             }
-            User user = optionalUser.get();
 
             Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
             if (!optionalKoiType.isPresent()) {
