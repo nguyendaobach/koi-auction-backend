@@ -145,7 +145,8 @@ public class UserService {
 
     public Optional<User> getUserById(Integer id) {
        Optional<User> user= userRepository.findById(id);
-       user.get().setPassword("***");
+       User user1=user.get();
+       user1.setPassword("***");
        return user;
     }
 
