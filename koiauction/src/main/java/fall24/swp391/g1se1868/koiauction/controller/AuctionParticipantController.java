@@ -26,7 +26,11 @@ public class AuctionParticipantController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        String response = auctionParticipantService.registerForAuction(userId, auctionId);
-        return ResponseEntity.ok(new StringResponse(response));
+        try {
+            String response = auctionParticipantService.registerForAuction(userId, auctionId);
+            return ResponseEntity.ok(new StringResponse(response));
+        }catch(Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
     }
 }
