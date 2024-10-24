@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/koi-origin/add-origin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-origin/delete/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/system-config/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/system-config/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/breeder/**").hasRole("BREEDER")
                         .requestMatchers("/api/auction/staff/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/staff/**").hasRole("STAFF")

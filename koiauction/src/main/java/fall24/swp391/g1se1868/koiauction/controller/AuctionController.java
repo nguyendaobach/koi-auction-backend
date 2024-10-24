@@ -191,8 +191,8 @@ public class AuctionController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null ||
-                auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000) {
+        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
+                auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() <100000) {
             return ResponseEntity.badRequest().body(new StringResponse("Price values must be greater than 100000 and not null"));
         }
         if (auctionRequest.getStartTime() == null || auctionRequest.getEndTime() == null ||
