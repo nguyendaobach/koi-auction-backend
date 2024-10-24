@@ -199,7 +199,12 @@ public class AuctionController {
                 auctionRequest.getStartTime().isBefore(Instant.now()) || auctionRequest.getEndTime().isBefore(Instant.now())) {
             return ResponseEntity.badRequest().body(new StringResponse("Time invalid"));
         }
-        return ResponseEntity.ok(new StringResponse(auctionService.addAuction(auctionRequest, userId)));
+        try {
+            String auctionResult = auctionService.addAuction(auctionRequest, userId);
+            return ResponseEntity.ok(new StringResponse(auctionResult));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/breeder")
