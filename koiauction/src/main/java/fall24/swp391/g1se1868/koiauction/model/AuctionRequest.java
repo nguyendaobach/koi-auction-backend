@@ -24,10 +24,22 @@ public class AuctionRequest {
     
     private Long bidStep; // Minimum bid step
 
+    private Long bidderDeposit;
+
 
     private List<Integer> koiIds; // List of Koi Fish IDs to be included in the auction
 
     // Getters and Setters
+
+
+    public Long getBidderDeposit() {
+        return bidderDeposit;
+    }
+
+    public void setBidderDeposit(Long bidderDeposit) {
+        this.bidderDeposit = bidderDeposit;
+    }
+
     public String getAuctionMethod() {
         return auctionMethod;
     }
