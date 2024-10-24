@@ -103,7 +103,6 @@ public class KoiFishService {
             Integer koiTypeId) {
 
         try {
-
             Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
             if (!optionalKoiType.isPresent()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Type not found");
