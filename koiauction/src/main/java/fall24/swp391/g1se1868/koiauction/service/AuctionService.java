@@ -55,7 +55,13 @@ public class AuctionService {
     AuctionSchedulerService auctionSchedulerService;
 
     @Autowired
+    SystemConfigService systemConfigService;
+
+    @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    WalletService walletService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -116,7 +122,6 @@ public class AuctionService {
     }
     @Transactional
     public String addAuction(AuctionRequest request,int breerderID) {
-
         Auction auction = new Auction();
         auction.setBreederID(breerderID);
         auction.setAuctionMethod(request.getAuctionMethod());
@@ -124,12 +129,13 @@ public class AuctionService {
         auction.setEndTime(request.getEndTime());
         auction.setStartingPrice(request.getStartingPrice());
         auction.setBuyoutPrice(request.getBuyoutPrice());
-        auction.setBidderDeposit(request.getStartingPrice()*10/100);
-        auction.setBreederDeposit(request.getStartingPrice()*20/100);
-        auction.setAuctionFee(500000L);
+        auction.setBidderDeposit(request.getBidderDeposit());
+        auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
+        auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
         auction.setBidStep(request.getBidStep());
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
+        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
         Auction savedAuction = auctionRepository.save(auction);
         if(savedAuction != null) {
             try {
@@ -168,6 +174,7 @@ public class AuctionService {
         auction.setStaffID(UserID);
         return auctionRepository.save(auction);
     }
+    @Transactional
     public Auction rejectAuction(Integer auctionId, Integer UserID) {
         Auction auction = auctionRepository.getById(auctionId);
         if(auction==null){
@@ -178,6 +185,7 @@ public class AuctionService {
         }
         auction.setStatus("Reject");
         auction.setStaffID(UserID);
+        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit());
         return auctionRepository.save(auction);
     }
     public void updateAuctionStatusOngoing() {
@@ -214,7 +222,7 @@ public class AuctionService {
 
     // Dummy method for sending payment requests to the winner
     private void requestPaymentFromWinner(Auction auction) {
-        // Logic for requesting payment from the winner
+
         System.out.println("Payment request sent to winner for auction: " + auction.getId());
     }
 
@@ -226,42 +234,26 @@ public class AuctionService {
     }
 
     public void closeAuction(Auction auction) {
-        // Đặt trạng thái đấu giá thành 'Closed'
         auction.setStatus("Closed");
-
-        // Xác định người chiến thắng
         Integer winnerID = determineWinner(auction);
         if (winnerID != null) {
             auction.setWinnerID(winnerID);
-
-            // Lấy giá cuối cùng
             long finalPrice = bidService.getCurrentPrice(auction.getId());
             auction.setFinalPrice(finalPrice);
-
-            // Thông báo tới người thắng (thêm 'type': 'winner')
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("winner", winnerID, "Chúc mừng! Bạn đã chiến thắng cuộc đấu giá với giá " + finalPrice + "!"));
         }
-
-        // Gửi thông báo tới tất cả những người tham gia rằng đấu giá đã kết thúc
         List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
         for (Bid bid : bids) {
             int bidderID = bid.getBidderID().getId();
             if (bidderID != winnerID) {
-                // Thông báo cho người không thắng cuộc (thêm 'type': 'loser')
                 messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                         new AuctionNotification("loser", bidderID, "Cuộc đấu giá đã kết thúc. Bạn đã không thắng cuộc đấu giá này."));
             }
         }
-
-        // Gửi thông báo về trạng thái của đấu giá cho tất cả mọi người (thêm 'type': 'status')
         messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                 new AuctionNotification("status", null, "Đấu giá đã kết thúc."));
-
-        // Thực hiện các tác vụ kết thúc cuộc đấu giá
         processEndOfAuctionTasks(auction);
-
-        // Lưu lại trạng thái đấu giá đã cập nhật
         auctionRepository.save(auction);
     }
 
@@ -426,4 +418,38 @@ public class AuctionService {
             return "Auction id not found";
         }
     }
+    public Long getRevenue(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getRevenueByDay(day, month, year);
+        } else if (month != null && year != null) {
+            return auctionRepository.getRevenueByMonth(month, year);
+        } else if (year != null) {
+            return auctionRepository.getRevenueByYear(year);
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+    public Long getCountAuction(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getCountAuctionByDay(day, month, year);
+        } else if (month != null && year != null) {
+            return auctionRepository.getCountAuctionByMonth(month, year);
+        } else if (year != null) {
+            return auctionRepository.getCountAuctionByYear(year);
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+    public Long getCountAuctionWithFinishedStatus(Integer day, Integer month, Integer year) {
+        if (day != null && month != null && year != null) {
+            return auctionRepository.getCountAuctionByDayAndStatus(day, month, year, "Finished");
+        } else if (month != null && year != null) {
+            return auctionRepository.getCountAuctionByMonthAndStatus(month, year, "Finished");
+        } else if (year != null) {
+            return auctionRepository.getCountAuctionByYearAndStatus(year, "Finished");
+        }
+        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
+    }
+
+
 }

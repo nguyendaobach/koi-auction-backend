@@ -22,7 +22,6 @@ public class AuctionParticipantService {
 
     @Transactional
     public String registerForAuction(Integer userId, Integer auctionId) {
-        // Kiểm tra nếu người dùng đã đăng ký cho phiên đấu giá này
         if (auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId)) {
             return "You are already registered for this auction.";
         }

@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-types/delete/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/koi-origin/add-origin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/koi-origin/delete/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/system-config/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/system-config/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/breeder/**").hasRole("BREEDER")
                         .requestMatchers("/api/auction/staff/**").hasRole("ADMIN")
                         .requestMatchers("/api/auction/staff/**").hasRole("STAFF")
@@ -78,10 +80,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
-                        .requestMatchers("/api/bidv2/*/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/koi-fish/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
-
+                        .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                         .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

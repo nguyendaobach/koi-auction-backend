@@ -10,6 +10,8 @@ import java.util.List;
 public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    AuctionService auctionService;
     // Lấy tất cả giao dịch
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
@@ -31,4 +33,5 @@ public class TransactionService {
     public List<Transaction> getTransactionsByType(String transactionType) {
         return transactionRepository.findByTransactionType(transactionType);
     }
+
 }

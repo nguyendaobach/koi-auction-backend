@@ -37,6 +37,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("SELECT COUNT(u) FROM User u WHERE u.createAt BETWEEN :start AND :end")
     int countUsersByMonth(@Param("start") Instant start, @Param("end") Instant end);
 
-
+    @Query("SELECT COUNT(u) FROM User u WHERE " +
+            "(:day IS NULL OR FUNCTION('DAY', u.createAt) = :day) " +
+            "AND (:month IS NULL OR FUNCTION('MONTH', u.createAt) = :month) " +
+            "AND (:year IS NULL OR FUNCTION('YEAR', u.createAt) = :year)")
+    int countNewUsers(@Param("day") Integer day,
+                      @Param("month") Integer month,
+                      @Param("year") Integer year);
 }
 

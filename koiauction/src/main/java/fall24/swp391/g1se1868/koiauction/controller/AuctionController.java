@@ -74,6 +74,51 @@ public class AuctionController {
         }
     }
 
+    @GetMapping("/breeder")
+    public ResponseEntity<Map<String, Object>> getAllOwnerAuction(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
+            @RequestParam(required = false) List<String> method,  // Danh sách phương thức
+            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
+
+        Pageable pageable = PageRequest.of(page, size);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+
+        Page<Auction> auctionPage = null;
+        if (desc.equals("DESC")) {
+            auctionPage = auctionRepository.findAllOwnerDesc(status, method,userId, pageable);
+        } else {
+            auctionPage = auctionRepository.findAllOwnerAsc(status, method,userId, pageable);
+        }
+
+        // Log thông tin về phiên đấu giá
+        System.out.println("Request page: " + page + ", size: " + size);
+        System.out.println("Total elements: " + auctionPage.getTotalElements());
+        System.out.println("Auctions on page " + page + ": " + auctionPage.getContent().size());
+
+        // Gọi service để lấy thông tin chi tiết
+        Page<KoiFishAuctionAll> auctionDetails = auctionService.getAllAuction(auctionPage);
+
+        // Tạo một Map để chứa thông tin phản hồi
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctions", auctionDetails.getContent());
+        response.put("currentPage", auctionDetails.getNumber()); // Trang hiện tại
+        response.put("totalPages", auctionDetails.getTotalPages()); // Tổng số trang
+        response.put("totalElements", auctionDetails.getTotalElements()); // Tổng số phần tử
+
+        if (auctionDetails != null && !auctionDetails.isEmpty()) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Trả về 404 nếu không tìm thấy phiên đấu giá
+        }
+    }
+
 
     @GetMapping("/admin")
     public ResponseEntity<List<KoiAuctionResponseDTO>> getAuctionDetails() {
@@ -146,16 +191,22 @@ public class AuctionController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null ||
-                auctionRequest.getBidStep() < 10000 || auctionRequest.getStartingPrice() < 10000 || auctionRequest.getBuyoutPrice() < 1000) {
-            return ResponseEntity.badRequest().body(new StringResponse("Price values must be greater than 10000 and not null"));
+        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
+                auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() <100000) {
+            return ResponseEntity.badRequest().body(new StringResponse("Price values must be greater than 100000 and not null"));
         }
         if (auctionRequest.getStartTime() == null || auctionRequest.getEndTime() == null ||
                 auctionRequest.getStartTime().isBefore(Instant.now()) || auctionRequest.getEndTime().isBefore(Instant.now())) {
             return ResponseEntity.badRequest().body(new StringResponse("Time invalid"));
         }
-        return ResponseEntity.ok(new StringResponse(auctionService.addAuction(auctionRequest, userId)));
+        try {
+            String auctionResult = auctionService.addAuction(auctionRequest, userId);
+            return ResponseEntity.ok(new StringResponse(auctionResult));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
     }
+
     @DeleteMapping("/breeder")
     public String DeleteAuction(@RequestParam Integer id){
         return auctionService.deleteAuction(id);
