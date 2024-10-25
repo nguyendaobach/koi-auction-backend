@@ -79,6 +79,7 @@ public class UserService {
     }
     public boolean verifyEmail(String email){
         User user = userRepository.findByEmail(email);
+
         return user==null?true:false;
     }
     public boolean verifyPhoneNumber(String phoneNumber){
