@@ -103,27 +103,6 @@ public class KoiFishService {
             Integer koiTypeId) {
 
         try {
-
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
-            }
-
-            if (!authentication.getAuthorities().stream()
-                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
-            }
-
-            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-            User user=userPrinciple.getUser();
-            Integer userId=user.getId();
-
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (!optionalUser.isPresent()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-
-
             Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
             if (!optionalKoiType.isPresent()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Type not found");
