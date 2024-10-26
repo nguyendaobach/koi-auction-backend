@@ -7,6 +7,7 @@ import fall24.swp391.g1se1868.koiauction.model.BidResponseDTO;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import fall24.swp391.g1se1868.koiauction.service.BidService;
+import fall24.swp391.g1se1868.koiauction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -31,6 +33,8 @@ public class BidController {
 
     @Autowired
     private AuctionService auctionService;
+     @Autowired
+     private UserService userService;
 
     @PostMapping("/place")
     public ResponseEntity<?> placeBid(@RequestBody BidRequest bidRequest) {
@@ -44,11 +48,10 @@ public class BidController {
         Bid bid = new Bid();
         bid.setAuctionID(auctionService.getAuctionById(bidRequest.getAuctionId()));
         bid.setAmount(bidRequest.getAmount());
-
         try {
             Bid newBid = bidService.placeBid(bid, userId);
-            messagingTemplate.convertAndSend("/topic/auction/" + bid.getAuctionID().getId(), bidService.getAllBidsForAuction(bid.getAuctionID().getId()));
-            return ResponseEntity.ok(newBid);
+            return ResponseEntity.ok(new BidResponseDTO(newBid.getAuctionID().getId()
+                    ,newBid.getBidderID().getId(),newBid.getId().getTime(), newBid.getAmount(), userService.getUserById(userId).get().getFullName()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (IllegalArgumentException e) {
