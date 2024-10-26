@@ -1,9 +1,6 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
-import fall24.swp391.g1se1868.koiauction.model.ForgotPassword;
-import fall24.swp391.g1se1868.koiauction.model.MailBody;
-import fall24.swp391.g1se1868.koiauction.model.StringResponse;
-import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.ForgotpasswordRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import fall24.swp391.g1se1868.koiauction.service.ChangePassword;
@@ -61,7 +58,7 @@ public class ForgotPasswordController {
 
         ForgotPassword forgotPassword = ForgotPassword.builder()
                 .otp(otp)
-                .expirationDate(Date.from(Instant.now().plusSeconds(70))) // 70 seconds expiration
+                .expirationDate(Date.from(Instant.now().plusSeconds(120))) // 70 seconds expiration
                 .user(user)
                 .build();
 
@@ -73,20 +70,19 @@ public class ForgotPasswordController {
 
     @PostMapping("/verifyAndChangePassword")
     public ResponseEntity<StringResponse> verifyAndChangePassword(
-            @RequestBody Integer otp,
-            @RequestBody String email,
-            @RequestBody ChangePassword changePassword) {
+            @RequestBody VerifyAndChangePasswordRequest verifyAndChangePasswordRequest) {
 
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(verifyAndChangePasswordRequest.getEmail());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new StringResponse("Invalid email address."));
         }
 
-        Optional<ForgotPassword> optionalForgotPassword = forgotpasswordRepository.findByOtpAndUser(otp, user);
+        Integer otp1=Integer.valueOf(verifyAndChangePasswordRequest.getOtp());
+        Optional<ForgotPassword> optionalForgotPassword = forgotpasswordRepository.findByOtpAndUser(otp1, user);
         if (optionalForgotPassword.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new StringResponse("Invalid OTP for email: " + email));
+                    .body(new StringResponse("Invalid OTP for email: " + verifyAndChangePasswordRequest.getEmail()));
         }
 
         ForgotPassword fp = optionalForgotPassword.get();
@@ -97,13 +93,13 @@ public class ForgotPasswordController {
                     .body(new StringResponse("OTP has expired."));
         }
 
-        if (!Objects.equals(changePassword.password(), changePassword.repeatPassword())) {
+        if (!Objects.equals(verifyAndChangePasswordRequest.getChangePassword().password(), verifyAndChangePasswordRequest.getChangePassword().repeatPassword())) {
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
                     .body(new StringResponse("Passwords do not match. Please try again."));
         }
 
-        String encodedPassword = encoder.encode(changePassword.password());
-        userRepository.updatePassword(email, encodedPassword);
+        String encodedPassword = encoder.encode(verifyAndChangePasswordRequest.getChangePassword().password());
+        userRepository.updatePassword(verifyAndChangePasswordRequest.getEmail(), encodedPassword);
 
         forgotpasswordRepository.delete(fp);
 
