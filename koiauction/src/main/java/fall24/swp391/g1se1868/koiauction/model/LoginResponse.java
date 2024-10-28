@@ -7,13 +7,15 @@ package fall24.swp391.g1se1868.koiauction.model;
         private String fullname;
         private String Role;
         private Integer userId;
+        private Integer expire;
 
-        public LoginResponse(String token, String username, String fullname, String role, Integer userId, String s) {
+        public LoginResponse(String token, String username, String fullname, String role, Integer userId, String s, Integer expire) {
             this.token = token;
             this.userId=userId;
             this.username = username;
             this.fullname = fullname;
             this.Role = role;
+            this.expire = expire;
         }
 
         public String getFullname() {

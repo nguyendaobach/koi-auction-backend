@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.tokens.KeyToken;
@@ -17,6 +18,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+    @Value("${token.expire}")
+    private int tokenExpire;
     private String secrectKey="9c9d7cc5c9fe5579d1b7b0b0d4ff4b951da90529a7859ac17a6cb0ec63290fcb";
 
     public String generateToken(String username, int userId) {
@@ -26,10 +29,9 @@ public class JwtService {
                 .setClaims(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis()+60*60*60*30))
+                .expiration(new Date(System.currentTimeMillis()+tokenExpire))
                 .signWith(getKey())
                 .compact();
-
     }
 
     public String extractUserName(String token) {
@@ -70,7 +72,6 @@ public class JwtService {
     }
 
     public static void main(String[] args) {
-        JwtService jwtService = new JwtService();
-        System.out.println(jwtService.getUserIdFromToken("eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjYsInN1YiI6ImhhaSIsImlhdCI6MTcyNzgwNjc3MiwiZXhwIjoxNzI3ODEzMjUyfQ.Ht7152qlvN3K8M9Jdfok2K1gMYrWbAbP-BII-bXGcT2gU3NHwV2s-dtpic5KCmxs"));
+        System.out.println(new Date(System.currentTimeMillis()+5*60*60*1000));
     }
 }
