@@ -121,10 +121,20 @@ public class AuctionController {
 
 
     @GetMapping("/admin")
-    public ResponseEntity<List<KoiAuctionResponseDTO>> getAuctionDetails() {
-        List<Auction> auction =auctionRepository.findAllAdmin();
-        List<KoiAuctionResponseDTO> koiAuctionResponseDTOList =auctionService.getAuctionDetails(auction);
-        return ResponseEntity.ok(koiAuctionResponseDTOList);
+    public ResponseEntity<Map<String, Object>> getAuctionDetails(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Auction> auctionPage = auctionRepository.findAllAdmin(pageable);
+        Page<KoiAuctionResponseDTO> koiAuctionResponseDTOList =auctionService.getAuctionDetails(auctionPage);
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctions", koiAuctionResponseDTOList.getContent());
+        response.put("currentPage", koiAuctionResponseDTOList.getNumber()); // Trang hiện tại
+        response.put("totalPages", koiAuctionResponseDTOList.getTotalPages()); // Tổng số trang
+        response.put("totalElements", koiAuctionResponseDTOList.getTotalElements()); // Tổng số phần tử
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
