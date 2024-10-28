@@ -198,6 +198,13 @@ public class AuctionService {
             }
         }
     }
+    public void updateAuctionStatusFinished(Integer auctionId) {
+            Auction auction = auctionRepository.getById(auctionId);
+            if (auction.getStatus().equals("Closed")) {
+                auction.setStatus("Finished");
+                auctionRepository.save(auction);
+        }
+    }
     public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
         if (bids.isEmpty()) {

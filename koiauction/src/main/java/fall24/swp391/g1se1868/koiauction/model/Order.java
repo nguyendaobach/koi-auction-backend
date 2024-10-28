@@ -21,6 +21,9 @@ public class Order {
     @JoinColumn(name = "AuctionID")
     private Auction auctionID;
 
+    @Column(name = "FullName")
+    private String fullName;
+
     @Nationalized
     @Lob
     @Column(name = "Address")
@@ -44,6 +47,15 @@ public class Order {
     @Nationalized
     @Column(name = "Status", length = 50)
     private String status;
+
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
     public Integer getId() {
         return id;

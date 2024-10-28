@@ -1,12 +1,14 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 
+import fall24.swp391.g1se1868.koiauction.model.Auction;
 import fall24.swp391.g1se1868.koiauction.model.Transaction;
 import fall24.swp391.g1se1868.koiauction.model.Wallet;
 import fall24.swp391.g1se1868.koiauction.repository.TransactionRepository;
 import fall24.swp391.g1se1868.koiauction.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -22,6 +24,10 @@ public class WalletService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Lazy
+    @Autowired
+    AuctionService auctionService;
 
     public Wallet getWalletByUserId(Integer userId) {
         return walletRepository.findbyuserid(userId)
@@ -49,11 +55,16 @@ public class WalletService {
     }
 
     @Transactional
-    public String payment(int payerUserId, Long amount) {
+    public String paymentforAuction(int payerUserId, Integer auctionId) {
         Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
                 .orElseThrow(() -> new RuntimeException("Payer wallet not found"));
         Wallet recipientWallet = walletRepository.findbyuserid(1)
                 .orElseThrow(() -> new RuntimeException("Recipient wallet not found"));
+        Auction auction = auctionService.getAuctionById(auctionId);
+        Long amount = auction.getFinalPrice();
+        if(amount==0||amount==null){
+            return "Final Price Error";
+        }
         if (payerWallet.getAmount().compareTo(amount) < 0) {
             return "Insufficient balance!";
         }
@@ -63,6 +74,7 @@ public class WalletService {
         walletRepository.save(recipientWallet);
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
+        payerTransaction.setAuctionID(auctionId);
         payerTransaction.setAmount(amount);  // Negative for deduction
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
@@ -71,6 +83,7 @@ public class WalletService {
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");
         transactionRepository.save(payerTransaction);
+        auctionService.updateAuctionStatusFinished(auctionId);
         return "Payment successful!";
     }
     @Transactional

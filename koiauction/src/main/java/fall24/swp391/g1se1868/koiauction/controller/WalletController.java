@@ -190,14 +190,14 @@ public class WalletController {
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<StringResponse> makePayment( @RequestParam Long amount) {
+    public ResponseEntity<StringResponse> makePayment( @RequestParam Integer auctionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        String response = walletService.payment(userId, amount);
+        String response = walletService.paymentforAuction(userId, auctionId);
         return ResponseEntity.ok(new StringResponse(response));
     }
 
