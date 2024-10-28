@@ -6,14 +6,15 @@ import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.ChatService;// Assuming you have this custom UserPrinciple class
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -25,21 +26,27 @@ public class ChatController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/chat")
-    public void sendMessage(ChatRequest message) {
+    @PostMapping("/chat")
+    public ResponseEntity<?> sendMessage(@RequestBody ChatRequest message) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
+        if (message.getMessage() == null || message.getMessage().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         Chat chat = new Chat();
         chat.setMessage(message.getMessage());
-        chat.setDatetime(message.getDatetime());
+        chat.setDatetime(LocalDateTime.now());
         chat.setSenderId(userPrinciple.getId());
         chat.setReceiverId(message.getReceiverId());
         Chat savedMessage = chatService.saveMessage(chat);
-        messagingTemplate.convertAndSend("/topic/messages/" + message.getReceiverId(), savedMessage);
+        String chatRoomId = "room-" + Math.min(userPrinciple.getId(), message.getReceiverId()) + "-" + Math.max(userPrinciple.getId(), message.getReceiverId());
+        messagingTemplate.convertAndSend("/topic/" + chatRoomId, savedMessage);
+        return ResponseEntity.ok(savedMessage);
     }
+
 
     @GetMapping("/messages")
     public Page<Chat> getChatMessages(
