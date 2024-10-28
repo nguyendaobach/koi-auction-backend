@@ -22,6 +22,16 @@ public class Chat {
     @Column(nullable = false)
     private LocalDateTime datetime = LocalDateTime.now();
 
+    public Chat() {
+    }
+    public Chat(Integer chatId, Integer senderId, Integer receiverId, String message, LocalDateTime datetime) {
+        this.chatId = chatId;
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.message = message;
+        this.datetime = datetime;
+    }
+
     // Getters and Setters
     public Integer getChatId() { return chatId; }
     public void setChatId(Integer chatId) { this.chatId = chatId; }
