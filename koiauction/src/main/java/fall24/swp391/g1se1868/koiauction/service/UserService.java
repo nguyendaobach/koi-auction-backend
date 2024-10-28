@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -195,6 +197,23 @@ public class UserService {
     }
     public int getNewUsers(Integer day, Integer month, Integer year) {
         return userRepository.countNewUsers(day, month, year);
+    }
+
+    public Map<String, Long> getUserCountsByStatus(Integer day, Integer month, Integer year) {
+        Map<String, Long> statusCounts = new HashMap<>();
+        statusCounts.put("Active", userRepository.countByStatus("Active", day, month, year));
+        statusCounts.put("UnActive", userRepository.countByStatus("UnActive", day, month, year));
+        return statusCounts;
+    }
+
+    public Map<String, Long> getUserCountsByRole(Integer day, Integer month, Integer year) {
+        Map<String, Long> roleCounts = new HashMap<>();
+        // Thêm các role mà bạn muốn phân tích
+        roleCounts.put("admin", userRepository.countByRole("admin", day, month, year));
+        roleCounts.put("user", userRepository.countByRole("user", day, month, year));
+        roleCounts.put("staff", userRepository.countByRole("staff", day, month, year));
+        roleCounts.put("breeder", userRepository.countByRole("breeder", day, month, year));
+        return roleCounts;
     }
 }
 

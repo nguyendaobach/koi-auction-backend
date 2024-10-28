@@ -23,4 +23,31 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     int countTransactionsByMonth(@Param("month") int month, @Param("year") int year);
 
 
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE "
+            + "(:day IS NULL OR FUNCTION('DAY', t.time) = :day) AND "
+            + "(:month IS NULL OR FUNCTION('MONTH', t.time) = :month) AND "
+            + "(:year IS NULL OR FUNCTION('YEAR', t.time) = :year)")
+    Long count(@Param("day") Integer day,
+               @Param("month") Integer month,
+               @Param("year") Integer year);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE "
+            + "(:day IS NULL OR DAY(t.time) = :day) AND "
+            + "(:month IS NULL OR MONTH(t.time) = :month) AND "
+            + "(:year IS NULL OR YEAR(t.time) = :year)")
+    Long countByDate(Integer day, Integer month, Integer year);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE "
+            + "t.transactionType = :transactionType AND "
+            + "(:day IS NULL OR DAY(t.time) = :day) AND "
+            + "(:month IS NULL OR MONTH(t.time) = :month) AND "
+            + "(:year IS NULL OR YEAR(t.time) = :year)")
+    Long countByTransactionType(String transactionType, Integer day, Integer month, Integer year);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE "
+            + "t.status = :status AND "
+            + "(:day IS NULL OR DAY(t.time) = :day) AND "
+            + "(:month IS NULL OR MONTH(t.time) = :month) AND "
+            + "(:year IS NULL OR YEAR(t.time) = :year)")
+    Long countByStatus(String status, Integer day, Integer month, Integer year);
 }

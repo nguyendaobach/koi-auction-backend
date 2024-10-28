@@ -9,6 +9,7 @@ import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
 import fall24.swp391.g1se1868.koiauction.service.UserDetailService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import io.jsonwebtoken.io.IOException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -75,6 +76,7 @@ public class KoiFishController {
 
     @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
     public ResponseEntity<String> customizeKoiFish(
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
             @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,

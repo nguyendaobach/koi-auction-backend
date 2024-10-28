@@ -44,5 +44,25 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     int countNewUsers(@Param("day") Integer day,
                       @Param("month") Integer month,
                       @Param("year") Integer year);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.status = :status AND "
+            + "(:day IS NULL OR FUNCTION('DAY', u.createAt) = :day) AND "
+            + "(:month IS NULL OR FUNCTION('MONTH', u.createAt) = :month) AND "
+            + "(:year IS NULL OR FUNCTION('YEAR', u.createAt) = :year)")
+    Long countByStatus(@Param("status") String status,
+                       @Param("day") Integer day,
+                       @Param("month") Integer month,
+                       @Param("year") Integer year);
+
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND "
+            + "(:day IS NULL OR FUNCTION('DAY', u.createAt) = :day) AND "
+            + "(:month IS NULL OR FUNCTION('MONTH', u.createAt) = :month) AND "
+            + "(:year IS NULL OR FUNCTION('YEAR', u.createAt) = :year)")
+    Long countByRole(@Param("role") String role,
+                     @Param("day") Integer day,
+                     @Param("month") Integer month,
+                     @Param("year") Integer year);
+
 }
 

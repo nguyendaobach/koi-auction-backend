@@ -87,7 +87,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
 
 
     @Query("SELECT a FROM Auction a")
-    List<Auction> findAllAdmin();
+    Page<Auction> findAllAdmin(Pageable pageable);
 
     @Modifying
     @Transactional
