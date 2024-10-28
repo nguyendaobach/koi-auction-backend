@@ -8,6 +8,7 @@ import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import fall24.swp391.g1se1868.koiauction.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,8 @@ import java.util.Random;
 @RestController
 @RequestMapping("/api/security")
 public class SecurityController {
+    @Value("${token.expire}")
+    private int tokenExpire;
     @Autowired
     UserService userService;
     @Autowired
@@ -108,7 +111,7 @@ public class SecurityController {
             if (user != null) {
                 String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-                LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.");
+                LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.", tokenExpire);
                 return ResponseEntity.ok(response);
             } else {
                 User newUser = new User();
@@ -129,7 +132,7 @@ public class SecurityController {
                     // Tạo token cho người dùng mới
                 }
                 String token = jwtService.generateToken(newUser.getUserName(), newUser.getId());
-                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.");
+                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.", tokenExpire);
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
