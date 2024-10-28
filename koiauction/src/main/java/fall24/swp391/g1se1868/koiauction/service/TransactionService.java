@@ -33,5 +33,18 @@ public class TransactionService {
     public List<Transaction> getTransactionsByType(String transactionType) {
         return transactionRepository.findByTransactionType(transactionType);
     }
+    public Long getTransactionCount(Integer day, Integer month, Integer year) {
+        // Tạo câu truy vấn để đếm tổng số giao dịch dựa trên ngày, tháng, năm
+        return transactionRepository.countByDate(day, month, year);
+    }
 
+    public Long getTransactionCountByType(String transactionType, Integer day, Integer month, Integer year) {
+        // Tạo câu truy vấn để đếm số giao dịch theo loại
+        return transactionRepository.countByTransactionType(transactionType, day, month, year);
+    }
+
+    public Long getTransactionCountByStatus(String status, Integer day, Integer month, Integer year) {
+        // Tạo câu truy vấn để đếm số giao dịch theo trạng thái
+        return transactionRepository.countByStatus(status, day, month, year);
+    }
 }
