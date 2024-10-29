@@ -19,10 +19,15 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping()
-    public ResponseEntity<?> addOrder(@RequestParam Integer auctionId,
-                                         @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> addOrder(@RequestBody OrderRequest orderRequest) {
         try {
-            Order order = orderService.addOrder(auctionId, orderRequest);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new RuntimeException("User is not authenticated");
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            Order order = orderService.addOrder(orderRequest.getAuctionID(), orderRequest, userId);
             return ResponseEntity.ok(new StringResponse("Add order successful"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));

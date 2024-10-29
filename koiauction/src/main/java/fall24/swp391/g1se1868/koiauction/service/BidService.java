@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ public class BidService {
             bid.setId(new BidId());
         }
         Auction auction = bid.getAuctionID();
+        if(auction.getEndTime().isBefore(Instant.now())){
+            throw new IllegalArgumentException("End time is after current time");
+        }
         if (!auction.getStatus().equals("Ongoing")) {
             throw new IllegalStateException("Auction is not Ongoing.");
         }

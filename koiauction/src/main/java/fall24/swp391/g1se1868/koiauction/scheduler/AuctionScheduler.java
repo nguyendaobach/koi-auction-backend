@@ -10,8 +10,9 @@ public class AuctionScheduler {
     @Autowired
     private AuctionService auctionService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 90000)
     public void updateAuctionStatus() {
         auctionService.updateAuctionStatusOngoing();
+        auctionService.closeAuctionbyScheduled();
     }
 }

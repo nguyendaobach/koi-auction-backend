@@ -23,9 +23,15 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
-    public Order addOrder(Integer auctionId, OrderRequest orderRequest) {
+    public Order addOrder(Integer auctionId, OrderRequest orderRequest, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
+        if(auction.getFinalPrice()==null||auction.getWinnerID()==null||!auction.getStatus().equalsIgnoreCase("Closed")){
+            throw new RuntimeException("Auction status is not closed");
+        }
+        if(auction.getWinnerID()!=userId){
+            throw new RuntimeException("User is not the winner ID");
+        }
         User bidder = userRepository.findById(auction.getWinnerID())
                 .orElseThrow(() -> new RuntimeException("Bidder not found"));
         Order order = new Order();
@@ -36,6 +42,7 @@ public class OrderService {
         order.setPrice(auction.getFinalPrice());
         order.setPhoneNumber(orderRequest.getPhoneNumber());
         order.setNote(orderRequest.getNote());
+        order.setFullName(orderRequest.getFullName());
         order.setStatus("Pending");
         return orderRepository.save(order);
     }

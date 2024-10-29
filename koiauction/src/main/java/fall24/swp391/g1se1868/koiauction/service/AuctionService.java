@@ -198,6 +198,15 @@ public class AuctionService {
             }
         }
     }
+    public void closeAuctionbyScheduled(){
+        List<Auction> auctions = auctionRepository.findAll();
+        ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
+        for (Auction auction : auctions) {
+            if (auction.getEndTime().isBefore(nowZoned.toInstant()) && auction.getStatus().equals("Ongoing")) {
+                closeAuction(auction);
+            }
+            }
+    }
     public void updateAuctionStatusFinished(Integer auctionId) {
             Auction auction = auctionRepository.getById(auctionId);
             if (auction.getStatus().equals("Closed")) {
@@ -223,13 +232,11 @@ public class AuctionService {
     }
 
     private void returnDepositsToLosers(Auction auction) {
-        // Logic for returning deposits
+
         System.out.println("Deposits returned for auction: " + auction.getId());
     }
 
-    // Dummy method for sending payment requests to the winner
     private void requestPaymentFromWinner(Auction auction) {
-
         System.out.println("Payment request sent to winner for auction: " + auction.getId());
     }
 
