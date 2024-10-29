@@ -50,9 +50,9 @@ public class ChatController {
 
 
     @GetMapping("/messages")
-    public Page<Chat> getChatMessages(
+    public List<Chat> getChatMessages(
             @RequestParam Integer receiverId,
-            @RequestParam int page) {
+            @RequestParam(defaultValue = "0") int page) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");

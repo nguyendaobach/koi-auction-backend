@@ -23,9 +23,10 @@ public class ChatService {
         return chatMessageRepository.save(message);
     }
 
-    public Page<Chat> getChatMessages(Integer senderId, Integer receiverId, int page) {
-        Pageable pageRequest = PageRequest.of(page, 20);
-        return chatMessageRepository.findMessages(senderId, receiverId, pageRequest);
+    public List<Chat> getChatMessages(Integer senderId, Integer receiverId, int page) {
+        Pageable pageable = PageRequest.of(page, 20);
+        Page<Chat> chatPage = chatMessageRepository.findMessages(senderId, receiverId, pageable);
+        return chatPage.getContent();
     }
 
     public List<UserChat> getUserChats(Integer userId) {
