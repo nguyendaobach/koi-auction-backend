@@ -266,7 +266,7 @@ public class AuctionService {
             }
         }
         messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                new AuctionNotification("status", null, "Đấu giá đã kết thúc."));
+                new AuctionNotification("status", winnerID, "Đấu giá đã kết thúc."));
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
     }
