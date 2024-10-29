@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/chat")
 public class ChatController {
 
     @Autowired
@@ -27,7 +28,7 @@ public class ChatController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    @PostMapping("/chat")
+    @PostMapping()
     public ResponseEntity<?> sendMessage(@RequestBody ChatRequest message) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
