@@ -2,6 +2,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 
 import fall24.swp391.g1se1868.koiauction.model.Chat;
 import fall24.swp391.g1se1868.koiauction.model.ChatRequest;
+import fall24.swp391.g1se1868.koiauction.model.UserChat;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.ChatService;// Assuming you have this custom UserPrinciple class
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,16 @@ public class ChatController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         Integer senderId = userPrinciple.getId();
         return chatService.getChatMessages(senderId, receiverId, page);
+    }
+
+    @GetMapping("/userchat")
+    public List<UserChat> getUserChats(@RequestParam Integer userId) {
+        return chatService.getUserChats(userId);
+    }
+
+    @GetMapping("/systemchat")
+    public List<UserChat> getStaffChats() {
+        return chatService.getStaffChat();
     }
 }
 

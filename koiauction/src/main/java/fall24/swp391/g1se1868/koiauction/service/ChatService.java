@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.Chat;
+import fall24.swp391.g1se1868.koiauction.model.UserChat;
 import fall24.swp391.g1se1868.koiauction.repository.ChatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,14 @@ public class ChatService {
     public Page<Chat> getChatMessages(Integer senderId, Integer receiverId, int page) {
         Pageable pageRequest = PageRequest.of(page, 20);
         return chatMessageRepository.findMessages(senderId, receiverId, pageRequest);
+    }
+
+    public List<UserChat> getUserChats(Integer userId) {
+        return chatMessageRepository.getUserChatsBySenderId(userId);
+    }
+
+    public List<UserChat> getStaffChat(){
+        return chatMessageRepository.getStaffToChat();
     }
 }
 
