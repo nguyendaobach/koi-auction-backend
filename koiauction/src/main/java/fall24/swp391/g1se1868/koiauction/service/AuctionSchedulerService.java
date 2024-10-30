@@ -17,12 +17,12 @@ public class AuctionSchedulerService {
 
     public void scheduleStartAuction(Integer auctionId, Instant startInstant) throws SchedulerException {
         JobDetail jobDetail = JobBuilder.newJob(StartAuctionJob.class)
-                .withIdentity("startAuctionJob", "auctionGroup")
+                .withIdentity("startAuctionJob_" + auctionId, "auctionGroup")
                 .usingJobData("auctionId", auctionId)
                 .build();
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity("startAuctionTrigger", "auctionGroup")
+                .withIdentity("startAuctionTrigger_" + auctionId, "auctionGroup")
                 .startAt(Date.from(startInstant))
                 .build();
 
@@ -31,12 +31,12 @@ public class AuctionSchedulerService {
 
     public void scheduleCloseAuction(Integer auctionId, Instant endInstant) throws SchedulerException {
         JobDetail jobDetail = JobBuilder.newJob(CloseAuctionJob.class)
-                .withIdentity("closeAuctionJob", "auctionGroup")
+                .withIdentity("closeAuctionJob_" + auctionId, "auctionGroup")
                 .usingJobData("auctionId", auctionId)
                 .build();
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity("closeAuctionTrigger", "auctionGroup")
+                .withIdentity("closeAuctionTrigger_" + auctionId, "auctionGroup")
                 .startAt(Date.from(endInstant))
                 .build();
 
