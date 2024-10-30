@@ -27,8 +27,7 @@ public class Blog {
     @Column(name = "created_at", nullable = false)
     private Date createdAt = new Date();  // Ngày tạo bài viết, mặc định là thời điểm hiện tại
 
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore  // Ngăn không cho serializa danh sách này
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<BlogImage> images;
 
     // Getters và Setters

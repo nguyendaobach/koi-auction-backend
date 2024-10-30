@@ -76,7 +76,6 @@ public class KoiFishController {
 
     @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Transactional
     public ResponseEntity<String> customizeKoiFish(
             @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
             @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,
