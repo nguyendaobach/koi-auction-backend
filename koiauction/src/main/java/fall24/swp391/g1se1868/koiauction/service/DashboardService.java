@@ -123,4 +123,26 @@ public class DashboardService {
         auctionData.put("auctionCount", auctionCount);
         return auctionData;
     }
+    public Map<String, Object> getDashboard(Integer day, Integer month, Integer year) {
+        Map<String, Object> dashboard = new HashMap<>();
+
+        // Lấy doanh thu dựa trên ngày, tháng, năm
+        Long revenue = auctionService.getRevenue(day, month, year);
+        dashboard.put("revenue", revenue);
+
+        // Lấy số lượng phiên đấu giá dựa trên ngày, tháng, năm
+        Long auctionCount = auctionService.getCountAuction(day, month, year);
+        dashboard.put("auctionCount", auctionCount);
+
+        // Lấy số lượng phiên đấu giá có trạng thái Finished dựa trên ngày, tháng, năm
+        Long finishedAuctionCount = auctionService.getCountAuctionWithFinishedStatus(day, month, year);
+        dashboard.put("finishedAuctionCount", finishedAuctionCount);
+
+        // Bạn có thể thêm các thông tin khác từ UserService nếu cần
+        // Ví dụ: số lượng người dùng hoặc các thông tin khác
+        Integer userCount = userService.getNewUsers(day,month,year);
+        dashboard.put("newUserCount", userCount);
+
+        return dashboard;
+    }
 }
