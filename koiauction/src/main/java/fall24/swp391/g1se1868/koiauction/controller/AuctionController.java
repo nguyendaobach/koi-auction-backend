@@ -41,12 +41,12 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
             @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
+            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
 
         Pageable pageable = PageRequest.of(page, size);
-
+        String desc=desc1.toLowerCase();
         Page<Auction> auctionPage = null;
-        if (desc.equals("DESC")) {
+        if (desc.equals("desc")) {
             auctionPage = auctionRepository.findAllDesc(status, method, pageable);
         } else {
             auctionPage = auctionRepository.findAllAsc(status, method, pageable);
@@ -80,8 +80,8 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
             @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
-
+            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
+        String desc =desc1.toLowerCase();
         Pageable pageable = PageRequest.of(page, size);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -91,7 +91,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
 
         Page<Auction> auctionPage = null;
-        if (desc.equals("DESC")) {
+        if (desc.equals("desc")) {
             auctionPage = auctionRepository.findAllOwnerDesc(status, method,userId, pageable);
         } else {
             auctionPage = auctionRepository.findAllOwnerAsc(status, method,userId, pageable);
@@ -194,7 +194,7 @@ public class AuctionController {
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
     @PostMapping("/breeder/add-auction")
-    public ResponseEntity<StringResponse> addAuction(AuctionRequest auctionRequest) {
+    public ResponseEntity<StringResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
