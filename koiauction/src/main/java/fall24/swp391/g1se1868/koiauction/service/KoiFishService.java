@@ -122,6 +122,10 @@ public class KoiFishService {
             // Lưu imageHeader là "Header Video"
             if (imageHeader != null) {
                 String fileUrl = firebaseService.uploadImage(imageHeader);
+                if(fileUrl==null){
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading files: " );
+
+                }
                 KoiMedia koiMedia = new KoiMedia();
                 koiMedia.setKoiID(savedKoiFish);
                 koiMedia.setUrl(fileUrl);

@@ -32,5 +32,5 @@ build/
 ### VS Code ###
 .vscode/a
 
-# Add other sensitive files or directories to ignore
-koiauction/src/main/resources/firebase.json
+# Ignore Firebase config file
+firebase.json
