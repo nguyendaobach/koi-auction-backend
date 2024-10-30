@@ -194,7 +194,7 @@ public class AuctionController {
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
     @PostMapping("/breeder/add-auction")
-    public ResponseEntity<StringResponse> addAuction(AuctionRequest auctionRequest) {
+    public ResponseEntity<StringResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
