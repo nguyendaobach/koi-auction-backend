@@ -26,7 +26,7 @@ jobs:
         env:
           FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
         run: |
-          echo "$FIREBASE_CREDENTIALS" > ./src/main/resources/firebase.json
+          echo "$FIREBASE_CREDENTIALS" > ./koiauction/src/main/resources/firebase.json
 
       - name: Build with Maven
         run: mvn clean install -f koiauction
