@@ -23,13 +23,13 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean install -f koiauction
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+         name: java-app
+         path: 'koiauction/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -59,5 +59,5 @@ jobs:
         with:
           app-name: 'koi-auction'
           slot-name: 'Production'
-          package: '*.jar'
+          package: '${{ github.workspace }}/*.jar'  # Đường dẫn đến file JAR  # Adjust path to the JAR file for deployment  # Adjust path to the JAR file for deployment
           
