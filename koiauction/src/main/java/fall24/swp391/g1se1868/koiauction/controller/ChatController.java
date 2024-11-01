@@ -51,7 +51,7 @@ public class ChatController {
 
 
     @GetMapping("/messages")
-    public List<Chat> getChatMessages(
+    public Page<Chat> getChatMessages(
             @RequestParam Integer receiverId,
             @RequestParam(defaultValue = "0") int page) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
