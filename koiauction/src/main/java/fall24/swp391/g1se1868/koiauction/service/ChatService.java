@@ -25,8 +25,7 @@ public class ChatService {
 
     public Page<Chat> getChatMessages(Integer senderId, Integer receiverId, int page) {
         Pageable pageable = PageRequest.of(page, 20);
-        Page<Chat> chatPage = chatMessageRepository.findMessages(senderId, receiverId, pageable);
-        return chatPage;
+        return chatMessageRepository.findMessages(senderId, receiverId, pageable);
     }
 
     public List<UserChat> getUserChats(Integer userId) {
