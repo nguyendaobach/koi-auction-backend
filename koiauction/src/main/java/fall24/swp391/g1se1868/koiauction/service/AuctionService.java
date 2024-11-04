@@ -135,8 +135,8 @@ public class AuctionService {
         auction.setBidStep(request.getBidStep());
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
-        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
         Auction savedAuction = auctionRepository.save(auction);
+        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()),savedAuction.getId());
         if(savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
@@ -185,16 +185,16 @@ public class AuctionService {
         }
         auction.setStatus("Reject");
         auction.setStaffID(UserID);
-        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit());
+        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit(), auctionId);
         return auctionRepository.save(auction);
     }
+    @Transactional
     public void updateAuctionStatusOngoing() {
         List<Auction> auctions = auctionRepository.findAll();
         ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
         for (Auction auction : auctions) {
-            if (auction.getStartTime().isBefore(nowZoned.toInstant()) && auction.getStatus().equals("Scheduled")) {
-                auction.setStatus("Ongoing");
-                auctionRepository.save(auction);
+            if (auction.getStartTime().isBefore(nowZoned.toInstant()) && (auction.getStatus().equalsIgnoreCase("Pending")|| auction.getStatus().equalsIgnoreCase("Scheduled")) ){
+                startAuction(auction.getId());
             }
         }
     }
@@ -214,6 +214,7 @@ public class AuctionService {
                 auctionRepository.save(auction);
         }
     }
+
     public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
         if (bids.isEmpty()) {
@@ -231,22 +232,32 @@ public class AuctionService {
         return null;
     }
 
-    private void returnDepositsToLosers(Auction auction) {
-
-        System.out.println("Deposits returned for auction: " + auction.getId());
+    @Transactional
+    public void returnDepositsToLosers(Auction auction) {
+        Integer winnerId = null;
+         winnerId = determineWinner(auction);
+        if(winnerId != null) {
+            List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
+            for(AuctionParticipant auctionParticipant : listap) {
+                if(!auctionParticipant.getUserID().equals(winnerId)) {
+                    walletService.refundDeposit(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
+                    System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
+                    auctionParticipant.setStatus("Refunded");
+                    auctionParticipantRepository.save(auctionParticipant);
+                }
+            }
+        }
     }
 
     private void requestPaymentFromWinner(Auction auction) {
         System.out.println("Payment request sent to winner for auction: " + auction.getId());
     }
 
-    // Logic to handle other auction end tasks like returning deposits, requiring payments, etc.
     public void processEndOfAuctionTasks(Auction auction) {
         returnDepositsToLosers(auction);
         requestPaymentFromWinner(auction);
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
-
     public void closeAuction(Auction auction) {
         auction.setStatus("Closed");
         Integer winnerID = determineWinner(auction);

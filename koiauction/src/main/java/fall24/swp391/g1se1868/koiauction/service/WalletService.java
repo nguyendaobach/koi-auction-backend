@@ -87,7 +87,7 @@ public class WalletService {
         return "Payment successful!";
     }
     @Transactional
-    public Transaction deposit(int payerUserId, Long amount) {
+    public Transaction deposit(int payerUserId, Long amount, int auctionId) {
         Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
                 .orElseThrow(() -> new RuntimeException("Payer wallet not found"));
         Wallet recipientWallet = walletRepository.findbyuserid(1)
@@ -102,6 +102,7 @@ public class WalletService {
         Transaction payerTransaction = new Transaction();
         payerTransaction.setWalletID(payerWallet);
         payerTransaction.setAmount(amount);
+        payerTransaction.setAuctionID(auctionId);
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
         payerTransaction.setTime(now.toInstant());
@@ -111,39 +112,28 @@ public class WalletService {
         return payerTransaction;
     }
     @Transactional
-    public Transaction refundDeposit(int payerUserId, Long amount) {
-        // Tìm ví của người nhận (payer - người dùng) theo user ID
+    public Transaction refundDeposit(int payerUserId, Long amount, int auctionId) {
         Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
                 .orElseThrow(() -> new RuntimeException("Payer wallet not found"));
-
-        // Tìm ví của hệ thống, giả định rằng hệ thống có user ID = 1
         Wallet systemWallet = walletRepository.findbyuserid(1)
                 .orElseThrow(() -> new RuntimeException("System wallet not found"));
-
-        // Kiểm tra số tiền trong ví hệ thống có đủ để hoàn trả hay không
         if (systemWallet.getAmount().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient funds in system wallet");
         }
-
-        // Trừ tiền từ ví của hệ thống
         systemWallet.setAmount(systemWallet.getAmount() - amount);
         walletRepository.save(systemWallet);
-
-        // Thêm tiền vào ví của người dùng (payer)
         payerWallet.setAmount(payerWallet.getAmount() + amount);
         walletRepository.save(payerWallet);
-
-        // Tạo bản ghi giao dịch hoàn trả
         Transaction refundTransaction = new Transaction();
         refundTransaction.setWalletID(payerWallet); // Ghi lại giao dịch với ví người dùng
         refundTransaction.setAmount(amount);
+        refundTransaction.setAuctionID(auctionId);
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
         refundTransaction.setTime(now.toInstant());
         refundTransaction.setTransactionType("Refund");  // Loại giao dịch là hoàn tiền
         refundTransaction.setStatus("Completed");
         transactionRepository.save(refundTransaction);
-
         return refundTransaction;
     }
 
