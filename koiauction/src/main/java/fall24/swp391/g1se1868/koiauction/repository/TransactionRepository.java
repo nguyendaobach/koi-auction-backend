@@ -14,9 +14,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     @Query("SELECT t FROM Transaction t WHERE t.walletID.id = ?1")
     List<Transaction> findByWalletID(Integer walletID);
-
     List<Transaction> findByAmount(Long amount);
-    // Tìm giao dịch giữa hai mốc thời gian
     List<Transaction> findByTimeBetween(Instant startTime, Instant endTime);
     List<Transaction> findByTransactionType(String transactionType);
     @Query("SELECT COUNT(t) FROM Transaction t WHERE MONTH(t.time) = :month AND YEAR(t.time) = :year")

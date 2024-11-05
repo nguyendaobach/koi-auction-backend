@@ -31,7 +31,7 @@ public class AuctionParticipantService {
         if (userWallet.getAmount() < activeAuction.getBidderDeposit()) {
             return "Insufficient balance for deposit.";
         }
-        Transaction transaction = walletService.deposit(userId, activeAuction.getBidderDeposit());
+        Transaction transaction = walletService.deposit(userId, activeAuction.getBidderDeposit(),auctionId);
         AuctionParticipant auctionParticipant = new AuctionParticipant();
         AuctionParticipantId participantId = new AuctionParticipantId();
         Auction auction = new Auction(auctionId);
@@ -43,7 +43,6 @@ public class AuctionParticipantService {
         auctionParticipant.setTransactionID(transaction.getId());
         auctionParticipant.setStatus("Participated");
         auctionParticipantRepository.save(auctionParticipant);
-
         return "Registration successful!";
     }
 
