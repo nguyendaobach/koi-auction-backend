@@ -211,14 +211,14 @@ public class AuctionController {
         }
         try {
             String auctionResult = auctionService.addAuction(auctionRequest, userId);
-            return ResponseEntity.ok(new StringResponse(auctionResult));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new StringResponse(auctionResult));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
         }
     }
 
     @DeleteMapping("/breeder")
-    public String DeleteAuction(@RequestParam Integer id){
+    public ResponseEntity<?> DeleteAuction(@RequestParam Integer id){
         return auctionService.deleteAuction(id);
     }
 

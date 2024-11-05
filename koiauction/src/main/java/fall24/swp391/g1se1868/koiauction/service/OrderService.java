@@ -26,8 +26,8 @@ public class OrderService {
     public Order addOrder(Integer auctionId, OrderRequest orderRequest, Integer userId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
-        if(auction.getFinalPrice()==null||auction.getWinnerID()==null||!auction.getStatus().equalsIgnoreCase("Closed")){
-            throw new RuntimeException("Auction status is not closed");
+        if(auction.getFinalPrice()==null||auction.getWinnerID()==null||!auction.getStatus().equalsIgnoreCase("Paid")){
+            throw new RuntimeException("Auction status is not paid");
         }
         if(auction.getWinnerID()!=userId){
             throw new RuntimeException("User is not the winner ID");

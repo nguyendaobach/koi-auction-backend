@@ -39,19 +39,16 @@ public class SecurityController {
 
     Random random = new Random();
 
-    // Tạo số nguyên ngẫu nhiên
     String randomInt = String.valueOf(random.nextInt());
 
     @PostMapping("/register")
-    public ResponseEntity<StringResponse> register(@RequestBody UserRegister user) {
+    public ResponseEntity<?> register(@RequestBody UserRegister user) {
         try {
-            String message = userService.register(user);
-            return new ResponseEntity<>(new StringResponse(message), HttpStatus.OK);
+            return userService.register(user);
         } catch (Exception e) {
             return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLogin user) {
@@ -69,7 +66,6 @@ public class SecurityController {
 
     @PostMapping("/google/login")
     public ResponseEntity<?> handleGoogleLogin(@RequestBody String token) {
-        // Lấy token từ frontend
         return getGoogleProfile(token);
     }
 

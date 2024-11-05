@@ -232,12 +232,12 @@ public class KoiFishService {
     }
 
 
-    public String delete(Integer id) {
+    public ResponseEntity<?> delete(Integer id) {
         if(koiFishRepository.findById(id)!=null){
             koiFishRepository.delete(id);
-            return "Koi Fish removed succesfully";
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Koi Fish removed succesfully");
         }else {
-            return "Koi Id not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Id not found");
         }
     }
 
