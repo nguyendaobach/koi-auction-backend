@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -79,11 +78,10 @@ public class WalletService {
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
         payerTransaction.setTime(now.toInstant());
-        payerTransaction.setAuctionID(null);
         payerTransaction.setTransactionType("Payment");
         payerTransaction.setStatus("Completed");
         transactionRepository.save(payerTransaction);
-        auctionService.updateAuctionStatusFinished(auctionId);
+        auctionService.updateAuctionStatusPaid(auctionId);
         return "Payment successful!";
     }
     @Transactional

@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -207,10 +207,10 @@ public class AuctionService {
             }
             }
     }
-    public void updateAuctionStatusFinished(Integer auctionId) {
+    public void updateAuctionStatusPaid(Integer auctionId) {
             Auction auction = auctionRepository.getById(auctionId);
             if (auction.getStatus().equals("Closed")) {
-                auction.setStatus("Finished");
+                auction.setStatus("Paid");
                 auctionRepository.save(auction);
         }
     }
@@ -239,7 +239,7 @@ public class AuctionService {
         if(winnerId != null) {
             List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
             for(AuctionParticipant auctionParticipant : listap) {
-                if(!auctionParticipant.getUserID().equals(winnerId)) {
+                if(!auctionParticipant.getUserID().getId().equals(winnerId)) {
                     walletService.refundDeposit(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
                     System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
                     auctionParticipant.setStatus("Refunded");
@@ -419,12 +419,12 @@ public class AuctionService {
         System.out.println(Instant.now());
     }
 
-    public String deleteAuction(Integer id) {
+    public ResponseEntity<?> deleteAuction(Integer id) {
         if(auctionRepository.findById(id)!=null){
             auctionRepository.delete(id);
-            return "Delete successfully";
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body( "Delete successfully");
         }else {
-            return "Auction id not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Auction id not found");
         }
     }
     public Long getRevenue(Integer day, Integer month, Integer year) {
