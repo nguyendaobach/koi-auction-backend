@@ -121,7 +121,7 @@ public class AuctionService {
         return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
     }
     @Transactional
-    public String addAuction(AuctionRequest request,int breerderID) {
+    public Auction addAuction(AuctionRequest request,int breerderID) {
         Auction auction = new Auction();
         auction.setBreederID(breerderID);
         auction.setAuctionMethod(request.getAuctionMethod());
@@ -158,7 +158,7 @@ public class AuctionService {
             auctionKoi.setKoiID(new KoiFish(koiId));
             auctionKoiRepository.save(auctionKoi);
         }
-        return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
+        return savedAuction;
     }
     public Page<KoiAuctionResponseDTO> getAllActionRequest(Pageable pageable) {
         Page<Auction> auctionPage = auctionRepository.getAllAuctionRequest(pageable);
@@ -420,7 +420,7 @@ public class AuctionService {
     }
 
     public ResponseEntity<?> deleteAuction(Integer id) {
-        if(auctionRepository.findById(id)!=null){
+        if(auctionRepository.findById(id).isPresent()){
             auctionRepository.delete(id);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body( "Delete successfully");
         }else {
