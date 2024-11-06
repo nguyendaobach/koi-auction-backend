@@ -121,7 +121,6 @@ public class WalletController {
             queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
             String paymentUrl = VNPayConfig.getVnp_PayUrl() + "?" + queryUrl;
 
-            // Trả về URL thanh toán cho Frontend
             return ResponseEntity.ok(new StringResponse(paymentUrl));
 
         } catch (Exception e) {
