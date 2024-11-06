@@ -194,7 +194,7 @@ public class AuctionController {
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
     @PostMapping("/breeder/add-auction")
-    public ResponseEntity<StringResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
+    public ResponseEntity<AuctionResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
@@ -203,17 +203,17 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
                 auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() <100000) {
-            return ResponseEntity.badRequest().body(new StringResponse("Price values must be greater than 100000 and not null"));
+            return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null",null));
         }
         if (auctionRequest.getStartTime() == null || auctionRequest.getEndTime() == null ||
                 auctionRequest.getStartTime().isBefore(Instant.now()) || auctionRequest.getEndTime().isBefore(Instant.now())) {
-            return ResponseEntity.badRequest().body(new StringResponse("Time invalid"));
+            return ResponseEntity.badRequest().body(new AuctionResponse("Time invalid",null));
         }
         try {
-            String auctionResult = auctionService.addAuction(auctionRequest, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new StringResponse(auctionResult));
+            Auction auctionResult = auctionService.addAuction(auctionRequest, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AuctionResponse("Add Auction Successfully",auctionResult.getId()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+            return ResponseEntity.badRequest().body(new AuctionResponse(e.getMessage(),null));
         }
     }
 
