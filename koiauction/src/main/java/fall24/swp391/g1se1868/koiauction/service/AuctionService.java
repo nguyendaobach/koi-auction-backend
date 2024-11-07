@@ -62,6 +62,8 @@ public class AuctionService {
 
     @Autowired
     WalletService walletService;
+    @Autowired
+    private KoiFishRepository koiFishRepository;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -149,6 +151,12 @@ public class AuctionService {
         }
 
         for (Integer koiId : request.getKoiIds()) {
+            KoiFish koi = koiFishRepository.findById(koiId).orElseThrow(() -> new IllegalArgumentException("Koi not found with ID: " + koiId));
+            if(!koi.getStatus().equalsIgnoreCase("Active")){
+                throw new RuntimeException("Koi is not active");
+            }
+            koi.setStatus("Sold");
+            koiFishRepository.save(koi);
             AuctionKoi auctionKoi = new AuctionKoi();
             AuctionKoiId auctionKoiId = new AuctionKoiId();
             auctionKoiId.setAuctionID(savedAuction.getId());

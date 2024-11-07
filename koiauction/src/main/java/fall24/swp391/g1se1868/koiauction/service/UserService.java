@@ -82,7 +82,7 @@ public class UserService {
     public boolean verifyUserName(String username){
         try {
             User user = userRepository.findByUserName(username);
-            return user==null?true:false;
+            return user==null&&username!=null&&!username.isEmpty()&&!username.isBlank()?true:false;
         } catch (IncorrectResultSizeDataAccessException e) {
             return false;
         }
@@ -90,7 +90,7 @@ public class UserService {
     public boolean verifyEmail(String email){
         try {
             User user = userRepository.findByEmail(email);
-            return user==null?true:false;
+            return user==null&&email!=null&&!email.isEmpty()&&!email.isBlank()?true:false;
         } catch (IncorrectResultSizeDataAccessException e) {
             return false;
         }
@@ -98,7 +98,7 @@ public class UserService {
     public boolean verifyPhoneNumber(String phoneNumber){
         try {
             User user = userRepository.findByPhoneNumber(phoneNumber);
-            return user==null?true:false;
+            return user==null&&phoneNumber!=null&&!phoneNumber.isEmpty()&&!phoneNumber.isBlank()?true:false;
         } catch (IncorrectResultSizeDataAccessException e) {
             return false;
         }
