@@ -242,7 +242,7 @@ public class KoiFishServiceTest {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Koi Fish not found", response.getBody());
+        assertEquals("Koi Id not found", response.getBody());
         verify(koiFishRepository, times(0)).delete(any(KoiFish.class));
     }
 }

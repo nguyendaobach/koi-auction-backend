@@ -216,10 +216,43 @@ public class AuctionController {
             return ResponseEntity.badRequest().body(new AuctionResponse(e.getMessage(),null));
         }
     }
-
-    @DeleteMapping("/breeder")
-    public ResponseEntity<?> DeleteAuction(@RequestParam Integer id){
-        return auctionService.deleteAuction(id);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateAuction(
+            @PathVariable int id,
+            @RequestBody AuctionRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try {
+            Auction updatedAuction = auctionService.updateAuction(id, request, userId);
+            return ResponseEntity.ok(updatedAuction);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> cancelAuction(@PathVariable Integer id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try {
+            auctionService.cancelAuction(id,userId);
+            Map<String, String> successResponse = new HashMap<>();
+            successResponse.put("message", "Auction cancelled successfully.");
+            return ResponseEntity.ok(successResponse);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     @GetMapping("/staff/get-auction-request")

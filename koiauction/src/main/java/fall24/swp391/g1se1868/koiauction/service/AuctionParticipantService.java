@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class AuctionParticipantService {
@@ -44,6 +45,9 @@ public class AuctionParticipantService {
         auctionParticipant.setStatus("Participated");
         auctionParticipantRepository.save(auctionParticipant);
         return "Registration successful!";
+    }
+    public List<AuctionParticipant> findByAuctionId(Integer auctionId){
+        return auctionParticipantRepository.findAuctionParticipantsByAuctionID(auctionId);
     }
 
 }
