@@ -80,16 +80,16 @@ public class UserService {
 
     public boolean verifyUserName(String username){
         User user = userRepository.findByUserName(username);
-        return user==null?true:false;
+        return user==null&&username!=null&&!username.isEmpty()&&!username.isBlank()?true:false;
     }
     public boolean verifyEmail(String email){
         User user = userRepository.findByEmail(email);
 
-        return user==null?true:false;
+        return user==null&&email!=null&&!email.isEmpty()&&!email.isBlank()?true:false;
     }
     public boolean verifyPhoneNumber(String phoneNumber){
         User user = userRepository.findByPhoneNumber(phoneNumber);
-        return user==null?true:false;
+        return user==null&&phoneNumber!=null&&!phoneNumber.isEmpty()&&!phoneNumber.isBlank()?true:false;
     }
     public int getUserId(String username){
         User user = userRepository.findByUserName(username);

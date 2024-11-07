@@ -55,6 +55,9 @@ import java.time.LocalDate;
     @Column(name = "KoiName", length = 100)
     private String koiName;
 
+    public KoiFish(int i, String active) {
+    }
+
     public String getKoiName() {
         return koiName;
     }
