@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -79,17 +80,28 @@ public class UserService {
     }
 
     public boolean verifyUserName(String username){
-        User user = userRepository.findByUserName(username);
-        return user==null&&username!=null&&!username.isEmpty()&&!username.isBlank()?true:false;
+        try {
+            User user = userRepository.findByUserName(username);
+            return user==null&&username!=null&&!username.isEmpty()&&!username.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public boolean verifyEmail(String email){
-        User user = userRepository.findByEmail(email);
-
-        return user==null&&email!=null&&!email.isEmpty()&&!email.isBlank()?true:false;
+        try {
+            User user = userRepository.findByEmail(email);
+            return user==null&&email!=null&&!email.isEmpty()&&!email.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public boolean verifyPhoneNumber(String phoneNumber){
-        User user = userRepository.findByPhoneNumber(phoneNumber);
-        return user==null&&phoneNumber!=null&&!phoneNumber.isEmpty()&&!phoneNumber.isBlank()?true:false;
+        try {
+            User user = userRepository.findByPhoneNumber(phoneNumber);
+            return user==null&&phoneNumber!=null&&!phoneNumber.isEmpty()&&!phoneNumber.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public int getUserId(String username){
         User user = userRepository.findByUserName(username);
