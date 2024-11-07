@@ -415,10 +415,6 @@ public class AuctionService {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(Instant.now());
-    }
-
     public ResponseEntity<?> deleteAuction(Integer id) {
         if(auctionRepository.findById(id).isPresent()){
             auctionRepository.delete(id);
@@ -427,6 +423,78 @@ public class AuctionService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Auction id not found");
         }
     }
+    @Transactional
+    public Auction updateAuction(int auctionId, AuctionRequest request, int breederID) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+        if (auction.getBreederID() != breederID) {
+            throw new RuntimeException("You do not have permission to update this auction.");
+        }
+        switch (auction.getStatus()) {
+            case "Pending":
+                auction.setAuctionMethod(request.getAuctionMethod());
+                auction.setStartTime(request.getStartTime());
+                auction.setEndTime(request.getEndTime());
+                auction.setStartingPrice(request.getStartingPrice());
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidderDeposit(request.getBidderDeposit());
+                auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
+                auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
+                auction.setBidStep(request.getBidStep());
+                auctionKoiRepository.deleteByAuctionID(auction.getId());
+                for (Integer koiId : request.getKoiIds()) {
+                    AuctionKoi auctionKoi = new AuctionKoi();
+                    AuctionKoiId auctionKoiId = new AuctionKoiId();
+                    auctionKoiId.setAuctionID(auction.getId());
+                    auctionKoiId.setKoiID(koiId);
+                    auctionKoi.setId(auctionKoiId);
+                    auctionKoi.setAuctionID(auction);
+                    auctionKoi.setKoiID(new KoiFish(koiId));
+                    auctionKoiRepository.save(auctionKoi);
+                }
+                break;
+
+            case "Scheduled":
+                auction.setStartTime(request.getStartTime());
+                auction.setEndTime(request.getEndTime());
+                break;
+
+            default:
+                throw new RuntimeException("Cannot update auction in current status: " + auction.getStatus());
+        }
+        return auctionRepository.save(auction);
+    }
+
+    @Transactional
+    public void cancelAuction(Integer id, Integer userId) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+        if(auction.getBreederID()!=userId){
+            throw new RuntimeException("You do not have permission to update this auction.");
+        }
+        switch (auction.getStatus()) {
+            case "Pending":
+                auction.setStatus("Cancelled");
+                walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                break;
+
+            case "Scheduled":
+                List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(id);
+                if (participants.isEmpty()) {
+                    auction.setStatus("Cancelled");
+                    walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                } else {
+                    throw new IllegalArgumentException("Cannot cancel scheduled auction because has participants.");
+                }
+                break;
+
+            default:
+                throw new IllegalArgumentException("Auction cannot be cancelled in current status: " + auction.getStatus());
+        }
+
+        auctionRepository.save(auction);
+    }
+
     public Long getRevenue(Integer day, Integer month, Integer year) {
         if (day != null && month != null && year != null) {
             return auctionRepository.getRevenueByDay(day, month, year);
