@@ -2,6 +2,7 @@ package fall24.swp391.g1se1868.koiauction.security;
 
 import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserDetailService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,23 +30,37 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String token=null;
-        String username=null;
+        String token = null;
+        String username = null;
 
-        if (authHeader!=null && authHeader.startsWith("Bearer ")){
-            token= authHeader.substring(7);
-            username= jwtService.extractUserName(token);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // Extract the token after "Bearer "
+
+            try {
+                username = jwtService.extractUserName(token); // Extract username from token
+            } catch (ExpiredJwtException e) {
+                // Handle token expiration
+                response.setContentType("application/json");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\": \"token_expired\"}");
+                return; // Stop further processing
+            }
         }
-        if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null){
-            UserDetails userDetails= context.getBean(UserDetailService.class).loadUserByUsername(username);
 
-            if(jwtService.validateToken(token,userDetails)){
-                UsernamePasswordAuthenticationToken authenticationToken=
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = context.getBean(UserDetailService.class).loadUserByUsername(username);
+
+            // Validate token and user details
+            if (jwtService.validateToken(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
-        filterChain.doFilter(request,response);
+
+        // Continue with the filter chain
+        filterChain.doFilter(request, response);
     }
+
 }

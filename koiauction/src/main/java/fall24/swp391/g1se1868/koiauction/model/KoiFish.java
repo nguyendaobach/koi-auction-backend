@@ -1,32 +1,33 @@
 package fall24.swp391.g1se1868.koiauction.model;
 
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Nationalized;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-public class KoiFish {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "KoiID", nullable = false)
-    private Integer id;
+    @NoArgsConstructor
+    public class KoiFish {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "KoiID", nullable = false)
+        private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "UserID")
     private User userID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CountryID")
     private KoiOrigin countryID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "KoiTypeID")
     private KoiType koiTypeID;
 
-    @Column(name = "BreederID")
-    private Integer breederID;
 
     @Column(name = "Weight", precision = 10, scale = 2)
     private BigDecimal weight;
@@ -36,6 +37,7 @@ public class KoiFish {
     private String sex;
 
     @Column(name = "Birthday")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 
     @Nationalized
@@ -49,6 +51,37 @@ public class KoiFish {
     @Nationalized
     @Column(name = "Status", length = 50)
     private String status;
+
+    @Column(name = "KoiName", length = 100)
+    private String koiName;
+
+    public KoiFish(int i, String active) {
+    }
+
+    public String getKoiName() {
+        return koiName;
+    }
+
+    public void setKoiName(String koiName) {
+        this.koiName = koiName;
+    }
+
+    public KoiFish(User userID,String koiName, KoiOrigin countryID, KoiType koiTypeID, BigDecimal weight, String sex, LocalDate birthday, String description, BigDecimal length, String status) {
+        this.userID = userID;
+        this.koiName=koiName;
+        this.countryID = countryID;
+        this.koiTypeID = koiTypeID;
+        this.weight = weight;
+        this.sex = sex;
+        this.birthday = birthday;
+        this.description = description;
+        this.length = length;
+        this.status = status;
+    }
+
+    public KoiFish(Integer id) {
+        this.id = id;
+    }
 
     public Integer getId() {
         return id;
@@ -82,13 +115,6 @@ public class KoiFish {
         this.koiTypeID = koiTypeID;
     }
 
-    public Integer getBreederID() {
-        return breederID;
-    }
-
-    public void setBreederID(Integer breederID) {
-        this.breederID = breederID;
-    }
 
     public BigDecimal getWeight() {
         return weight;

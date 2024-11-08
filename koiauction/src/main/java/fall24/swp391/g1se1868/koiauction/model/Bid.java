@@ -2,7 +2,6 @@ package fall24.swp391.g1se1868.koiauction.model;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
 
 @Entity
 public class Bid {
@@ -15,12 +14,12 @@ public class Bid {
     private Auction auctionID;
 
     @MapsId("bidderID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "BidderID", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "BidderID")
     private User bidderID;
 
     @Column(name = "Amount", precision = 10, scale = 2)
-    private BigDecimal amount;
+    private  Long amount;
 
     public BidId getId() {
         return id;
@@ -46,11 +45,11 @@ public class Bid {
         this.bidderID = bidderID;
     }
 
-    public BigDecimal getAmount() {
+    public  Long getAmount() {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount( Long amount) {
         this.amount = amount;
     }
 
