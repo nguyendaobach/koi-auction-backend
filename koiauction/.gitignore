@@ -34,3 +34,6 @@ build/
 
 # Ignore Firebase config file
 src/main/resources/firebase.json
+
+src/test/java/fall24/swp391/g1se1868/koiauction/KoiFishServiceTest.java
+src/test/java/fall24/swp391/g1se1868/koiauction/AuctionServiceTest.java
