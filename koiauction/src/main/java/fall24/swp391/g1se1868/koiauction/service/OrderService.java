@@ -4,12 +4,17 @@ import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.repository.OrderRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -91,4 +96,35 @@ public class OrderService {
                 order.getStatus()
         )).toList();
     }
+
+    public OrderResponse getOrderById(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+
+        Order order = optionalOrder.get();
+
+        if ((order.getBidderID() != null && order.getBidderID().getId().equals(userId))) {
+            if (!order.getStatus().equals("Pending")) {
+                throw new AccessDeniedException("This order cannot be modified because it is no longer Pending.");
+            }
+            return new OrderResponse(
+                    order.getId(),
+                    order.getBidderID() != null ? order.getBidderID().getId() : null,
+                    order.getAuctionID() != null ? order.getAuctionID().getId() : null,
+                    order.getAddress(),
+                    order.getDate(),
+                    order.getPrice(),
+                    order.getPhoneNumber(),
+                    order.getNote(),
+                    order.getStatus()
+            );
+        } else {
+            throw new AccessDeniedException("User does not have permission to access this order");
+        }
+    }
+
+
 }
