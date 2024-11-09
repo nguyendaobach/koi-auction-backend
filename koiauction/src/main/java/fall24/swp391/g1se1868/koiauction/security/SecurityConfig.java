@@ -1,3 +1,4 @@
+
 package fall24.swp391.g1se1868.koiauction.security;
 
 import lombok.RequiredArgsConstructor;
@@ -18,11 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +30,7 @@ public class SecurityConfig {
     UserDetailsService userDetailService;
 
     @Autowired
-     JwtFilter jwtFilter;
+    JwtFilter jwtFilter;
 
 //    @Bean
 //    CorsConfigurationSource corsConfigurationSource() {
@@ -83,10 +80,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
                         .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                        .sessionManagement(session ->
-                                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                )
-                        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity.httpBasic(Customizer.withDefaults());
         return httpSecurity.build();
     }

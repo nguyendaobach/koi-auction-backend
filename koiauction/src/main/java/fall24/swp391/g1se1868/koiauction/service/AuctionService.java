@@ -82,20 +82,26 @@ public class AuctionService {
 
 
 
-    public List<Map<String, Object>> getPastAuctionsWithWinnerName() {
-        List<Object[]> results = auctionRepository.findPastAuctionsWithWinnerName();
-        List<Map<String, Object>> pastAuctions = new ArrayList<>();
-        for (Object[] result : results) {
-            Auction auction = (Auction) result[0];
-            String winnerName = (String) result[1];
-            Map<String, Object> auctionData = new HashMap<>();
-            auctionData.put("auction", auction);
-            auctionData.put("winnerName", winnerName);
-            pastAuctions.add(auctionData);
-        }
+    public Page<Map<String, Object>> getPastAuctionsWithWinnerName(Pageable pageable) {
+        // Gọi repository để lấy kết quả với phân trang
+        Page<Object[]> results = auctionRepository.findPastAuctionsWithWinnerName(pageable);
 
-        return pastAuctions;
+        // Chuyển đổi kết quả trả về thành một danh sách các Map chứa thông tin cần thiết
+        List<Map<String, Object>> pastAuctions = results.getContent().stream()
+                .map(result -> {
+                    Auction auction = (Auction) result[0];
+                    String winnerName = (String) result[1];
+                    Map<String, Object> auctionData = new HashMap<>();
+                    auctionData.put("auction", auction);
+                    auctionData.put("winnerName", winnerName);
+                    return auctionData;
+                })
+                .collect(Collectors.toList());
+
+        // Trả về Page chứa danh sách các đấu giá đã qua với phân trang
+        return new PageImpl<>(pastAuctions, pageable, results.getTotalElements());
     }
+
 
 
     public AuctionDetailDTO getAuctionsParticipantByUser(int userId) {
