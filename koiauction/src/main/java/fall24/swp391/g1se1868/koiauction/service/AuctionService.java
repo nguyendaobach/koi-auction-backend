@@ -107,9 +107,8 @@ public class AuctionService {
     public AuctionDetailDTO getAuctionsParticipantByUser(int userId) {
         List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(userId);
         if (!auctionIds.isEmpty()) {
-            // Giả sử bạn chỉ muốn lấy một phiên đấu giá đầu tiên từ danh sách
             Integer auctionId = auctionIds.get(0);
-            return getAuctionWithKoiByID(auctionId); // Gọi phương thức đã sửa để lấy thông tin chi tiết
+            return getAuctionWithKoiByID(auctionId);
         } else {
             throw new RuntimeException("No auctions found for user ID: " + userId);
         }
