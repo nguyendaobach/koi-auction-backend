@@ -30,7 +30,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
             "JOIN User u ON a.winnerID = u.id " +
             "WHERE a.endTime < CURRENT_TIMESTAMP " +
             "AND a.status = 'Closed'")
-    List<Object[]> findPastAuctionsWithWinnerName();
+    Page<Object[]> findPastAuctionsWithWinnerName(Pageable pageable);
 
     @Query("SELECT a FROM Auction a WHERE a.winnerID = ?1")
     Page<Auction> getAuctionbyWinnerID(int winnerID, Pageable pageable);

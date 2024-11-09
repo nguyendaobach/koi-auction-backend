@@ -55,23 +55,25 @@ public class UserService {
         }
 
         if (verifyUserName(userRegister.getUserName())) {
-            User user = new User();
-            user.setUserName(userRegister.getUserName());
-            user.setFullName(userRegister.getFullName());
-            user.setPhoneNumber(userRegister.getPhoneNumber());
-            user.setEmail(userRegister.getEmail());
-            user.setPassword(encoder.encode(userRegister.getPassword()));
-            user.setAddress(userRegister.getAddress());
-            user.setCreateAt(Instant.now());
-            user.setUpdateAt(Instant.now());
-            user.setRole("User");
-            user.setStatus("Active");
-
-            if (userRepository.save(user) != null) {
-                walletService.addUserWallet(user.getId());
-                return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
+            if(verifyEmail(userRegister.getEmail())){
+                User user = new User();
+                user.setUserName(userRegister.getUserName());
+                user.setEmail(userRegister.getEmail());
+                user.setPassword(encoder.encode(userRegister.getPassword()));
+                user.setPhoneNumber("");
+                user.setAddress("");
+                user.setCreateAt(Instant.now());
+                user.setUpdateAt(Instant.now());
+                user.setRole("User");
+                user.setStatus("Active");
+                if (userRepository.save(user) != null) {
+                    walletService.addUserWallet(user.getId());
+                    return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
+                }
+            }else {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
             }
 
         } else {

@@ -11,6 +11,9 @@ import fall24.swp391.g1se1868.koiauction.service.UserService;
 import io.jsonwebtoken.io.IOException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -50,8 +54,9 @@ public class KoiFishController {
         return koiFishService.getKoiActive();
     }
 
-    @GetMapping()
-    public List<KoiFishUser> getAll() {
+    @GetMapping
+    public Map<String, Object> getAll(@RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrinciple userPrinciple = null;
 
@@ -60,19 +65,23 @@ public class KoiFishController {
             userPrinciple = (UserPrinciple) authentication.getPrincipal();
         }
 
+        // Tạo đối tượng Pageable cho phân trang
+        Pageable pageable = PageRequest.of(page, size);
+
         // Nếu người dùng đã xác thực
         if (userPrinciple != null) {
             User user = userPrinciple.getUser();
 
             // Nếu người dùng có vai trò ROLE_BREEDER, lấy danh sách cá Koi của Breeder
-            if (user.getRole().equalsIgnoreCase("breeder")) {
-                return koiFishService.getAllBreeder(user.getId());
+            if (user.getRole().equals("Breeder")) {
+                return koiFishService.getAllBreeder(user.getId(), pageable);
             }
         }
 
         // Nếu không có người dùng xác thực hoặc không phải ROLE_BREEDER, trả về tất cả cá Koi
-        return koiFishService.getAll();
+        return koiFishService.getAll(pageable);
     }
+
 
     @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
