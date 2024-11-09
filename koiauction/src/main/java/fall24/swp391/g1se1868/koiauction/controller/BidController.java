@@ -65,5 +65,15 @@ public class BidController {
     public List<BidResponseDTO> getAllBid(@RequestParam int auctionId) {
         return bidService.getBidsWithUserDetails(auctionId);
     }
+    @GetMapping("/check-bid")
+    public ResponseEntity<?> checkBid(@RequestParam int auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated.");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        return  ResponseEntity.status(HttpStatus.OK).body(bidService.hasUserBid(auctionId,userId));
+    }
 
 }

@@ -221,6 +221,21 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
+    @PostMapping("/user/close-acution")
+    public ResponseEntity<?> closeAuction(@RequestParam int auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try{
+            auctionService.closeAuctionCall(auctionId,userId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
     @PostMapping("/breeder/add-auction")
     public ResponseEntity<AuctionResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

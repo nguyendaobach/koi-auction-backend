@@ -21,4 +21,7 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.BidResponseDTO(a.id.auctionID, a.id.bidderID, a.id.time, a.amount, u.fullName) " +
             "FROM Bid a JOIN a.bidderID u WHERE a.auctionID.id = :auctionId")
     List<BidResponseDTO> findBidsWithUserDetails(@Param("auctionId") Integer auctionId);
+
+    @Query("SELECT COUNT(b) > 0 FROM Bid b WHERE b.id.auctionID = :auctionId AND b.bidderID.id = :userId")
+    boolean existsByAuctionIdAndBidderId(@Param("auctionId") int auctionId, @Param("userId") int userId);
 }
