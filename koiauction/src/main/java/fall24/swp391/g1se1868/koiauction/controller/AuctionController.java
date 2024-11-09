@@ -167,15 +167,19 @@ public class AuctionController {
     }
 
 
-    @GetMapping("/user/participant-by-user")
-    public AuctionDetailDTO getAuctionParticipants() {
+    @GetMapping("/user/participant")
+    public ResponseEntity<?> getAuctionParticipants() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        return auctionService.getAuctionsParticipantByUser(userId);
+        try {
+            return  ResponseEntity.ok(auctionService.getAuctionsParticipantByUser(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
 
