@@ -69,9 +69,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserAuctionCount(u.id, u.fullName, COUNT(a)) " +
             "FROM User u JOIN Auction a ON u.id = a.breederID " +
-            "WHERE u.role = 'Breeder' " +
+            "WHERE u.role = 'Breeder' AND a.status <> 'Reject' " +  // thêm khoảng trắng
             "GROUP BY u.id, u.fullName " +
             "ORDER BY COUNT(a) DESC")
     List<UserAuctionCount> findTopBreedersByAuctionCount(Pageable pageable);
+
 }
 

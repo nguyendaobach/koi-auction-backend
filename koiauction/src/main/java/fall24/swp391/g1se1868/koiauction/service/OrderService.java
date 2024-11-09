@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.repository.OrderRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,14 +116,50 @@ public class OrderService {
             throw new AccessDeniedException("User does not have permission to access this order");
         }
     }
-    public void changeStatusOrder(Integer orderId){
+    public String changeStatusToShipping(Integer orderId, Integer userId) {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
         if (!optionalOrder.isPresent()) {
             throw new EntityNotFoundException("Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
-        order.setStatus(order.getStatus());
+        if(order.getAuctionID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }else {
+            order.setStatus("Shipping");
+            orderRepository.save(order);
+            return "Updated successfully";
+        }
+    }
+    public String changeStatusToDispute(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if(order.getBidderID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }
+        order.setStatus("Dispute");
+        orderRepository.save(order);
+        return "Updated successfully";
     }
 
-
+    @Transactional
+    public String doneOrder(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if(order.getBidderID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }
+        order.setStatus("Done");
+        WalletService walletService = new WalletService();
+        Auction auction = order.getAuctionID();
+        walletService.refund(auction.getBreederID(),auction.getFinalPrice()+auction.getBreederDeposit()-auction.getAuctionFee(),order.getAuctionID().getId());
+        auction.setStatus("Finished");
+        orderRepository.save(order);
+        return "Updated successfully";
+    }
 }
