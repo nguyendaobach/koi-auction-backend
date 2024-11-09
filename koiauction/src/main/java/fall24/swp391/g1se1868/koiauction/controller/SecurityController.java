@@ -3,10 +3,13 @@ package fall24.swp391.g1se1868.koiauction.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fall24.swp391.g1se1868.koiauction.model.*;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.Changepassword;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
+import fall24.swp391.g1se1868.koiauction.service.ChangePassword;
 import fall24.swp391.g1se1868.koiauction.service.JwtService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
 import fall24.swp391.g1se1868.koiauction.service.WalletService;
+import io.jsonwebtoken.security.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Random;
 
 @RestController
@@ -50,10 +54,41 @@ public class SecurityController {
         }
     }
 
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(@RequestBody Changepassword changepassword){
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new RuntimeException("User is not authenticated");
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            Optional<User> user=userRepository.findById(userId);
+            if(!user.isEmpty()){
+                User user1=user.get();
+                if(user1.getRole().equals("Admin")){
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Admin does not have permission");
+                }
+                if(changepassword.getPassword().equals(changepassword.getConfirm())){
+                    user1.setPassword(encoder.encode(changepassword.getPassword()));
+                    userRepository.save(user1);
+                }else{
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Passwords do not match");
+                }
+            }else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+            }
+        }catch(Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("ok");
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLogin user) {
         return userService.login(user);
     }
+
     @PostMapping("/logout")
     public ResponseEntity<StringResponse> logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
