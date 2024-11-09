@@ -81,7 +81,7 @@ public class ForgotPasswordController {
         Integer otp1=Integer.valueOf(verifyAndChangePasswordRequest.getOtp());
         Optional<ForgotPassword> optionalForgotPassword = forgotpasswordRepository.findByOtpAndUser(otp1, user);
         if (optionalForgotPassword.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new StringResponse("Invalid OTP for email: " + verifyAndChangePasswordRequest.getEmail()));
         }
 

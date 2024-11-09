@@ -159,6 +159,106 @@ public class KoiFishService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while saving KoiFish: " + e.getMessage());
         }
     }
+    @Transactional
+    public ResponseEntity<String> updateKoiFish(
+            Integer koiFishId,
+            User user,
+            MultipartFile imageHeader,
+            List<MultipartFile> imageDetail,
+            MultipartFile video,
+            String name,
+            BigDecimal weight,
+            String sex,
+            LocalDate birthday,
+            String description,
+            BigDecimal length,
+            Integer countryId,
+            Integer koiTypeId,
+            List<String> deleteUrls) {
+
+        try {
+            Optional<KoiFish> optionalKoiFish = koiFishRepository.findById(koiFishId);
+            if (!optionalKoiFish.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Fish not found");
+            }
+            KoiFish koiFish = optionalKoiFish.get();
+
+            if (!koiFish.getUserID().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to update this Koi Fish");
+            }
+
+            Optional<KoiType> optionalKoiType = koiTypeService.getKoiTypeById(koiTypeId);
+            if (!optionalKoiType.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Type not found");
+            }
+            KoiType koiType = optionalKoiType.get();
+
+            Optional<KoiOrigin> optionalKoiOrigin = koiOriginService.getKoiOriginById(countryId);
+            if (!optionalKoiOrigin.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Origin not found");
+            }
+            KoiOrigin koiOrigin = optionalKoiOrigin.get();
+
+            koiFish.setUserID(user);
+            koiFish.setKoiName(name);
+            koiFish.setCountryID(koiOrigin);
+            koiFish.setKoiTypeID(koiType);
+            koiFish.setWeight(weight);
+            koiFish.setSex(sex);
+            koiFish.setBirthday(birthday);
+            koiFish.setDescription(description);
+            koiFish.setLength(length);
+            koiFishRepository.save(koiFish);
+
+            if (deleteUrls != null && !deleteUrls.isEmpty()) {
+                for (String url : deleteUrls) {
+                    koiMediaRepository.deleteByUrl(url);
+                }
+            }
+            if (imageHeader != null) {
+                String fileUrl = firebaseService.uploadImage(imageHeader);
+                if (fileUrl != null) {
+                    KoiMedia koiMedia = new KoiMedia();
+                    koiMedia.setKoiID(koiFish);
+                    koiMedia.setUrl(fileUrl);
+                    koiMedia.setMediaType("Header Image");
+                    koiMediaRepository.save(koiMedia);
+                }
+            }
+            if (imageDetail != null && !imageDetail.isEmpty()) {
+                for (MultipartFile detailImage : imageDetail) {
+                    if (detailImage != null) {
+                        String fileUrl = firebaseService.uploadImage(detailImage);
+                        if (fileUrl != null) {
+                            KoiMedia koiMedia = new KoiMedia();
+                            koiMedia.setKoiID(koiFish);
+                            koiMedia.setUrl(fileUrl);
+                            koiMedia.setMediaType("Image Detail");
+                            koiMediaRepository.save(koiMedia);
+                        }
+                    }
+                }
+            }
+            if (video != null) {
+                String fileUrl = firebaseService.uploadImage(video);
+                if (fileUrl != null) {
+                    KoiMedia koiMedia = new KoiMedia();
+                    koiMedia.setKoiID(koiFish);
+                    koiMedia.setUrl(fileUrl);
+                    koiMedia.setMediaType("Video");
+                    koiMediaRepository.save(koiMedia);
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body("KoiFish updated successfully, new media added");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading files: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating KoiFish: " + e.getMessage());
+        }
+    }
+
+
 
 
     public ResponseEntity<KoiFishDetailDTO> getById(Integer id) {
@@ -232,12 +332,12 @@ public class KoiFishService {
     }
 
 
-    public String delete(Integer id) {
-        if(koiFishRepository.findById(id)!=null){
+    public ResponseEntity<?> delete(Integer id) {
+        if(koiFishRepository.findById(id).isPresent()){
             koiFishRepository.delete(id);
-            return "Koi Fish removed succesfully";
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Koi Fish removed succesfully");
         }else {
-            return "Koi Id not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Koi Id not found");
         }
     }
 

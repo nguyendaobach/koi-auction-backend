@@ -32,10 +32,10 @@ public class VerifyController {
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
     @GetMapping("/verify-email")
-    public ResponseEntity<StringResponse> verifyEmail(@RequestParam String Email) {
-        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(Email);
+    public ResponseEntity<StringResponse> verifyEmail(@RequestParam String email) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(email);
         if(matcher.matches()) {
-            boolean isAvailable = userService.verifyEmail(Email);
+            boolean isAvailable = userService.verifyEmail(email);
             if (isAvailable) {
                 return ResponseEntity.ok(new StringResponse("Email is available"));
             } else {
@@ -46,10 +46,10 @@ public class VerifyController {
         }
     }
     @GetMapping("/verify-phone")
-    public ResponseEntity<StringResponse> verifyPhone(@RequestParam String Phone) {
+    public ResponseEntity<StringResponse> verifyPhone(@RequestParam String phone) {
         String allCountryRegex = "^(\\+\\d{1,3}( )?)?((\\(\\d{1,3}\\))|\\d{1,3})[- .]?\\d{3,4}[- .]?\\d{4}$";
-            if (Phone.matches(allCountryRegex)) {
-                boolean isAvailable = userService.verifyPhoneNumber(Phone);
+            if (phone.matches(allCountryRegex)) {
+                boolean isAvailable = userService.verifyPhoneNumber(phone);
                 if (isAvailable) {
                     return ResponseEntity.ok(new StringResponse("Phone number is available"));
                 } else {

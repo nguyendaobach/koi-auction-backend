@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -17,6 +18,22 @@ public class DashboardController {
 
     @Autowired
     private DashboardService dashboardService;
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getDashboard(
+            @RequestParam(required = false) Integer day,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+        try {
+            Map<String, Object> dashboard = new HashMap<>();
+            dashboard = dashboardService.getDashboard(day, month, year);
+            return ResponseEntity.ok(dashboard);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An error occurred"));
+        }
+    }
 
     @GetMapping("/user")
     public ResponseEntity<Map<String, Object>> getUserData(

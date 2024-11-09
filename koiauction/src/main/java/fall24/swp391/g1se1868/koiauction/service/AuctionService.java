@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -62,6 +62,8 @@ public class AuctionService {
 
     @Autowired
     WalletService walletService;
+    @Autowired
+    private KoiFishRepository koiFishRepository;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -121,7 +123,7 @@ public class AuctionService {
         return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
     }
     @Transactional
-    public String addAuction(AuctionRequest request,int breerderID) {
+    public Auction addAuction(AuctionRequest request,int breerderID) {
         Auction auction = new Auction();
         auction.setBreederID(breerderID);
         auction.setAuctionMethod(request.getAuctionMethod());
@@ -135,8 +137,8 @@ public class AuctionService {
         auction.setBidStep(request.getBidStep());
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
-        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
         Auction savedAuction = auctionRepository.save(auction);
+        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()),savedAuction.getId());
         if(savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
@@ -149,6 +151,12 @@ public class AuctionService {
         }
 
         for (Integer koiId : request.getKoiIds()) {
+            KoiFish koi = koiFishRepository.findById(koiId).orElseThrow(() -> new IllegalArgumentException("Koi not found with ID: " + koiId));
+            if(!koi.getStatus().equalsIgnoreCase("Active")){
+                throw new RuntimeException("Koi is not active");
+            }
+            koi.setStatus("Sold");
+            koiFishRepository.save(koi);
             AuctionKoi auctionKoi = new AuctionKoi();
             AuctionKoiId auctionKoiId = new AuctionKoiId();
             auctionKoiId.setAuctionID(savedAuction.getId());
@@ -158,7 +166,7 @@ public class AuctionService {
             auctionKoi.setKoiID(new KoiFish(koiId));
             auctionKoiRepository.save(auctionKoi);
         }
-        return savedAuction!=null?"Add Auction Successfully":"Add Auction Failed";
+        return savedAuction;
     }
     public Page<KoiAuctionResponseDTO> getAllActionRequest(Pageable pageable) {
         Page<Auction> auctionPage = auctionRepository.getAllAuctionRequest(pageable);
@@ -185,16 +193,16 @@ public class AuctionService {
         }
         auction.setStatus("Reject");
         auction.setStaffID(UserID);
-        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit());
+        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit(), auctionId);
         return auctionRepository.save(auction);
     }
+    @Transactional
     public void updateAuctionStatusOngoing() {
         List<Auction> auctions = auctionRepository.findAll();
         ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
         for (Auction auction : auctions) {
-            if (auction.getStartTime().isBefore(nowZoned.toInstant()) && auction.getStatus().equals("Scheduled")) {
-                auction.setStatus("Ongoing");
-                auctionRepository.save(auction);
+            if (auction.getStartTime().isBefore(nowZoned.toInstant()) && (auction.getStatus().equalsIgnoreCase("Pending")|| auction.getStatus().equalsIgnoreCase("Scheduled")) ){
+                startAuction(auction.getId());
             }
         }
     }
@@ -207,13 +215,14 @@ public class AuctionService {
             }
             }
     }
-    public void updateAuctionStatusFinished(Integer auctionId) {
+    public void updateAuctionStatusPaid(Integer auctionId) {
             Auction auction = auctionRepository.getById(auctionId);
             if (auction.getStatus().equals("Closed")) {
-                auction.setStatus("Finished");
+                auction.setStatus("Paid");
                 auctionRepository.save(auction);
         }
     }
+
     public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
         if (bids.isEmpty()) {
@@ -231,22 +240,32 @@ public class AuctionService {
         return null;
     }
 
-    private void returnDepositsToLosers(Auction auction) {
-
-        System.out.println("Deposits returned for auction: " + auction.getId());
+    @Transactional
+    public void returnDepositsToLosers(Auction auction) {
+        Integer winnerId = null;
+         winnerId = determineWinner(auction);
+        if(winnerId != null) {
+            List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
+            for(AuctionParticipant auctionParticipant : listap) {
+                if(!auctionParticipant.getUserID().getId().equals(winnerId)) {
+                    walletService.refundDeposit(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
+                    System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
+                    auctionParticipant.setStatus("Refunded");
+                    auctionParticipantRepository.save(auctionParticipant);
+                }
+            }
+        }
     }
 
     private void requestPaymentFromWinner(Auction auction) {
         System.out.println("Payment request sent to winner for auction: " + auction.getId());
     }
 
-    // Logic to handle other auction end tasks like returning deposits, requiring payments, etc.
     public void processEndOfAuctionTasks(Auction auction) {
         returnDepositsToLosers(auction);
         requestPaymentFromWinner(auction);
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
-
     public void closeAuction(Auction auction) {
         auction.setStatus("Closed");
         Integer winnerID = determineWinner(auction);
@@ -404,18 +423,86 @@ public class AuctionService {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(Instant.now());
-    }
-
-    public String deleteAuction(Integer id) {
-        if(auctionRepository.findById(id)!=null){
+    public ResponseEntity<?> deleteAuction(Integer id) {
+        if(auctionRepository.findById(id).isPresent()){
             auctionRepository.delete(id);
-            return "Delete successfully";
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body( "Delete successfully");
         }else {
-            return "Auction id not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Auction id not found");
         }
     }
+    @Transactional
+    public Auction updateAuction(int auctionId, AuctionRequest request, int breederID) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+        if (auction.getBreederID() != breederID) {
+            throw new RuntimeException("You do not have permission to update this auction.");
+        }
+        switch (auction.getStatus()) {
+            case "Pending":
+                auction.setAuctionMethod(request.getAuctionMethod());
+                auction.setStartTime(request.getStartTime());
+                auction.setEndTime(request.getEndTime());
+                auction.setStartingPrice(request.getStartingPrice());
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidderDeposit(request.getBidderDeposit());
+                auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
+                auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
+                auction.setBidStep(request.getBidStep());
+                auctionKoiRepository.deleteByAuctionID(auction.getId());
+                for (Integer koiId : request.getKoiIds()) {
+                    AuctionKoi auctionKoi = new AuctionKoi();
+                    AuctionKoiId auctionKoiId = new AuctionKoiId();
+                    auctionKoiId.setAuctionID(auction.getId());
+                    auctionKoiId.setKoiID(koiId);
+                    auctionKoi.setId(auctionKoiId);
+                    auctionKoi.setAuctionID(auction);
+                    auctionKoi.setKoiID(new KoiFish(koiId));
+                    auctionKoiRepository.save(auctionKoi);
+                }
+                break;
+
+            case "Scheduled":
+                auction.setStartTime(request.getStartTime());
+                auction.setEndTime(request.getEndTime());
+                break;
+
+            default:
+                throw new RuntimeException("Cannot update auction in current status: " + auction.getStatus());
+        }
+        return auctionRepository.save(auction);
+    }
+
+    @Transactional
+    public void cancelAuction(Integer id, Integer userId) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Auction not found"));
+        if(auction.getBreederID()!=userId){
+            throw new RuntimeException("You do not have permission to update this auction.");
+        }
+        switch (auction.getStatus()) {
+            case "Pending":
+                auction.setStatus("Cancelled");
+                walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                break;
+
+            case "Scheduled":
+                List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(id);
+                if (participants.isEmpty()) {
+                    auction.setStatus("Cancelled");
+                    walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                } else {
+                    throw new IllegalArgumentException("Cannot cancel scheduled auction because has participants.");
+                }
+                break;
+
+            default:
+                throw new IllegalArgumentException("Auction cannot be cancelled in current status: " + auction.getStatus());
+        }
+
+        auctionRepository.save(auction);
+    }
+
     public Long getRevenue(Integer day, Integer month, Integer year) {
         if (day != null && month != null && year != null) {
             return auctionRepository.getRevenueByDay(day, month, year);

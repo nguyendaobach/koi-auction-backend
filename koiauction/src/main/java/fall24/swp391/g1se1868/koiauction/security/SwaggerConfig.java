@@ -20,6 +20,7 @@ public class SwaggerConfig {
         final String securitySchemeName = "bearerAuth";
         servers.add(new Server().url("http://localhost:8080"));
         servers.add(new Server().url("https://koi-auction-backend-dwe7hvbuhsdtgafe.southeastasia-01.azurewebsites.net"));
+        servers.add(new Server().url("https://koi-auction-cac0ghbvc6dghhcq.southeastasia-01.azurewebsites.net"));
 
         return new OpenAPI()
                 .servers(servers)

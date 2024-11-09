@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,17 +42,16 @@ public class UserService {
     WalletService walletService;
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
-    public String register(UserRegister userRegister) {
+    public ResponseEntity<?> register(UserRegister userRegister) {
         if (userRegister == null) {
-            return "User object cannot be null";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User object cannot be null");
         }
-
         if (userRegister.getUserName() == null || userRegister.getUserName().isEmpty()) {
-            return "Username cannot be null or empty";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username cannot be null or empty");
         }
 
         if (userRegister.getPassword() == null || userRegister.getPassword().isEmpty()) {
-            return "Password cannot be null or empty";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password cannot be null or empty");
         }
 
         if (verifyUserName(userRegister.getUserName())) {
@@ -69,28 +69,39 @@ public class UserService {
 
             if (userRepository.save(user) != null) {
                 walletService.addUserWallet(user.getId());
-                return "Registered successfully";
+                return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
             } else {
-                return "Registration failed";
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
             }
 
         } else {
-            return "Username already in use";
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already in use");
         }
     }
 
     public boolean verifyUserName(String username){
-        User user = userRepository.findByUserName(username);
-        return user==null?true:false;
+        try {
+            User user = userRepository.findByUserName(username);
+            return user==null&&username!=null&&!username.isEmpty()&&!username.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public boolean verifyEmail(String email){
-        User user = userRepository.findByEmail(email);
-
-        return user==null?true:false;
+        try {
+            User user = userRepository.findByEmail(email);
+            return user==null&&email!=null&&!email.isEmpty()&&!email.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public boolean verifyPhoneNumber(String phoneNumber){
-        User user = userRepository.findByPhoneNumber(phoneNumber);
-        return user==null?true:false;
+        try {
+            User user = userRepository.findByPhoneNumber(phoneNumber);
+            return user==null&&phoneNumber!=null&&!phoneNumber.isEmpty()&&!phoneNumber.isBlank()?true:false;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return false;
+        }
     }
     public int getUserId(String username){
         User user = userRepository.findByUserName(username);

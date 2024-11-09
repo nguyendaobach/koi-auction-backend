@@ -149,9 +149,36 @@ public class KoiFishController {
         }
     }
 
+    @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
+    @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateKoiFish(
+            @RequestParam Integer koiFishId,
+            @RequestParam(required = false) MultipartFile imageHeader,
+            @RequestParam(required = false) List<MultipartFile> imageDetail,
+            @RequestParam(required = false) MultipartFile video,
+            @RequestParam String name,
+            @RequestParam BigDecimal weight,
+            @RequestParam String sex,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
+            @RequestParam String description,
+            @RequestParam BigDecimal length,
+            @RequestParam Integer countryID,
+            @RequestParam Integer koiTypeID,
+            @RequestParam(required = false) List<String> deleteUrls) {
 
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        Integer userId = userPrinciple.getId();
+
+        User user = new User(userId);
+
+        return koiFishService.updateKoiFish(
+                koiFishId, user, imageHeader, imageDetail, video, name, weight, sex, birthday,
+                description, length, countryID, koiTypeID, deleteUrls);
+    }
     @DeleteMapping()
-    public String delete(@RequestParam Integer id){
+    public ResponseEntity<?> delete(@RequestParam Integer id){
         return koiFishService.delete(id);
     }
 
