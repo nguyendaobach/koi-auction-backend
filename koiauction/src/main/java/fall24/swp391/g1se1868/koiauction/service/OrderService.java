@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.repository.OrderRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,9 @@ public class OrderService {
         if(auction.getWinnerID()!=userId){
             throw new RuntimeException("User is not the winner ID");
         }
+        if(orderRepository.findOrderByAuctionId(auctionId)!=null){
+            throw new RuntimeException("Order for auction already exists");
+        }
         User bidder = userRepository.findById(auction.getWinnerID())
                 .orElseThrow(() -> new RuntimeException("Bidder not found"));
         Order order = new Order();
@@ -52,34 +56,24 @@ public class OrderService {
         return orderRepository.save(order);
     }
     public Order updateOrder(Integer orderId, OrderRequest orderRequest, Integer userId) {
-        // Retrieve the order by ID
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        // Check if the user has permission to update the order
         if (!order.getBidderID().getId().equals(userId)) {
             throw new RuntimeException("User is not authorized to update this order");
         }
-
-        // Check if the order status allows updates (e.g., only "Pending" orders can be updated)
         if (!order.getStatus().equalsIgnoreCase("Pending")) {
             throw new RuntimeException("Order cannot be updated as it is not in a 'Pending' state");
         }
-
-        // Update order fields based on the new request data
         order.setAddress(orderRequest.getAddress());
         order.setPhoneNumber(orderRequest.getPhoneNumber());
         order.setNote(orderRequest.getNote());
         order.setFullName(orderRequest.getFullName());
-
-        // Save and return the updated order
         return orderRepository.save(order);
     }
 
     public List<OrderResponse> getOrdersByUser(Integer userId) {
         List<Order> ordersAsBidder = orderRepository.findOrdersByBidderId(userId);
         List<Order> ordersAsBreeder = orderRepository.findOrdersByBreederId(userId);
-
         List<Order> combinedOrders = new ArrayList<>();
         combinedOrders.addAll(ordersAsBidder);
         combinedOrders.addAll(ordersAsBreeder);
@@ -99,13 +93,10 @@ public class OrderService {
 
     public OrderResponse getOrderById(Integer orderId, Integer userId) {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
-
         if (!optionalOrder.isPresent()) {
             throw new EntityNotFoundException("Order not found with ID: " + orderId);
         }
-
         Order order = optionalOrder.get();
-
         if ((order.getBidderID() != null && order.getBidderID().getId().equals(userId))) {
             if (!order.getStatus().equals("Pending")) {
                 throw new AccessDeniedException("This order cannot be modified because it is no longer Pending.");
@@ -125,6 +116,50 @@ public class OrderService {
             throw new AccessDeniedException("User does not have permission to access this order");
         }
     }
+    public String changeStatusToShipping(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if(order.getAuctionID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }else {
+            order.setStatus("Shipping");
+            orderRepository.save(order);
+            return "Updated successfully";
+        }
+    }
+    public String changeStatusToDispute(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if(order.getBidderID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }
+        order.setStatus("Dispute");
+        orderRepository.save(order);
+        return "Updated successfully";
+    }
 
-
+    @Transactional
+    public String doneOrder(Integer orderId, Integer userId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (!optionalOrder.isPresent()) {
+            throw new EntityNotFoundException("Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if(order.getBidderID().getId()!=userId){
+            throw new RuntimeException("User is not authorized to update this order");
+        }
+        order.setStatus("Done");
+        WalletService walletService = new WalletService();
+        Auction auction = order.getAuctionID();
+        walletService.refund(auction.getBreederID(),auction.getFinalPrice()+auction.getBreederDeposit()-auction.getAuctionFee(),order.getAuctionID().getId());
+        auction.setStatus("Finished");
+        orderRepository.save(order);
+        return "Updated successfully";
+    }
 }

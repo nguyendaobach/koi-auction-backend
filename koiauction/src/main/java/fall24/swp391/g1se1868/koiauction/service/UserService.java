@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -227,6 +228,9 @@ public class UserService {
         roleCounts.put("staff", userRepository.countByRole("staff", day, month, year));
         roleCounts.put("breeder", userRepository.countByRole("breeder", day, month, year));
         return roleCounts;
+    }
+    public List<UserAuctionCount> getTopBreedersByAuctionCount() {
+        return userRepository.findTopBreedersByAuctionCount(PageRequest.of(0, 10));
     }
 }
 

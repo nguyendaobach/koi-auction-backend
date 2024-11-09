@@ -227,7 +227,7 @@ public class AuctionService {
         }
         auction.setStatus("Rejected");
         auction.setStaffID(userId);
-        walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), auctionId);
+        walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), auctionId);
         List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auctionId);
         for (KoiFish auctionKoi : auctionKois) {
             auctionKoi.setStatus("Active");
@@ -272,7 +272,7 @@ public class AuctionService {
             List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
             for(AuctionParticipant auctionParticipant : listap) {
                 if(!auctionParticipant.getUserID().getId().equals(winnerId)) {
-                    walletService.refundDeposit(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
+                    walletService.refund(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
                     System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
                     auctionParticipant.setStatus("Refunded");
                     auctionParticipantRepository.save(auctionParticipant);
@@ -563,14 +563,14 @@ public class AuctionService {
         switch (auction.getStatus()) {
             case "Pending":
                 auction.setStatus("Cancelled");
-                walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), id);
                 break;
 
             case "Scheduled":
                 List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(id);
                 if (participants.isEmpty()) {
                     auction.setStatus("Cancelled");
-                    walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                    walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), id);
                 } else {
                     throw new IllegalArgumentException("Cannot cancel scheduled auction because has participants.");
                 }
