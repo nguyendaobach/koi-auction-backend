@@ -137,51 +137,88 @@ public class AuctionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @GetMapping("/{id}")
-    public AuctionDetailDTO getAuctionByID(@PathVariable int id) {
-        return auctionService.getAuctionWithKoiByID(id);
+    public ResponseEntity<AuctionDetailDTO> getAuctionByID(@PathVariable int id) {
+        AuctionDetailDTO auctionDetailDTO = auctionService.getAuctionWithKoiByID(id);
+        if (auctionDetailDTO != null) {
+            return ResponseEntity.ok(auctionDetailDTO);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
 
 
-    // Trả về các phiên đấu giá trong quá khứ kèm theo người chiến thắng
     @GetMapping("/past")
-    public List<Map<String, Object>> getPastAuctionsWithWinnerName() {
-        return auctionService.getPastAuctionsWithWinnerName();
+    public ResponseEntity<Map<String, Object>> getPastAuctionsWithWinnerName(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // Tạo đối tượng Pageable cho phân trang
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Lấy danh sách các phiên đấu giá đã qua với phân trang
+        Page<Map<String, Object>> pastAuctions = auctionService.getPastAuctionsWithWinnerName(pageable);
+
+        // Tạo đối tượng Map để trả về thông tin phân trang và danh sách đấu giá
+        Map<String, Object> response = new HashMap<>();
+        response.put("pastAuctions", pastAuctions.getContent());  // Danh sách các đấu giá đã qua
+        response.put("currentPage", pastAuctions.getNumber());  // Trang hiện tại
+        response.put("totalPages", pastAuctions.getTotalPages());  // Tổng số trang
+        response.put("totalElements", pastAuctions.getTotalElements());  // Tổng số phần tử
+
+        // Trả về kết quả với mã trạng thái OK
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/user/participant-by-user")
-    public AuctionDetailDTO getAuctionParticipants() {
+
+    @GetMapping("/user/participant")
+    public ResponseEntity<?> getAuctionParticipants() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        return auctionService.getAuctionsParticipantByUser(userId);
+        try {
+            return  ResponseEntity.ok(auctionService.getAuctionsParticipantByUser(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
 
     @GetMapping("/user/auction-by-winner")
-    public ResponseEntity<Page<KoiAuctionResponseDTO>> getWinnerAuctions(
+    public ResponseEntity<Map<String, Object>> getWinnerAuctions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Kiểm tra người dùng có xác thực không
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
+
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
 
         // Tạo đối tượng Pageable cho phân trang
         Pageable pageable = PageRequest.of(page, size);
 
-        // Trả về danh sách các phiên đấu giá mà user đã thắng với phân trang
+        // Lấy danh sách các phiên đấu giá mà người dùng đã thắng
         Page<KoiAuctionResponseDTO> auctionDetails = auctionService.getWinnerAuctionByWinnerID(userId, pageable);
-        return new ResponseEntity<>(auctionDetails, HttpStatus.OK);
+
+        // Tạo đối tượng Map để trả về thông tin phân trang và danh sách đấu giá
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctions", auctionDetails.getContent());  // Danh sách các phiên đấu giá
+        response.put("currentPage", auctionDetails.getNumber());  // Trang hiện tại
+        response.put("totalPages", auctionDetails.getTotalPages());  // Tổng số trang
+        response.put("totalElements", auctionDetails.getTotalElements());  // Tổng số phần tử
+
+        return new ResponseEntity<>(response, HttpStatus.OK);  // Trả về kết quả với mã trạng thái OK
     }
+
 
     @GetMapping("/user/check-participant-for-auction")
     public boolean checkParticipantForAuction(@RequestParam int auctionId) {
@@ -192,6 +229,21 @@ public class AuctionController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
+    }
+    @PostMapping("/user/close-acution")
+    public ResponseEntity<?> closeAuction(@RequestParam int auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try{
+            auctionService.closeAuctionCall(auctionId,userId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
     @PostMapping("/breeder/add-auction")
     public ResponseEntity<AuctionResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
@@ -256,14 +308,24 @@ public class AuctionController {
     }
 
     @GetMapping("/staff/get-auction-request")
-    public ResponseEntity<Page<KoiAuctionResponseDTO>> getAllAuctionRequest(
+    public ResponseEntity<Map<String, Object>> getAllAuctionRequest(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        // Tạo đối tượng Pageable cho phân trang
         Pageable pageable = PageRequest.of(page, size);
-        Page<KoiAuctionResponseDTO> auctions = auctionService.getAllActionRequest(pageable);
-        return new ResponseEntity<>(auctions, HttpStatus.OK);
+
+        Page<KoiAuctionResponseDTO> auctionRequests = auctionService.getAllActionRequest(pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctionRequests", auctionRequests.getContent());
+        response.put("currentPage", auctionRequests.getNumber());
+        response.put("totalPages", auctionRequests.getTotalPages());
+        response.put("totalElements", auctionRequests.getTotalElements());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PostMapping("/staff/approve/{auctionId}")
     public ResponseEntity<Auction> approveAuction(@PathVariable Integer auctionId) {

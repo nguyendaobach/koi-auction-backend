@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -55,23 +56,25 @@ public class UserService {
         }
 
         if (verifyUserName(userRegister.getUserName())) {
-            User user = new User();
-            user.setUserName(userRegister.getUserName());
-            user.setFullName(userRegister.getFullName());
-            user.setPhoneNumber(userRegister.getPhoneNumber());
-            user.setEmail(userRegister.getEmail());
-            user.setPassword(encoder.encode(userRegister.getPassword()));
-            user.setAddress(userRegister.getAddress());
-            user.setCreateAt(Instant.now());
-            user.setUpdateAt(Instant.now());
-            user.setRole("User");
-            user.setStatus("Active");
-
-            if (userRepository.save(user) != null) {
-                walletService.addUserWallet(user.getId());
-                return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
+            if(verifyEmail(userRegister.getEmail())){
+                User user = new User();
+                user.setUserName(userRegister.getUserName());
+                user.setEmail(userRegister.getEmail());
+                user.setPassword(encoder.encode(userRegister.getPassword()));
+                user.setPhoneNumber("");
+                user.setAddress("");
+                user.setCreateAt(Instant.now());
+                user.setUpdateAt(Instant.now());
+                user.setRole("User");
+                user.setStatus("Active");
+                if (userRepository.save(user) != null) {
+                    walletService.addUserWallet(user.getId());
+                    return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
+                }
+            }else {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
             }
 
         } else {
@@ -225,6 +228,9 @@ public class UserService {
         roleCounts.put("staff", userRepository.countByRole("staff", day, month, year));
         roleCounts.put("breeder", userRepository.countByRole("breeder", day, month, year));
         return roleCounts;
+    }
+    public List<UserAuctionCount> getTopBreedersByAuctionCount() {
+        return userRepository.findTopBreedersByAuctionCount(PageRequest.of(0, 10));
     }
 }
 

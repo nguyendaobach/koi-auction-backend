@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -40,8 +41,10 @@ public class BidService {
             bid.setId(new BidId());
         }
         Auction auction = bid.getAuctionID();
-        if(auction.getEndTime().isBefore(Instant.now())){
-            throw new IllegalArgumentException("End time is after current time");
+
+        // Check if auction has ended
+        if (auction.getEndTime().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("Auction has already ended.");
         }
         if (!auction.getStatus().equals("Ongoing")) {
             throw new IllegalStateException("Auction is not Ongoing.");
@@ -49,14 +52,13 @@ public class BidService {
         if (!auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auction.getId())) {
             throw new IllegalArgumentException("User is not registered for the auction.");
         }
-        Long currentPrice = getCurrentPrice(auction.getId());
-        Long stepPrice = auction.getBidStep();
-        Long nextPrice;
-        if(currentPrice == auction.getStartingPrice()){
-            nextPrice = currentPrice;
-        }else{
-            nextPrice = currentPrice + stepPrice;
+
+        if ("First-come".equalsIgnoreCase(auction.getAuctionMethod()) && hasUserBid(auction.getId(), userId)) {
+            throw new IllegalArgumentException("User has already placed a bid in this First-come auction.");
         }
+        Long currentPrice = getCurrentPrice(auction);
+        Long stepPrice = auction.getBidStep();
+        Long nextPrice = (currentPrice.equals(auction.getStartingPrice())) ? currentPrice : currentPrice + stepPrice;
         if (bid.getAmount() < nextPrice) {
             throw new IllegalArgumentException("Bid must be at least the current highest bid plus the step price.");
         }
@@ -72,9 +74,26 @@ public class BidService {
         }
         return savedBid;
     }
-    public Long getCurrentPrice(int auctionID){
-        return bidRepository.findHighestBidByAuctionId(auctionID).orElse(auctionService.getAuctionById(auctionID).getStartingPrice());
+
+    public Long getCurrentPrice(Auction auction) {
+        if ("Descending".equalsIgnoreCase(auction.getAuctionMethod())) {
+            long startingPrice = auction.getStartingPrice();
+            long buyoutPrice = auction.getBuyoutPrice();
+            long bidStep = auction.getBidStep();
+            long numberOfReductions = (startingPrice - buyoutPrice) / bidStep;
+            long reductionInterval = Duration.between(auction.getStartTime(), auction.getEndTime()).toMillis() / numberOfReductions;
+            long elapsedIntervals = Duration.between(auction.getStartTime(), Instant.now()).toMillis() / reductionInterval;
+            long currentPrice = startingPrice - (elapsedIntervals * bidStep);
+            return Math.max(currentPrice, buyoutPrice);
+        } else {
+            return bidRepository.findHighestBidByAuctionId(auction.getId())
+                    .orElse(auction.getStartingPrice());
+        }
     }
+    public boolean hasUserBid(int auctionId, int userId) {
+        return bidRepository.existsByAuctionIdAndBidderId(auctionId, userId);
+    }
+
 
 
     public List<Bid> getAllBidsForAuction(Integer auctionId) {

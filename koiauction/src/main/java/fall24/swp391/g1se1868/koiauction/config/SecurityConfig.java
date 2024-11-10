@@ -1,7 +1,8 @@
-package fall24.swp391.g1se1868.koiauction.security;
 
+package fall24.swp391.g1se1868.koiauction.config;
+
+import fall24.swp391.g1se1868.koiauction.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +30,7 @@ public class SecurityConfig {
     UserDetailsService userDetailService;
 
     @Autowired
-     JwtFilter jwtFilter;
+    JwtFilter jwtFilter;
 
 //    @Bean
 //    CorsConfigurationSource corsConfigurationSource() {
@@ -79,14 +76,15 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
+                        .requestMatchers("/api/breeder/user").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/koi-fish/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
                         .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                        .sessionManagement(session ->
-                                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                )
-                        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity.httpBasic(Customizer.withDefaults());
         return httpSecurity.build();
     }

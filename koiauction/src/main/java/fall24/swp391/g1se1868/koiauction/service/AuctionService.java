@@ -76,34 +76,39 @@ public class AuctionService {
             Auction auction = auctionOptional.get();
             return convertToAuctionDetailDTO(auction);
         } else {
-            throw new RuntimeException("Auction not found with id: " + id);
+            return null;
         }
     }
 
 
 
-    public List<Map<String, Object>> getPastAuctionsWithWinnerName() {
-        List<Object[]> results = auctionRepository.findPastAuctionsWithWinnerName();
-        List<Map<String, Object>> pastAuctions = new ArrayList<>();
-        for (Object[] result : results) {
-            Auction auction = (Auction) result[0];
-            String winnerName = (String) result[1];
-            Map<String, Object> auctionData = new HashMap<>();
-            auctionData.put("auction", auction);
-            auctionData.put("winnerName", winnerName);
-            pastAuctions.add(auctionData);
-        }
+    public Page<Map<String, Object>> getPastAuctionsWithWinnerName(Pageable pageable) {
+        // Gọi repository để lấy kết quả với phân trang
+        Page<Object[]> results = auctionRepository.findPastAuctionsWithWinnerName(pageable);
 
-        return pastAuctions;
+        // Chuyển đổi kết quả trả về thành một danh sách các Map chứa thông tin cần thiết
+        List<Map<String, Object>> pastAuctions = results.getContent().stream()
+                .map(result -> {
+                    Auction auction = (Auction) result[0];
+                    String winnerName = (String) result[1];
+                    Map<String, Object> auctionData = new HashMap<>();
+                    auctionData.put("auction", auction);
+                    auctionData.put("winnerName", winnerName);
+                    return auctionData;
+                })
+                .collect(Collectors.toList());
+
+        // Trả về Page chứa danh sách các đấu giá đã qua với phân trang
+        return new PageImpl<>(pastAuctions, pageable, results.getTotalElements());
     }
+
 
 
     public AuctionDetailDTO getAuctionsParticipantByUser(int userId) {
         List<Integer> auctionIds = auctionParticipantRepository.findAuctionIdsByUserId(userId);
         if (!auctionIds.isEmpty()) {
-            // Giả sử bạn chỉ muốn lấy một phiên đấu giá đầu tiên từ danh sách
             Integer auctionId = auctionIds.get(0);
-            return getAuctionWithKoiByID(auctionId); // Gọi phương thức đã sửa để lấy thông tin chi tiết
+            return getAuctionWithKoiByID(auctionId);
         } else {
             throw new RuntimeException("No auctions found for user ID: " + userId);
         }
@@ -123,23 +128,51 @@ public class AuctionService {
         return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
     }
     @Transactional
-    public Auction addAuction(AuctionRequest request,int breerderID) {
+    public Auction addAuction(AuctionRequest request, int breederID) {
         Auction auction = new Auction();
-        auction.setBreederID(breerderID);
+        auction.setBreederID(breederID);
         auction.setAuctionMethod(request.getAuctionMethod());
         auction.setStartTime(request.getStartTime());
         auction.setEndTime(request.getEndTime());
-        auction.setStartingPrice(request.getStartingPrice());
-        auction.setBuyoutPrice(request.getBuyoutPrice());
+        switch (request.getAuctionMethod()) {
+            case "Ascending":
+                auction.setStartingPrice(request.getStartingPrice());
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidStep(request.getBidStep());
+                break;
+
+            case "Descending":
+                if (request.getStartingPrice() <= request.getBuyoutPrice()) {
+                    throw new IllegalArgumentException("Starting price must be greater than buyout price for Descending auction.");
+                }
+                auction.setStartingPrice(request.getStartingPrice());
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidStep(request.getBidStep());
+                break;
+
+            case "Fixed-price":
+                auction.setStartingPrice(null); // Not used for Fixed-price auctions
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidStep(null); // No bid step for Fixed-price auctions
+                break;
+
+            case "First-come":
+                auction.setStartingPrice(request.getStartingPrice());
+                auction.setBuyoutPrice(request.getBuyoutPrice());
+                auction.setBidStep(request.getBidStep());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid auction method: " + request.getAuctionMethod());
+        }
+
         auction.setBidderDeposit(request.getBidderDeposit());
         auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
         auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
-        auction.setBidStep(request.getBidStep());
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
         Auction savedAuction = auctionRepository.save(auction);
-        walletService.deposit(breerderID,Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()),savedAuction.getId());
-        if(savedAuction != null) {
+        walletService.deposit(breederID, Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()), savedAuction.getId());
+        if (savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
                 Instant endTime = auction.getEndTime();
@@ -151,12 +184,14 @@ public class AuctionService {
         }
 
         for (Integer koiId : request.getKoiIds()) {
-            KoiFish koi = koiFishRepository.findById(koiId).orElseThrow(() -> new IllegalArgumentException("Koi not found with ID: " + koiId));
-            if(!koi.getStatus().equalsIgnoreCase("Active")){
+            KoiFish koi = koiFishRepository.findById(koiId)
+                    .orElseThrow(() -> new IllegalArgumentException("Koi not found with ID: " + koiId));
+            if (!koi.getStatus().equalsIgnoreCase("Active")) {
                 throw new RuntimeException("Koi is not active");
             }
-            koi.setStatus("Sold");
+            koi.setStatus("Selling");
             koiFishRepository.save(koi);
+
             AuctionKoi auctionKoi = new AuctionKoi();
             AuctionKoiId auctionKoiId = new AuctionKoiId();
             auctionKoiId.setAuctionID(savedAuction.getId());
@@ -168,6 +203,7 @@ public class AuctionService {
         }
         return savedAuction;
     }
+
     public Page<KoiAuctionResponseDTO> getAllActionRequest(Pageable pageable) {
         Page<Auction> auctionPage = auctionRepository.getAllAuctionRequest(pageable);
         return getAuctionDetails(auctionPage);
@@ -183,19 +219,23 @@ public class AuctionService {
         return auctionRepository.save(auction);
     }
     @Transactional
-    public Auction rejectAuction(Integer auctionId, Integer UserID) {
-        Auction auction = auctionRepository.getById(auctionId);
-        if(auction==null){
-            throw  new EntityNotFoundException("Auction not found");
-        }
+    public Auction rejectAuction(Integer auctionId, Integer userId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new EntityNotFoundException("Auction not found"));
         if (!auction.getStatus().equals("Pending")) {
-            throw new IllegalArgumentException("Auction must be in Pending status to be approved.");
+            throw new IllegalArgumentException("Auction must be in Pending status to be rejected.");
         }
-        auction.setStatus("Reject");
-        auction.setStaffID(UserID);
-        walletService.refundDeposit(auction.getBreederID(),auction.getBreederDeposit(), auctionId);
+        auction.setStatus("Rejected");
+        auction.setStaffID(userId);
+        walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), auctionId);
+        List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auctionId);
+        for (KoiFish auctionKoi : auctionKois) {
+            auctionKoi.setStatus("Active");
+            koiFishRepository.save(auctionKoi);
+        }
         return auctionRepository.save(auction);
     }
+
     @Transactional
     public void updateAuctionStatusOngoing() {
         List<Auction> auctions = auctionRepository.findAll();
@@ -223,6 +263,95 @@ public class AuctionService {
         }
     }
 
+
+    @Transactional
+    public void returnDepositsToLosers(Auction auction) {
+        Integer winnerId = null;
+         winnerId = auction.getWinnerID();
+        if(winnerId != null) {
+            List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
+            for(AuctionParticipant auctionParticipant : listap) {
+                if(!auctionParticipant.getUserID().getId().equals(winnerId)) {
+                    walletService.refund(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
+                    System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
+                    auctionParticipant.setStatus("Refunded");
+                    auctionParticipantRepository.save(auctionParticipant);
+                }
+            }
+        }
+    }
+
+
+    private void requestPaymentFromWinner(Auction auction) {
+        System.out.println("Payment request sent to winner for auction: " + auction.getId());
+    }
+
+    public void processEndOfAuctionTasks(Auction auction) {
+        returnDepositsToLosers(auction);
+        requestPaymentFromWinner(auction);
+        System.out.println("End-of-auction tasks completed for auction " + auction.getId());
+    }
+    public void closeAuction(Auction auction) {
+        auction.setStatus("Closed");
+        if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")) {
+            Integer winnerID = determineWinner(auction);
+            if (winnerID != null) {
+                auction.setWinnerID(winnerID);
+                long finalPrice = bidService.getCurrentPrice(auction);
+                auction.setFinalPrice(finalPrice);
+            }
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("Closed", winnerID!=null?winnerID:null , auction.getFinalPrice()));
+        }else if(auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
+            List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
+            if (bids.isEmpty()){
+            long maxBidAmount = bids.stream().mapToLong(Bid::getAmount).max().orElse(0);
+            List<Bid> highestBids = bids.stream()
+                    .filter(bid -> bid.getAmount() == maxBidAmount)
+                    .collect(Collectors.toList());
+            if (highestBids.size() == 1) {
+                auction.setFinalPrice(maxBidAmount);
+                auction.setWinnerID(highestBids.get(0).getBidderID().getId());
+            } else if(highestBids.size() > 1){
+                int randomnumber= new Random().nextInt(highestBids.size());
+                auction.setFinalPrice(highestBids.get(randomnumber).getAmount());
+                auction.setWinnerID(highestBids.get(randomnumber).getBidderID().getId());
+            }}
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("Closed", auction.getWinnerID()!=null?auction.getWinnerID():null , auction.getFinalPrice()));
+        }
+        processEndOfAuctionTasks(auction);
+        auctionRepository.save(auction);
+    }
+    public void closeAuctionCall(int auctionId, Integer userID) {
+        Auction auction = auctionRepository.getById(auctionId);
+        auction.setStatus("Closed");
+        if (auction.getAuctionMethod().equalsIgnoreCase("Descending")) {
+            long finalPrice = calculateDescendingPrice(auction);
+            auction.setFinalPrice(finalPrice);
+            auction.setWinnerID(userID);
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("Closed", userID, auction.getFinalPrice()));
+
+        } else if (auction.getAuctionMethod().equalsIgnoreCase("Fixed-price")
+        || auction.getAuctionMethod().equalsIgnoreCase("Ascending")
+        || auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
+            auction.setWinnerID(userID);
+            auction.setFinalPrice(auction.getBuyoutPrice());
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("Closed", userID, auction.getBuyoutPrice()));
+        }
+        processEndOfAuctionTasks(auction);
+        auctionRepository.save(auction);
+    }
+
+    private long calculateDescendingPrice(Auction auction) {
+        long priceRange = auction.getStartingPrice() - auction.getBuyoutPrice();
+        long stepTimeMillis = (auction.getEndTime().toEpochMilli() - auction.getStartTime().toEpochMilli()) / (priceRange / auction.getBidStep());
+        long elapsedSteps = (Instant.now().toEpochMilli() - auction.getStartTime().toEpochMilli()) / stepTimeMillis;
+        return auction.getStartingPrice() - (elapsedSteps * auction.getBidStep());
+    }
+
     public Integer determineWinner(Auction auction) {
         List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
         if (bids.isEmpty()) {
@@ -240,55 +369,6 @@ public class AuctionService {
         return null;
     }
 
-    @Transactional
-    public void returnDepositsToLosers(Auction auction) {
-        Integer winnerId = null;
-         winnerId = determineWinner(auction);
-        if(winnerId != null) {
-            List<AuctionParticipant> listap = auctionParticipantRepository.findAuctionParticipantsByAuctionID(auction.getId());
-            for(AuctionParticipant auctionParticipant : listap) {
-                if(!auctionParticipant.getUserID().getId().equals(winnerId)) {
-                    walletService.refundDeposit(auctionParticipant.getUserID().getId(),auctionParticipant.getAuctionID().getBidderDeposit(), auction.getId());
-                    System.out.println("Refund deposit for Auction " + auction.getStatus() +", User: "+ auctionParticipant.getUserID().getFullName());
-                    auctionParticipant.setStatus("Refunded");
-                    auctionParticipantRepository.save(auctionParticipant);
-                }
-            }
-        }
-    }
-
-    private void requestPaymentFromWinner(Auction auction) {
-        System.out.println("Payment request sent to winner for auction: " + auction.getId());
-    }
-
-    public void processEndOfAuctionTasks(Auction auction) {
-        returnDepositsToLosers(auction);
-        requestPaymentFromWinner(auction);
-        System.out.println("End-of-auction tasks completed for auction " + auction.getId());
-    }
-    public void closeAuction(Auction auction) {
-        auction.setStatus("Closed");
-        Integer winnerID = determineWinner(auction);
-        if (winnerID != null) {
-            auction.setWinnerID(winnerID);
-            long finalPrice = bidService.getCurrentPrice(auction.getId());
-            auction.setFinalPrice(finalPrice);
-            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                    new AuctionNotification("winner", winnerID, "Chúc mừng! Bạn đã chiến thắng cuộc đấu giá với giá " + finalPrice + "!"));
-        }
-        List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
-        for (Bid bid : bids) {
-            int bidderID = bid.getBidderID().getId();
-            if (bidderID != winnerID) {
-                messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                        new AuctionNotification("loser", bidderID, "Cuộc đấu giá đã kết thúc. Bạn đã không thắng cuộc đấu giá này."));
-            }
-        }
-        messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                new AuctionNotification("status", winnerID, "Đấu giá đã kết thúc."));
-        processEndOfAuctionTasks(auction);
-        auctionRepository.save(auction);
-    }
 
     private AuctionDetailDTO convertToAuctionDetailDTO(Auction auction) {
         AuctionDetailDTO auctionDTO = new AuctionDetailDTO();
@@ -483,14 +563,14 @@ public class AuctionService {
         switch (auction.getStatus()) {
             case "Pending":
                 auction.setStatus("Cancelled");
-                walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), id);
                 break;
 
             case "Scheduled":
                 List<AuctionParticipant> participants = auctionParticipantRepository.findAuctionParticipantsByAuctionID(id);
                 if (participants.isEmpty()) {
                     auction.setStatus("Cancelled");
-                    walletService.refundDeposit(auction.getBreederID(), auction.getBreederDeposit(), id);
+                    walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), id);
                 } else {
                     throw new IllegalArgumentException("Cannot cancel scheduled auction because has participants.");
                 }
