@@ -138,8 +138,13 @@ public class AuctionController {
     }
 
     @GetMapping("/{id}")
-    public AuctionDetailDTO getAuctionByID(@PathVariable int id) {
-        return auctionService.getAuctionWithKoiByID(id);
+    public ResponseEntity<AuctionDetailDTO> getAuctionByID(@PathVariable int id) {
+        AuctionDetailDTO auctionDetailDTO = auctionService.getAuctionWithKoiByID(id);
+        if (auctionDetailDTO != null) {
+            return ResponseEntity.ok(auctionDetailDTO);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
 
