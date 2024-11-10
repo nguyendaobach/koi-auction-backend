@@ -76,7 +76,7 @@ public class AuctionService {
             Auction auction = auctionOptional.get();
             return convertToAuctionDetailDTO(auction);
         } else {
-            throw new RuntimeException("Auction not found with id: " + id);
+            return null;
         }
     }
 
