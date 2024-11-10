@@ -1,37 +1,37 @@
 package fall24.swp391.g1se1868.koiauction.model;
 
 public class AuctionNotification {
-        private String type;  // 'winner', 'loser', 'status'
-        private Integer userId; // ID của người nhận thông báo, có thể null nếu là thông báo chung
-        private String message;
+        private String status;  // 'winner', 'loser', 'status'
+        private Integer winnerId; // ID của người nhận thông báo, có thể null nếu là thông báo chung
+        private Long amount;
 
-        public AuctionNotification(String type, Integer userId, String message) {
-            this.type = type;
-            this.userId = userId;
-            this.message = message;
-        }
-
-    public String getType() {
-        return type;
+    public AuctionNotification(String status, Integer winnerId, Long amount) {
+        this.status = status;
+        this.winnerId = winnerId;
+        this.amount = amount;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getStatus() {
+        return status;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
+    public Integer getWinnerId() {
+        return winnerId;
     }
 
-    public String getMessage() {
-        return message;
+    public void setWinnerId(Integer winnerId) {
+        this.winnerId = winnerId;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public Long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Long amount) {
+        this.amount = amount;
     }
 }

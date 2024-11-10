@@ -1,4 +1,4 @@
-package fall24.swp391.g1se1868.koiauction.security;
+package fall24.swp391.g1se1868.koiauction.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

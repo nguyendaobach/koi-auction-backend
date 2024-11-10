@@ -1,6 +1,8 @@
 package fall24.swp391.g1se1868.koiauction.repository;
 
 import fall24.swp391.g1se1868.koiauction.model.User;
+import fall24.swp391.g1se1868.koiauction.model.UserAuctionCount;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
@@ -63,6 +66,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
                      @Param("day") Integer day,
                      @Param("month") Integer month,
                      @Param("year") Integer year);
+
+    @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserAuctionCount(u.id, u.fullName, COUNT(a)) " +
+            "FROM User u JOIN Auction a ON u.id = a.breederID " +
+            "WHERE u.role = 'Breeder' AND a.status <> 'Reject' " +  // thêm khoảng trắng
+            "GROUP BY u.id, u.fullName " +
+            "ORDER BY COUNT(a) DESC")
+    List<UserAuctionCount> findTopBreedersByAuctionCount(Pageable pageable);
 
 }
 

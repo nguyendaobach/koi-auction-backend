@@ -167,15 +167,19 @@ public class AuctionController {
     }
 
 
-    @GetMapping("/user/participant-by-user")
-    public AuctionDetailDTO getAuctionParticipants() {
+    @GetMapping("/user/participant")
+    public ResponseEntity<?> getAuctionParticipants() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        return auctionService.getAuctionsParticipantByUser(userId);
+        try {
+            return  ResponseEntity.ok(auctionService.getAuctionsParticipantByUser(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
 
@@ -220,6 +224,21 @@ public class AuctionController {
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
+    }
+    @PostMapping("/user/close-acution")
+    public ResponseEntity<?> closeAuction(@RequestParam int auctionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try{
+            auctionService.closeAuctionCall(auctionId,userId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
     @PostMapping("/breeder/add-auction")
     public ResponseEntity<AuctionResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {

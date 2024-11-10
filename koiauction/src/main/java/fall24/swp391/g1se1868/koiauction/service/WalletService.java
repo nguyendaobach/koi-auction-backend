@@ -110,7 +110,7 @@ public class WalletService {
         return payerTransaction;
     }
     @Transactional
-    public Transaction refundDeposit(int payerUserId, Long amount, int auctionId) {
+    public Transaction refund(int payerUserId, Long amount, int auctionId) {
         Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
                 .orElseThrow(() -> new RuntimeException("Payer wallet not found"));
         Wallet systemWallet = walletRepository.findbyuserid(1)

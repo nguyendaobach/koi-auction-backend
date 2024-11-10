@@ -96,6 +96,51 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+    @PostMapping("/{orderId}/shipping")
+    public ResponseEntity<?> updateStatusToShipping(@PathVariable Integer orderId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new RuntimeException("User is not authenticated");
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            return ResponseEntity.ok(orderService.changeStatusToShipping(orderId, userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{orderId}/dispute")
+    public ResponseEntity<?> updateStatusToDispute(@PathVariable Integer orderId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new RuntimeException("User is not authenticated");
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            return ResponseEntity.ok(orderService.changeStatusToDispute(orderId, userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{orderId}/done")
+    public ResponseEntity<?> markOrderAsDone(@PathVariable Integer orderId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new RuntimeException("User is not authenticated");
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            return ResponseEntity.ok(orderService.doneOrder(orderId, userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
+    }
+
 
 }
 

@@ -1,8 +1,8 @@
 
-package fall24.swp391.g1se1868.koiauction.security;
+package fall24.swp391.g1se1868.koiauction.config;
 
+import fall24.swp391.g1se1868.koiauction.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,6 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/verify/**").permitAll()
                         .requestMatchers("/api/forgot-password/**").permitAll()
+                        .requestMatchers("/api/breeder/user").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/koi-fish/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/koi-types/**","/api/koi-origin/**").permitAll()
                         .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
