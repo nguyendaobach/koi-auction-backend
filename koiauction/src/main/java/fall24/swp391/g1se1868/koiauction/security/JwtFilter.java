@@ -34,16 +34,16 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7); // Extract the token after "Bearer "
+            token = authHeader.substring(7);
 
             try {
-                username = jwtService.extractUserName(token); // Extract username from token
+                username = jwtService.extractUserName(token);
             } catch (ExpiredJwtException e) {
                 // Handle token expiration
                 response.setContentType("application/json");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"error\": \"token_expired\"}");
-                return; // Stop further processing
+                return;
             }
         }
 
