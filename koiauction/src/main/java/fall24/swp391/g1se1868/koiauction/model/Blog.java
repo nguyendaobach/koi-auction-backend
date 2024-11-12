@@ -11,21 +11,21 @@ public class Blog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "PostId")  // Match the column name in the database
+    @Column(name = "PostId")
     private Long id;  // ID bài viết
 
     @Column(name = "UserId", nullable = false)
-    private Integer userId;  // ID người dùng tạo bài viết
+    private Integer userId;
 
     @Column(nullable = false, length = 255)
-    private String title;  // Tiêu đề bài viết
+    private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;  // Nội dung bài viết
+    private String content;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false)
-    private Date createdAt = new Date();  // Ngày tạo bài viết, mặc định là thời điểm hiện tại
+    private Date createdAt = new Date();
 
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<BlogImage> images;

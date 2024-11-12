@@ -41,6 +41,27 @@ public class AdminController {
     private StatisticsService statisticsService;
 
 
+    @GetMapping("/transaction/search")
+    public ResponseEntity<List<Transaction>> searchTransactions(
+            @RequestParam(required = false) String transactionType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endTime,
+            @RequestParam(required = false) Long walletID,
+            @RequestParam(required = false) Long amountStart,
+            @RequestParam(required = false) Long amountEnd) {
+
+        Instant startInstant = (startTime != null) ? startTime.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+        Instant endInstant = (endTime != null) ? endTime.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant() : null;
+
+        List<Transaction> transactions = transactionService.searchTransactions(
+                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd);
+
+        return new ResponseEntity<>(transactions, HttpStatus.OK);
+    }
+
+
+
+
     @GetMapping("/transaction")
     public ResponseEntity<Map<String, Object>> getAllTransactions(
             @RequestParam(defaultValue = "0") int page,
