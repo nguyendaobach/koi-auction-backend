@@ -151,9 +151,9 @@ public class AuctionService {
                 break;
 
             case "Fixed-price":
-                auction.setStartingPrice(null); // Not used for Fixed-price auctions
+                auction.setStartingPrice(null);
                 auction.setBuyoutPrice(request.getBuyoutPrice());
-                auction.setBidStep(null); // No bid step for Fixed-price auctions
+                auction.setBidStep(null);
                 break;
 
             case "First-come":
@@ -299,12 +299,22 @@ public class AuctionService {
                 auction.setWinnerID(winnerID);
                 long finalPrice = bidService.getCurrentPrice(auction);
                 auction.setFinalPrice(finalPrice);
+                List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+                for (KoiFish auctionKoi : auctionKois) {
+                    auctionKoi.setStatus("Sold");
+                    koiFishRepository.save(auctionKoi);
+                }
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", winnerID!=null?winnerID:null , auction.getFinalPrice()));
         }else if(auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
             List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
-            if (bids.isEmpty()){
+            if (!bids.isEmpty()){
+                List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+                for (KoiFish auctionKoi : auctionKois) {
+                    auctionKoi.setStatus("Sold");
+                    koiFishRepository.save(auctionKoi);
+                }
             long maxBidAmount = bids.stream().mapToLong(Bid::getAmount).max().orElse(0);
             List<Bid> highestBids = bids.stream()
                     .filter(bid -> bid.getAmount() == maxBidAmount)
@@ -320,12 +330,24 @@ public class AuctionService {
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", auction.getWinnerID()!=null?auction.getWinnerID():null , auction.getFinalPrice()));
         }
+        if(auction.getWinnerID()==null) {
+            List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+            for (KoiFish auctionKoi : auctionKois) {
+                auctionKoi.setStatus("Active");
+                koiFishRepository.save(auctionKoi);
+            }
+        }
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
     }
     public void closeAuctionCall(int auctionId, Integer userID) {
         Auction auction = auctionRepository.getById(auctionId);
         auction.setStatus("Closed");
+        List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
+        for (KoiFish auctionKoi : auctionKois) {
+            auctionKoi.setStatus("Sold");
+            koiFishRepository.save(auctionKoi);
+        }
         if (auction.getAuctionMethod().equalsIgnoreCase("Descending")) {
             long finalPrice = calculateDescendingPrice(auction);
             auction.setFinalPrice(finalPrice);
@@ -379,7 +401,7 @@ public class AuctionService {
         User breeder = userRepository.findById(auction.getBreederID())
                 .orElseThrow(() -> new RuntimeException("Breeder not found with id: " + auction.getBreederID()));
         auctionDTO.setBreederFullName(breeder.getFullName());
-
+        auctionDTO.setBreederAddress(breeder.getAddress());
         auctionDTO.setStaffID(auction.getStaffID());
         auctionDTO.setWinnerID(auction.getWinnerID());
         auctionDTO.setAuctionMethod(auction.getAuctionMethod());
@@ -590,8 +612,9 @@ public class AuctionService {
             return auctionRepository.getRevenueByMonth(month, year);
         } else if (year != null) {
             return auctionRepository.getRevenueByYear(year);
+        } else {
+            return auctionRepository.getTotalRevenue();
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
     public Long getCountAuction(Integer day, Integer month, Integer year) {
@@ -601,8 +624,9 @@ public class AuctionService {
             return auctionRepository.getCountAuctionByMonth(month, year);
         } else if (year != null) {
             return auctionRepository.getCountAuctionByYear(year);
+        } else {
+            return auctionRepository.getTotalAuctionCount();
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
     public Long getCountAuctionWithFinishedStatus(Integer day, Integer month, Integer year) {
@@ -612,8 +636,9 @@ public class AuctionService {
             return auctionRepository.getCountAuctionByMonthAndStatus(month, year, "Finished");
         } else if (year != null) {
             return auctionRepository.getCountAuctionByYearAndStatus(year, "Finished");
+        } else {
+            return auctionRepository.getTotalFinishedAuctionCount("Finished");
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
 

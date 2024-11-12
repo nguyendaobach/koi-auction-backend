@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class WalletService {
@@ -23,6 +24,8 @@ public class WalletService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private SystemConfigService systemConfigService;
 
     @Lazy
     @Autowired
@@ -133,6 +136,58 @@ public class WalletService {
         refundTransaction.setStatus("Completed");
         transactionRepository.save(refundTransaction);
         return refundTransaction;
+    }
+    // 1. Send Withdrawal Request
+    public void sendWithdrawRequest(Integer userId, Long amount) {
+        Wallet wallet = getWalletByUserId(userId);
+        Long fee = Math.max(
+                Math.round(amount * systemConfigService.getWithdrawFree()),
+                systemConfigService.getWithdrawFeeMin().longValue()
+        );
+        if (wallet.getAmount() < (fee+amount)) {
+            throw new RuntimeException("Insufficient funds to cover the withdrawal fee.");
+        }
+        Wallet systemWallet = walletRepository.findbyuserid(1)
+                .orElseThrow(() -> new RuntimeException("System wallet not found"));
+        systemWallet.setAmount(systemWallet.getAmount() - amount);
+        walletRepository.save(systemWallet);
+        wallet.setAmount(wallet.getAmount() - (fee+amount));
+        walletRepository.save(wallet);
+        Transaction transaction = new Transaction();
+        transaction.setWalletID(wallet);
+        transaction.setAmount(amount);
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        transaction.setTime(ZonedDateTime.now(vietnamZone).toInstant());
+        transaction.setTransactionType("Withdraw");
+        transaction.setStatus("Pending");
+        transactionRepository.save(transaction);
+    }
+    public void completeWithdraw(Integer transactionId) {
+        Transaction transaction = getTransactionById(transactionId);
+
+        if (!"Pending".equals(transaction.getStatus())) {
+            throw new IllegalStateException("Only Pending transactions can be completed.");
+        }
+        Long withdrawAmount = transaction.getAmount();
+        Long fee = Math.max(
+                Math.round(withdrawAmount * systemConfigService.getWithdrawFree()),
+                systemConfigService.getWithdrawFeeMin().longValue()
+        );
+        Wallet wallet = transaction.getWalletID();
+        if (wallet.getAmount() < (fee+withdrawAmount)) {
+            throw new RuntimeException("Insufficient funds to cover the withdrawal fee.");
+        }
+        transaction.setStatus("Completed");
+        transactionRepository.save(transaction);
+    }
+
+    public List<Transaction> getWithdrawRequests(String status) {
+        return transactionRepository.findByTransactionTypeAndStatus("Withdraw", status);
+    }
+
+    public Transaction getTransactionById(Integer transactionId) {
+        return transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new NoSuchElementException("Transaction not found"));
     }
 
     @Transactional

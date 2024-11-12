@@ -83,80 +83,141 @@ public class KoiFishController {
     }
 
 
-    @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
-    @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> customizeKoiFish(
-            @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
-            @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,
-            @RequestParam(name = "video", required = true) MultipartFile video,
-            @RequestParam String name,
-            @RequestParam BigDecimal weight,
-            @RequestParam String sex,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
-            @RequestParam String description,
-            @RequestParam BigDecimal length,
-            @RequestParam Integer countryID,
-            @RequestParam Integer koiTypeID
-    ) {
-        List<String> allowedFormats = Arrays.asList("image/png", "image/jpeg", "image/jpg", "image/gif", "image/bmp", "image/webp", "image/tiff");
+//    @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
+//    @PostMapping(value = "/customize-koi-fish", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<String> customizeKoiFish(
+//            @RequestParam(name = "image-header", required = true) MultipartFile imageHeader,
+//            @RequestParam(name = "image-detail", required = true) List<MultipartFile> imageDetail,
+//            @RequestParam(name = "video", required = true) MultipartFile video,
+//            @RequestParam String name,
+//            @RequestParam BigDecimal weight,
+//            @RequestParam String sex,
+//            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
+//            @RequestParam String description,
+//            @RequestParam BigDecimal length,
+//            @RequestParam Integer countryID,
+//            @RequestParam Integer koiTypeID
+//    ) {
+//        List<String> allowedFormats = Arrays.asList("image/png", "image/jpeg", "image/jpg", "image/gif", "image/bmp", "image/webp", "image/tiff");
+//
+//        // Kiểm tra giá trị weight và length
+//        if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
+//            return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
+//        }
+//
+//        // Kiểm tra xác thực người dùng
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
+//        }
+//
+//        if (!authentication.getAuthorities().stream()
+//                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+//        }
+//
+//        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+//        Integer userId = userPrinciple.getId();
+//
+//        User user = new User(userId) ;
+//
+//        try {
+//            // Kiểm tra imageHeader
+//            if (imageHeader.isEmpty()) {
+//                return ResponseEntity.badRequest().body("Header image is required.");
+//            }
+//            if (!allowedFormats.contains(imageHeader.getContentType().toLowerCase())) {
+//                return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
+//            }
+//
+//            // Kiểm tra video
+//            if (video.isEmpty()) {
+//                return ResponseEntity.badRequest().body("Video is required.");
+//            }
+//            if (!video.getContentType().toLowerCase().equals("video/mp4")) {
+//                return ResponseEntity.badRequest().body("Video must be in MP4 format.");
+//            }
+//
+//            // Kiểm tra từng tệp trong imageDetail
+//            for (MultipartFile file : imageDetail) {
+//                if (file.isEmpty()) {
+//                    return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
+//                }
+//                String contentType = file.getContentType();
+//                if (!allowedFormats.contains(contentType.toLowerCase())) {
+//                    return ResponseEntity.badRequest().body("Each detail image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
+//                }
+//            }
+//
+//            // Lưu cá koi
+//            return koiFishService.saveKoiFish(user,imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
+//        } catch (IOException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+//        }
+//    }
 
-        // Kiểm tra giá trị weight và length
-        if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
-            return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
-        }
+@PostMapping(value = "/customize-koi-fish")
+public ResponseEntity<String> customizeKoiFish(
+        @RequestParam String imageHeader,
+        @RequestParam List<String> imageDetail,
+        @RequestParam String video,
+        @RequestParam String name,
+        @RequestParam BigDecimal weight,
+        @RequestParam String sex,
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
+        @RequestParam String description,
+        @RequestParam BigDecimal length,
+        @RequestParam Integer countryID,
+        @RequestParam Integer koiTypeID
+) {
 
-        // Kiểm tra xác thực người dùng
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
-        }
-
-        if (!authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
-        }
-
-        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-        Integer userId = userPrinciple.getId();
-
-        User user = new User(userId) ;
-
-        try {
-            // Kiểm tra imageHeader
-            if (imageHeader.isEmpty()) {
-                return ResponseEntity.badRequest().body("Header image is required.");
-            }
-            if (!allowedFormats.contains(imageHeader.getContentType().toLowerCase())) {
-                return ResponseEntity.badRequest().body("Header image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
-            }
-
-            // Kiểm tra video
-            if (video.isEmpty()) {
-                return ResponseEntity.badRequest().body("Video is required.");
-            }
-            if (!video.getContentType().toLowerCase().equals("video/mp4")) {
-                return ResponseEntity.badRequest().body("Video must be in MP4 format.");
-            }
-
-            // Kiểm tra từng tệp trong imageDetail
-            for (MultipartFile file : imageDetail) {
-                if (file.isEmpty()) {
-                    return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
-                }
-                String contentType = file.getContentType();
-                if (!allowedFormats.contains(contentType.toLowerCase())) {
-                    return ResponseEntity.badRequest().body("Each detail image must be in PNG, JPEG, GIF, BMP, WEBP, or TIFF format.");
-                }
-            }
-
-            // Lưu cá koi
-            return koiFishService.saveKoiFish(user,imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
+    // Kiểm tra giá trị weight và length
+    if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
+        return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
     }
+
+    // Kiểm tra xác thực người dùng
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
+    }
+
+    if (!authentication.getAuthorities().stream()
+            .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+    }
+
+    UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+    Integer userId = userPrinciple.getId();
+
+    User user = new User(userId) ;
+
+    try {
+        // Kiểm tra imageHeader
+        if (imageHeader.isEmpty()) {
+            return ResponseEntity.badRequest().body("Header image is required.");
+        }
+
+        // Kiểm tra video
+        if (video.isEmpty()) {
+            return ResponseEntity.badRequest().body("Video is required.");
+        }
+        // Kiểm tra từng tệp trong imageDetail
+        for (String file : imageDetail) {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
+            }
+        }
+
+        return koiFishService.saveKoiFish(user,imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+    }
+}
 
     @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -190,5 +251,6 @@ public class KoiFishController {
     public ResponseEntity<?> delete(@RequestParam Integer id){
         return koiFishService.delete(id);
     }
+
 
 }

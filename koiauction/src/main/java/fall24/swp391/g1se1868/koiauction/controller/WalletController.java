@@ -211,4 +211,46 @@ public class WalletController {
         List<Transaction> transactions = walletService.getTransactionsByUserId(userId);
         return ResponseEntity.ok(transactions);
     }
+    @GetMapping("/transactions/{id}")
+    public ResponseEntity<Transaction> getTransactionsByID(@PathVariable Integer id) {
+        Transaction transactions = walletService.getTransactionById(id);
+        return ResponseEntity.ok(transactions);
+    }
+    @PostMapping("/withdraw")
+    public ResponseEntity<String> sendWithdrawRequest( @RequestParam Long amount) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        try {
+            walletService.sendWithdrawRequest(userId, amount);
+            return ResponseEntity.ok("Withdrawal request sent successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 3. Complete Withdraw with Fee Deduction
+    @PostMapping("/withdraw/complete/{transactionId}")
+    public ResponseEntity<String> completeWithdraw(@PathVariable Integer transactionId) {
+        try {
+            walletService.completeWithdraw(transactionId);
+            return ResponseEntity.ok("Withdrawal completed successfully with applicable fees.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 4. Get Withdraw Requests by Status
+    @GetMapping("/withdraw/status")
+    public ResponseEntity<List<Transaction>> getWithdrawRequests(@RequestParam String status) {
+        try {
+            List<Transaction> transactions = walletService.getWithdrawRequests(status);
+            return ResponseEntity.ok(transactions);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }
