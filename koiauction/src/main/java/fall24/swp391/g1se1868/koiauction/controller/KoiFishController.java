@@ -191,4 +191,9 @@ public class KoiFishController {
         return koiFishService.delete(id);
     }
 
+    @PostMapping(value = "/customize-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveImage(@RequestParam(name = "file", required = true) MultipartFile file) throws java.io.IOException {
+       return koiFishService.saveFile(file);
+    }
+
 }
