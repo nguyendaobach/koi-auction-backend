@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,42 +42,24 @@ public class AdminController {
     private StatisticsService statisticsService;
 
 
-    @GetMapping("/transaction/search")
-    public ResponseEntity<List<Transaction>> searchTransactions(
+    @GetMapping("/search")
+    public ResponseEntity<Page<Transaction>> searchTransactions(
             @RequestParam(required = false) String transactionType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endTime,
             @RequestParam(required = false) Long walletID,
             @RequestParam(required = false) Long amountStart,
-            @RequestParam(required = false) Long amountEnd) {
+            @RequestParam(required = false) Long amountEnd,
+            @PageableDefault(size = 10) Pageable pageable) {
 
         Instant startInstant = (startTime != null) ? startTime.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
         Instant endInstant = (endTime != null) ? endTime.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant() : null;
 
-        List<Transaction> transactions = transactionService.searchTransactions(
-                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd);
+        Page<Transaction> transactions = transactionService.searchTransactions(
+                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, pageable);
 
         return new ResponseEntity<>(transactions, HttpStatus.OK);
     }
-
-
-
-
-    @GetMapping("/transaction")
-    public ResponseEntity<Map<String, Object>> getAllTransactions(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Transaction> transactions = transactionRepository.findAll(pageable);
-        Map<String, Object> response = new HashMap<>();
-        response.put("auctions", transactions.getContent());
-        response.put("currentPage", transactions.getNumber()); // Trang hiện tại
-        response.put("totalPages", transactions.getTotalPages()); // Tổng số trang
-        response.put("totalElements", transactions.getTotalElements());
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
 
     @GetMapping("/transaction/{id}")
     public ResponseEntity<?> getTransactionById(@PathVariable Integer id) {
@@ -91,27 +74,6 @@ public class AdminController {
 
     }
 
-    @GetMapping("/transaction/by-amount")
-    public List<Transaction> getTransactionsByAmount(@RequestParam Long amount) {
-        return transactionService.getTransactionsByAmount(amount);
-    }
-
-    @GetMapping("/transaction/by-time-range")
-    public List<Transaction> getTransactionsByTimeRange(
-            @RequestParam(name = "startTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTime,
-            @RequestParam(name = "endTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endTime) {
-
-        // Chuyển đổi LocalDate thành Instant, lấy giờ đầu ngày cho startTime và giờ cuối ngày cho endTime
-        Instant startInstant = startTime.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant endInstant = endTime.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant();
-
-        return transactionService.getTransactionsByDateRange(startInstant, endInstant);
-    }
-
-    @GetMapping("/transaction/by-type")
-    public List<Transaction> getTransactionsByType(@RequestParam String transactionType) {
-        return transactionService.getTransactionsByType(transactionType);
-    }
 
     @GetMapping("/total-balance")
     public Long getTotalBalance() {

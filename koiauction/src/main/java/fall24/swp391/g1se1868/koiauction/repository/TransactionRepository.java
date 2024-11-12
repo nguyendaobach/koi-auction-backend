@@ -1,6 +1,8 @@
 package fall24.swp391.g1se1868.koiauction.repository;
 
 import fall24.swp391.g1se1868.koiauction.model.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,11 +62,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             "AND (:walletID IS NULL OR t.walletID.id = :walletID) " +
             "AND (:amountStart IS NULL OR t.amount >= :amountStart) " +
             "AND (:amountEnd IS NULL OR t.amount <= :amountEnd)")
-    List<Transaction> searchTransactions(
+    Page<Transaction> searchTransactions(
             @Param("transactionType") String transactionType,
             @Param("startInstant") Instant startInstant,
             @Param("endInstant") Instant endInstant,
             @Param("walletID") Long walletID,
             @Param("amountStart") Long amountStart,
-            @Param("amountEnd") Long amountEnd);
+            @Param("amountEnd") Long amountEnd,
+            Pageable pageable);
 }
