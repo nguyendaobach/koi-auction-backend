@@ -5,7 +5,10 @@ import fall24.swp391.g1se1868.koiauction.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class TransactionService {
     @Autowired
@@ -47,4 +50,13 @@ public class TransactionService {
         // Tạo câu truy vấn để đếm số giao dịch theo trạng thái
         return transactionRepository.countByStatus(status, day, month, year);
     }
+
+    public List<Transaction> searchTransactions(String transactionType, Instant startInstant, Instant endInstant,
+                                                Long walletID, Long amountStart, Long amountEnd) {
+        return transactionRepository.searchTransactions(transactionType, startInstant, endInstant, walletID, amountStart, amountEnd);
+    }
+
+
+
+
 }

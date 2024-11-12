@@ -9,15 +9,15 @@ public class BlogImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ImageId")  // Match the column name in the database
+    @Column(name = "ImageId")
     private Long id;  // ID của hình ảnh
 
     @Column(name = "ImageUrl", nullable = false, length = 500)
-    private String imageUrl;  // URL hoặc đường dẫn tới hình ảnh
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PostId", nullable = false)
-    @JsonIgnore  // Ngăn không cho serializa trường này
+    @JsonIgnore
     private Blog blog;
 
     // Getters và Setters
