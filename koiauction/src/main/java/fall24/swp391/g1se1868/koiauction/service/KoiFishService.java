@@ -99,15 +99,12 @@ public class KoiFishService {
         return response;  // Trả về đối tượng Map chứa thông tin phân trang và danh sách cá Koi
     }
 
-
-
-
     @Transactional
     public ResponseEntity<String> saveKoiFish(
             User user,
-            MultipartFile imageHeader,
-            List<MultipartFile> imageDetail,
-            MultipartFile video,
+            String imageHeader,
+            List<String> imageDetail,
+            String video,
             String name,
             BigDecimal weight,
             String sex,
@@ -132,44 +129,33 @@ public class KoiFishService {
 
             String status = "Active";
             KoiFish koiFish = new KoiFish(user,name, koiOrigin, koiType, weight, sex, birthday, description, length, status);
-            KoiFish savedKoiFish = saveKoiFish(koiFish); // Lưu đối tượng KoiFish
+            KoiFish savedKoiFish = saveKoiFish(koiFish);
 
-            // Lưu imageHeader là "Header Video"
             if (imageHeader != null) {
-                String fileUrl = firebaseService.uploadImage(imageHeader);
-                if(fileUrl==null){
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading files: " );
 
-                }
                 KoiMedia koiMedia = new KoiMedia();
                 koiMedia.setKoiID(savedKoiFish);
-                koiMedia.setUrl(fileUrl);
+                koiMedia.setUrl(imageHeader);
                 koiMedia.setMediaType("Header Image");
                 koiMediaRepository.save(koiMedia);
             }
-            // Lưu imageDetail là "Image Detail"
-            for (MultipartFile detailImage : imageDetail) {
+            for (String detailImage : imageDetail) {
                 if (detailImage != null) {
-                    String fileUrl = firebaseService.uploadImage(detailImage);
                     KoiMedia koiMedia = new KoiMedia();
                     koiMedia.setKoiID(savedKoiFish);
-                    koiMedia.setUrl(fileUrl);
+                    koiMedia.setUrl(detailImage);
                     koiMedia.setMediaType("Image Detail");
                     koiMediaRepository.save(koiMedia);
                 }
             }
-            // Lưu video là "Video"
             if (video != null) {
-                String fileUrl = firebaseService.uploadImage(video);
                 KoiMedia koiMedia = new KoiMedia();
                 koiMedia.setKoiID(savedKoiFish);
-                koiMedia.setUrl(fileUrl);
+                koiMedia.setUrl(video);
                 koiMedia.setMediaType("Video");
                 koiMediaRepository.save(koiMedia);
             }
             return ResponseEntity.status(HttpStatus.CREATED).body("KoiFish and KoiMedia saved successfully");
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading files: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while saving KoiFish: " + e.getMessage());
         }
