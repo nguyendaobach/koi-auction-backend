@@ -450,4 +450,20 @@ public class KoiFishService {
     }
 
 
+    public ResponseEntity<?> saveFile(MultipartFile file) throws IOException {
+        // Kiểm tra xác thực người dùng
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
+        }
+
+        if (!authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+        }
+
+        String filee=firebaseService.uploadImage(file);
+
+        return ResponseEntity.status(HttpStatus.OK).body(filee);
+    }
 }
