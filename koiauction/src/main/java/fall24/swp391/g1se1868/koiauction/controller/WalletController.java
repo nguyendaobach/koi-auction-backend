@@ -253,5 +253,4 @@ public class WalletController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-
 }
