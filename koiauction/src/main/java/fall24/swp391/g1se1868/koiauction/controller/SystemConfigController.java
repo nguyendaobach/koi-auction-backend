@@ -35,5 +35,29 @@ public class SystemConfigController {
         systemConfigService.setAuctionFee(value);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/withdraw-free")
+    public ResponseEntity<Double> getWithdrawFree() {
+        Double withdrawFree = systemConfigService.getWithdrawFree();
+        return ResponseEntity.ok(withdrawFree);
+    }
+
+    @PutMapping("/withdraw-free")
+    public ResponseEntity<Void> updateWithdrawFree(@RequestParam Double value) {
+        systemConfigService.setWithdrawFree(value);
+        return ResponseEntity.ok().build();
+    }
+
+    // Get và update cho Withdraw Fee Min
+    @GetMapping("/withdraw-fee-min")
+    public ResponseEntity<Double> getWithdrawFeeMin() {
+        Double withdrawFeeMin = systemConfigService.getWithdrawFeeMin();
+        return ResponseEntity.ok(withdrawFeeMin);
+    }
+
+    @PutMapping("/withdraw-fee-min")
+    public ResponseEntity<Void> updateWithdrawFeeMin(@RequestParam Double value) {
+        systemConfigService.setWithdrawFeeMin(value);
+        return ResponseEntity.ok().build();
+    }
 }
 

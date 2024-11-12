@@ -151,9 +151,9 @@ public class AuctionService {
                 break;
 
             case "Fixed-price":
-                auction.setStartingPrice(null); // Not used for Fixed-price auctions
+                auction.setStartingPrice(null);
                 auction.setBuyoutPrice(request.getBuyoutPrice());
-                auction.setBidStep(null); // No bid step for Fixed-price auctions
+                auction.setBidStep(null);
                 break;
 
             case "First-come":
@@ -379,7 +379,7 @@ public class AuctionService {
         User breeder = userRepository.findById(auction.getBreederID())
                 .orElseThrow(() -> new RuntimeException("Breeder not found with id: " + auction.getBreederID()));
         auctionDTO.setBreederFullName(breeder.getFullName());
-
+        auctionDTO.setBreederAddress(breeder.getAddress());
         auctionDTO.setStaffID(auction.getStaffID());
         auctionDTO.setWinnerID(auction.getWinnerID());
         auctionDTO.setAuctionMethod(auction.getAuctionMethod());
