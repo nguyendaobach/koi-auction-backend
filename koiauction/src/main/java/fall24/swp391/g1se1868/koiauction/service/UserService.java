@@ -210,7 +210,15 @@ public class UserService {
         return null;
     }
     public int getNewUsers(Integer day, Integer month, Integer year) {
-        return userRepository.countNewUsers(day, month, year);
+        if (day != null && month != null && year != null) {
+            return userRepository.countNewUsers(day, month, year);
+        } else if (month != null && year != null) {
+            return userRepository.countNewUsers(null,month, year);
+        } else if (year != null) {
+            return userRepository.countNewUsers(null,null,year);
+        } else {
+            return userRepository.countNewUsers(null,null,null);
+        }
     }
 
     public Map<String, Long> getUserCountsByStatus(Integer day, Integer month, Integer year) {
