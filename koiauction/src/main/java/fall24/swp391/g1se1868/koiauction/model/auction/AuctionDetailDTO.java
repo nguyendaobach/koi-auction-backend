@@ -9,6 +9,7 @@ public class AuctionDetailDTO {
     private Integer id;
     private Integer breederID;
     private String breederFullName;
+    private String breederAddress;
     private Integer staffID;
     private Integer winnerID;
     private String auctionMethod;
@@ -24,6 +25,14 @@ public class AuctionDetailDTO {
     private Instant createAt;    // Sử dụng Instant
     private String status;
     private List<KoiDataDTO> koiData;
+
+    public String getBreederAddress() {
+        return breederAddress;
+    }
+
+    public void setBreederAddress(String breederAddress) {
+        this.breederAddress = breederAddress;
+    }
 
     public Integer getId() {
         return id;
