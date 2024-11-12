@@ -612,8 +612,9 @@ public class AuctionService {
             return auctionRepository.getRevenueByMonth(month, year);
         } else if (year != null) {
             return auctionRepository.getRevenueByYear(year);
+        } else {
+            return auctionRepository.getTotalRevenue();
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
     public Long getCountAuction(Integer day, Integer month, Integer year) {
@@ -623,8 +624,9 @@ public class AuctionService {
             return auctionRepository.getCountAuctionByMonth(month, year);
         } else if (year != null) {
             return auctionRepository.getCountAuctionByYear(year);
+        } else {
+            return auctionRepository.getTotalAuctionCount();
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
     public Long getCountAuctionWithFinishedStatus(Integer day, Integer month, Integer year) {
@@ -634,8 +636,9 @@ public class AuctionService {
             return auctionRepository.getCountAuctionByMonthAndStatus(month, year, "Finished");
         } else if (year != null) {
             return auctionRepository.getCountAuctionByYearAndStatus(year, "Finished");
+        } else {
+            return auctionRepository.getTotalFinishedAuctionCount("Finished");
         }
-        throw new IllegalArgumentException("Invalid date parameters. Please provide year, or month and year, or day, month, and year.");
     }
 
 

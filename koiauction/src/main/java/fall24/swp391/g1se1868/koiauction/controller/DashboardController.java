@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,14 +20,22 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
-    @GetMapping
+    @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboard(
             @RequestParam(required = false) Integer day,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
         try {
-            Map<String, Object> dashboard = new HashMap<>();
-            dashboard = dashboardService.getDashboard(day, month, year);
+            // Nếu day, month, hoặc year là null, mặc định sẽ sử dụng ngày hiện tại
+            if (day == null && month == null && year == null) {
+                LocalDate currentDate = LocalDate.now();
+                day = currentDate.getDayOfMonth();
+                month = currentDate.getMonthValue();
+                year = currentDate.getYear();
+            }
+
+            // Lấy dữ liệu từ service dựa trên các tham số ngày, tháng, năm đã xử lý
+            Map<String, Object> dashboard = dashboardService.getDashboard(day, month, year);
             return ResponseEntity.ok(dashboard);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
@@ -34,6 +43,7 @@ public class DashboardController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An error occurred"));
         }
     }
+
 
     @GetMapping("/user")
     public ResponseEntity<Map<String, Object>> getUserData(
