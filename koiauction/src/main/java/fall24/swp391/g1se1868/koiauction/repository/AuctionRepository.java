@@ -94,18 +94,18 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     @Query("UPDATE Auction k SET k.status = 'Cancelled' WHERE k.id = :id")
     String delete(@Param("id") Integer id);
 
-    @Query("SELECT SUM(a.auctionFee) FROM Auction a WHERE FUNCTION('DAY', a.endTime) = :day AND FUNCTION('MONTH', a.endTime) = :month AND FUNCTION('YEAR', a.endTime) = :year AND a.status = 'Closed'")
-    Long getRevenueByDay(@Param("day") int day, @Param("month") int month, @Param("year") int year);
-
-    // Revenue for a specific month
-    @Query("SELECT SUM(a.auctionFee) FROM Auction a WHERE FUNCTION('MONTH', a.endTime) = :month AND FUNCTION('YEAR', a.endTime) = :year AND a.status = 'Closed'")
-    Long getRevenueByMonth(@Param("month") int month, @Param("year") int year);
-
-    // Revenue for a specific year
-    @Query("SELECT SUM(a.auctionFee) FROM Auction a WHERE FUNCTION('YEAR', a.endTime) = :year AND a.status = 'Closed'")
+    @Query(value = "SELECT SUM(a.AuctionFee) FROM Auction a WHERE a.status = 'Closed' AND YEAR(a.endTime) = :year", nativeQuery = true)
     Long getRevenueByYear(@Param("year") int year);
 
-    // Count auctions for a specific day based on startTime
+    @Query(value = "SELECT SUM(a.AuctionFee) FROM Auction a WHERE a.status = 'Closed' AND MONTH(a.endTime) = :month AND YEAR(a.endTime) = :year", nativeQuery = true)
+    Long getRevenueByMonth(@Param("month") int month, @Param("year") int year);
+
+    @Query(value = "SELECT SUM(a.AuctionFee) FROM Auction a WHERE a.status = 'Closed' AND DAY(a.endTime) = :day AND MONTH(a.endTime) = :month AND YEAR(a.endTime) = :year", nativeQuery = true)
+    Long getRevenueByDay(@Param("day") int day, @Param("month") int month, @Param("year") int year);
+
+    @Query(value = "SELECT SUM(a.AuctionFee) FROM Auction a WHERE a.status = 'Closed'", nativeQuery = true)
+    Long getTotalRevenue();
+
     @Query("SELECT COUNT(a) FROM Auction a WHERE FUNCTION('DAY', a.startTime) = :day AND FUNCTION('MONTH', a.startTime) = :month AND FUNCTION('YEAR', a.startTime) = :year AND a.status = 'Ongoing'")
     Long getCountAuctionByDay(@Param("day") int day, @Param("month") int month, @Param("year") int year);
 
@@ -130,6 +130,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     Long getCountAuctionByYearAndStatus(@Param("year") int year, @Param("status") String status);
 
 
+    @Query("SELECT COUNT(a) FROM Auction a WHERE a.status = :status")
+    Long getTotalFinishedAuctionCount(@Param("status") String status);
+
+
+    @Query("SELECT COUNT(a) FROM Auction a WHERE a.status = 'Ongoing'")
+    Long getTotalAuctionCount();
 
 
 }
