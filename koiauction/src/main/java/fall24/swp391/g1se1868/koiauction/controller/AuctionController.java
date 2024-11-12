@@ -327,29 +327,27 @@ public class AuctionController {
     }
 
 
-    @PostMapping("/staff/approve/{auctionId}")
-    public ResponseEntity<Auction> approveAuction(@PathVariable Integer auctionId) {
+    @PostMapping("/staff/auction/{auctionId}")
+    public ResponseEntity<Auction> handleAuctionAction(
+            @PathVariable Integer auctionId,
+            @RequestParam String action) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }
+
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        Auction approvedAuction = auctionService.approveAuction(auctionId, userId);
-        return ResponseEntity.ok(approvedAuction);
-    }
-    @PostMapping("/staff/reject/{auctionId}")
-    public ResponseEntity<Auction> rejectAuction(@PathVariable Integer auctionId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User is not authenticated");
+
+        Auction updatedAuction;
+        if ("approve".equalsIgnoreCase(action)) {
+            updatedAuction = auctionService.approveAuction(auctionId, userId);
+        } else if ("reject".equalsIgnoreCase(action)) {
+            updatedAuction = auctionService.rejectAuction(auctionId, userId);
+        } else {
+            throw new RuntimeException("Invalid action. Use 'approve' or 'reject'.");
         }
-        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-        int userId = userPrinciple.getId();
-        Auction approvedAuction = auctionService.rejectAuction(auctionId, userId);
-        return ResponseEntity.ok(approvedAuction);
+
+        return ResponseEntity.ok(updatedAuction);
     }
-
-
-
 }
