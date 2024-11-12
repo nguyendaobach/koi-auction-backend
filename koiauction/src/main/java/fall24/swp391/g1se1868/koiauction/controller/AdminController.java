@@ -43,7 +43,7 @@ public class AdminController {
 
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Transaction>> searchTransactions(
+    public ResponseEntity<Map<String, Object>> searchTransactions(
             @RequestParam(required = false) String transactionType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endTime,
@@ -52,14 +52,24 @@ public class AdminController {
             @RequestParam(required = false) Long amountEnd,
             @PageableDefault(size = 10) Pageable pageable) {
 
+        // Chuyển đổi thời gian startTime và endTime sang Instant
         Instant startInstant = (startTime != null) ? startTime.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
         Instant endInstant = (endTime != null) ? endTime.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant() : null;
 
+        // Lấy kết quả tìm kiếm từ service
         Page<Transaction> transactions = transactionService.searchTransactions(
                 transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, pageable);
 
-        return new ResponseEntity<>(transactions, HttpStatus.OK);
+        // Tạo đối tượng response trả về
+        Map<String, Object> response = new HashMap<>();
+        response.put("transactions", transactions.getContent());  // Các giao dịch
+        response.put("currentPage", transactions.getNumber());  // Trang hiện tại
+        response.put("totalPages", transactions.getTotalPages());  // Tổng số trang
+        response.put("totalElements", transactions.getTotalElements());  // Tổng số phần tử
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @GetMapping("/transaction/{id}")
     public ResponseEntity<?> getTransactionById(@PathVariable Integer id) {
