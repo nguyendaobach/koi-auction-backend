@@ -62,8 +62,12 @@ public class AuctionService {
 
     @Autowired
     WalletService walletService;
+
     @Autowired
     private KoiFishRepository koiFishRepository;
+
+    @Autowired
+    EmailService emailService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -159,7 +163,7 @@ public class AuctionService {
             case "First-come":
                 auction.setStartingPrice(request.getStartingPrice());
                 auction.setBuyoutPrice(request.getBuyoutPrice());
-                auction.setBidStep(request.getBidStep());
+                auction.setBidStep(null);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid auction method: " + request.getAuctionMethod());
@@ -224,8 +228,7 @@ public class AuctionService {
                 .orElseThrow(() -> new EntityNotFoundException("Auction not found"));
         if (!auction.getStatus().equals("Pending")) {
             throw new IllegalArgumentException("Auction must be in Pending status to be rejected.");
-        }
-        auction.setStatus("Rejected");
+        }        auction.setStatus("Reject");
         auction.setStaffID(userId);
         walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), auctionId);
         List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auctionId);
@@ -296,6 +299,7 @@ public class AuctionService {
         if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")) {
             Integer winnerID = determineWinner(auction);
             if (winnerID != null) {
+                User winnerUser = userRepository.findById(winnerID).get();
                 auction.setWinnerID(winnerID);
                 long finalPrice = bidService.getCurrentPrice(auction);
                 auction.setFinalPrice(finalPrice);
@@ -303,6 +307,26 @@ public class AuctionService {
                 for (KoiFish auctionKoi : auctionKois) {
                     auctionKoi.setStatus("Sold");
                     koiFishRepository.save(auctionKoi);
+                }
+                String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+                String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                        " với giá " + auction.getFinalPrice() +
+                        "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+                MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+                emailService.sendHtmlMessage(mailSendWinner);
+                Set<Integer> notifiedLosers = new HashSet<>();
+                List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
+                for (Bid bid : bids) {
+                    int bidderID = bid.getBidderID().getId();
+                    if (bidderID != winnerID && !notifiedLosers.contains(bidderID)) {
+                        notifiedLosers.add(bidderID);
+                        User loserUser = userRepository.findById(bidderID).get();
+                        String loserSubject = "Thông báo về kết quả đấu giá " + auction.getId();
+                        String loserText = "Bạn đã không chiến thắng đấu giá " + auction.getId() +
+                                ". Tiền cọc của bạn đã được hoàn trả.";
+                        MailBody mailSendLoser = new MailBody(loserUser.getEmail(), loserSubject, loserText);
+                        emailService.sendHtmlMessage(mailSendLoser);
+                    }
                 }
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
@@ -331,6 +355,7 @@ public class AuctionService {
                     new AuctionNotification("Closed", auction.getWinnerID()!=null?auction.getWinnerID():null , auction.getFinalPrice()));
         }
         if(auction.getWinnerID()==null) {
+            auction.setStatus("Failed");
             List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
             for (KoiFish auctionKoi : auctionKois) {
                 auctionKoi.setStatus("Active");
@@ -540,17 +565,35 @@ public class AuctionService {
         if (auction.getBreederID() != breederID) {
             throw new RuntimeException("You do not have permission to update this auction.");
         }
+
         switch (auction.getStatus()) {
             case "Pending":
+                // Save the current breeder deposit for comparison
+                long oldBreederDeposit = auction.getBreederDeposit();
+
                 auction.setAuctionMethod(request.getAuctionMethod());
                 auction.setStartTime(request.getStartTime());
                 auction.setEndTime(request.getEndTime());
                 auction.setStartingPrice(request.getStartingPrice());
                 auction.setBuyoutPrice(request.getBuyoutPrice());
                 auction.setBidderDeposit(request.getBidderDeposit());
-                auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
                 auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
                 auction.setBidStep(request.getBidStep());
+
+                // Calculate the new breeder deposit based on the new starting price
+                long newBreederDeposit = Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit());
+
+                // Adjust deposit only if the new deposit is higher than the old deposit
+                if (newBreederDeposit > oldBreederDeposit) {
+                    long additionalDeposit = newBreederDeposit - oldBreederDeposit;
+                    walletService.deposit(breederID, additionalDeposit, auction.getId());
+                    auction.setBreederDeposit(newBreederDeposit);
+                } else {
+                    // Keep the old deposit if the starting price is lower
+                    auction.setBreederDeposit(oldBreederDeposit);
+                }
+
+                // Update Koi list for the auction
                 auctionKoiRepository.deleteByAuctionID(auction.getId());
                 for (Integer koiId : request.getKoiIds()) {
                     AuctionKoi auctionKoi = new AuctionKoi();
@@ -565,6 +608,7 @@ public class AuctionService {
                 break;
 
             case "Scheduled":
+                // Allow only time-related updates for scheduled auctions
                 auction.setStartTime(request.getStartTime());
                 auction.setEndTime(request.getEndTime());
                 break;
@@ -572,8 +616,10 @@ public class AuctionService {
             default:
                 throw new RuntimeException("Cannot update auction in current status: " + auction.getStatus());
         }
+
         return auctionRepository.save(auction);
     }
+
 
     @Transactional
     public void cancelAuction(Integer id, Integer userId) {

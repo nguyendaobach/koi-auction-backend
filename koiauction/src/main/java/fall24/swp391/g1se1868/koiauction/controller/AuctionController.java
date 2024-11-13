@@ -41,10 +41,10 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
             @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
+            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
 
         Pageable pageable = PageRequest.of(page, size);
-        String desc=desc1.toLowerCase();
+         desc=desc.toLowerCase();
         Page<Auction> auctionPage = null;
         if (desc.equals("desc")) {
             auctionPage = auctionRepository.findAllDesc(status, method, pageable);
@@ -96,10 +96,10 @@ public class AuctionController {
     public ResponseEntity<Map<String, Object>> getAllOwnerAuction(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
-            @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
-        String desc =desc1.toLowerCase();
+            @RequestParam(required = false) List<String> status,
+            @RequestParam(required = false) List<String> method,
+            @RequestParam(defaultValue = "DESC") String desc) {
+        desc =desc.toLowerCase();
         Pageable pageable = PageRequest.of(page, size);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -268,9 +268,29 @@ public class AuctionController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
-                auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() <100000) {
-            return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null",null));
+        if(auctionRequest.getAuctionMethod().equalsIgnoreCase("Ascending")) {
+            if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
+                    auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() < 100000) {
+                return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null", null));
+            }
+        }
+        if(auctionRequest.getAuctionMethod().equalsIgnoreCase("Descending")) {
+            if (auctionRequest.getBidStep() == null || auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null ||
+                    auctionRequest.getBidStep() < 100000 || auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 ) {
+                return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null", null));
+            }
+        }
+        if(auctionRequest.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
+            if ( auctionRequest.getBuyoutPrice() == null
+                     || auctionRequest.getBuyoutPrice() < 10000 ) {
+                return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null", null));
+            }
+        }
+        if(auctionRequest.getAuctionMethod().equalsIgnoreCase("Fist-come")) {
+            if ( auctionRequest.getStartingPrice() == null || auctionRequest.getBuyoutPrice() == null || auctionRequest.getBidderDeposit() == null ||
+                    auctionRequest.getStartingPrice() < 100000 || auctionRequest.getBuyoutPrice() < 10000 || auctionRequest.getBidderDeposit() < 100000) {
+                return ResponseEntity.badRequest().body(new AuctionResponse("Price values must be greater than 100000 and not null", null));
+            }
         }
         if (auctionRequest.getStartTime() == null || auctionRequest.getEndTime() == null ||
                 auctionRequest.getStartTime().isBefore(Instant.now()) || auctionRequest.getEndTime().isBefore(Instant.now())) {

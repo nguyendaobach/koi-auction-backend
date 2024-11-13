@@ -397,11 +397,6 @@ public List<KoiFishIdName> getKoiActive() {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
         }
 
-        if (!authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
-        }
-
         String filee=firebaseService.uploadImage(file);
 
         return ResponseEntity.status(HttpStatus.OK).body(filee);
