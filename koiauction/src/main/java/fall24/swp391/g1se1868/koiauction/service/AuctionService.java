@@ -540,17 +540,35 @@ public class AuctionService {
         if (auction.getBreederID() != breederID) {
             throw new RuntimeException("You do not have permission to update this auction.");
         }
+
         switch (auction.getStatus()) {
             case "Pending":
+                // Save the current breeder deposit for comparison
+                long oldBreederDeposit = auction.getBreederDeposit();
+
                 auction.setAuctionMethod(request.getAuctionMethod());
                 auction.setStartTime(request.getStartTime());
                 auction.setEndTime(request.getEndTime());
                 auction.setStartingPrice(request.getStartingPrice());
                 auction.setBuyoutPrice(request.getBuyoutPrice());
                 auction.setBidderDeposit(request.getBidderDeposit());
-                auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
                 auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
                 auction.setBidStep(request.getBidStep());
+
+                // Calculate the new breeder deposit based on the new starting price
+                long newBreederDeposit = Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit());
+
+                // Adjust deposit only if the new deposit is higher than the old deposit
+                if (newBreederDeposit > oldBreederDeposit) {
+                    long additionalDeposit = newBreederDeposit - oldBreederDeposit;
+                    walletService.deposit(breederID, additionalDeposit, auction.getId());
+                    auction.setBreederDeposit(newBreederDeposit);
+                } else {
+                    // Keep the old deposit if the starting price is lower
+                    auction.setBreederDeposit(oldBreederDeposit);
+                }
+
+                // Update Koi list for the auction
                 auctionKoiRepository.deleteByAuctionID(auction.getId());
                 for (Integer koiId : request.getKoiIds()) {
                     AuctionKoi auctionKoi = new AuctionKoi();
@@ -565,6 +583,7 @@ public class AuctionService {
                 break;
 
             case "Scheduled":
+                // Allow only time-related updates for scheduled auctions
                 auction.setStartTime(request.getStartTime());
                 auction.setEndTime(request.getEndTime());
                 break;
@@ -572,8 +591,10 @@ public class AuctionService {
             default:
                 throw new RuntimeException("Cannot update auction in current status: " + auction.getStatus());
         }
+
         return auctionRepository.save(auction);
     }
+
 
     @Transactional
     public void cancelAuction(Integer id, Integer userId) {
