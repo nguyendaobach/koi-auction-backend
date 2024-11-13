@@ -199,8 +199,8 @@ public class WalletService {
     public static void main(String[] args) {
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         ZonedDateTime now = ZonedDateTime.now(vietnamZone);
-        System.out.println("Local time: " + now);  // In giờ địa phương
-        System.out.println("UTC time: " + now.toInstant());  // In giờ UTC
+        System.out.println("Local time: " + now);
+        System.out.println("UTC time: " + now.toInstant());
     }
 }
 
