@@ -619,5 +619,7 @@ public class AuctionService {
         }
     }
 
-
+    public Page<Auction> findAuctionsByKoiNameContaining(String koiName, Pageable pageable) {
+        return auctionRepository.findAuctionsByKoiNameContaining(koiName, pageable);
+    }
 }

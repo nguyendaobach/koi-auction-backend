@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public class KoiFishDetailDTO {
+public class KoiFishDetailDTO { //koi fish controller
     private Integer koiId;
     private String koiName;
     private String creatorFullName;
