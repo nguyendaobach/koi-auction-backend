@@ -48,6 +48,7 @@ public class SecurityController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserRegister user) {
         try {
+
             return userService.register(user);
         } catch (Exception e) {
             return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

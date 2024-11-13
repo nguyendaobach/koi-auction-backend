@@ -52,14 +52,19 @@ public class UserService {
 
     public ResponseEntity<?> register(UserRegister userRegister) {
         try {
+            if (!verifyEmail(userRegister.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is invalid or already in use.");
+            }
             Integer otp = registerService.generateOTP();
             registerService.saveOTP(userRegister.getEmail(), otp);
-            sendOTPEmail(userRegister.getEmail(),otp);
+            sendOTPEmail(userRegister.getEmail(), otp);
+
             return ResponseEntity.status(HttpStatus.CREATED).body("OTP sent successfully to your email.");
         } catch (Exception e) {
             return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     public boolean verifyUserName(String username){
         try {
@@ -260,36 +265,53 @@ public class UserService {
 
     private void sendOTPEmail(String email, Integer otp) {
         String subject = "Your OTP Code for Registration";
-        String body = "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\" />"
-                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />"
-                + "<title>KOIAUCTION - OTP Email</title>"
-                + "<style>"
-                + "h1, p, div { margin: 0; padding: 0; font-family: \"Arial\", sans-serif; box-sizing: border-box; }"
-                + ".box { display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; }"
-                + ".container { max-width: 600px; width: 100%; background-color: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); padding: 24px; }"
-                + ".header { text-align: center; } .header h1 { font-size: 28px; font-weight: bold; color: #b41712; }"
-                + ".header p { font-size: 14px; color: #6b7280; margin-top: 8px; }"
-                + ".content { margin-top: 24px; } .content p { color: #374151; font-size: 16px; margin-bottom: 16px; }"
-                + ".otp-box { background-color: #f9fafb; padding: 24px; margin-bottom: 16px; text-align: center; border-radius: 8px; border: 1px solid #e5e7eb; }"
-                + ".otp-code { font-size: 36px; font-family: \"Courier New\", Courier, monospace; font-weight: bold; color: #374151; letter-spacing: 4px; }"
-                + ".otp-expiration { font-size: 14px !important; color: #374151bd !important; margin-top: 8px; }"
-                + ".footer { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }"
-                + ".footer p { margin-bottom: 8px; font-size: 14px; opacity: 0.5; }"
-                + "</style></head><body><div class=\"box\"><div class=\"container\"><div class=\"header\"><h1>KOIAUCTION</h1>"
-                + "<p>Nền tảng đấu giá cá Koi trực tuyến</p></div><div class=\"content\"><p>Xin chào,</p><p>Cảm ơn bạn đã sử dụng dịch vụ của KOIAUCTION. "
-                + "Đây là mã xác thực (OTP) của bạn:</p><div class=\"otp-box\"><div class=\"otp-code\">" + otp + "</div>"
-                + "<p class=\"otp-expiration\">Mã này sẽ hết hạn sau 5 phút</p></div><p>Vui lòng không chia sẻ mã này với bất kỳ ai. "
-                + "Nếu bạn không thực hiện yêu cầu này, xin hãy bỏ qua email này.<br /><br />Trân trọng, <br />Đội ngũ KOIAUCTION</p>"
-                + "<div class=\"footer\"><p>Email này được gửi tự động, vui lòng không trả lời.</p>"
-                + "<p>© 2024 KOIAUCTION. Tất cả các quyền được bảo lưu.</p></div></div></div></div></body></html>";
+        StringBuilder body = new StringBuilder();
+        body.append("<!DOCTYPE html>")
+                .append("<html lang=\"vi\">")
+                .append("<head><meta charset=\"UTF-8\" />")
+                .append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
+                .append("<title>KOIAUCTION - OTP Email</title>")
+                .append("<style>")
+                .append("h1, p, div { margin: 0; padding: 0; font-family: \"Arial\", sans-serif; box-sizing: border-box; }")
+                .append(".box { display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; }")
+                .append(".container { max-width: 600px; width: 100%; background-color: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); padding: 24px; }")
+                .append(".header { text-align: center; }")
+                .append(".header h1 { font-size: 28px; font-weight: bold; color: #b41712; }")
+                .append(".header p { font-size: 14px; color: #6b7280; margin-top: 8px; }")
+                .append(".content { margin-top: 24px; }")
+                .append(".content p { color: #374151; font-size: 16px; margin-bottom: 16px; }")
+                .append(".otp-box { background-color: #f9fafb; padding: 24px; margin-bottom: 16px; text-align: center; border-radius: 8px; border: 1px solid #e5e7eb; }")
+                .append(".otp-code { font-size: 36px; font-family: \"Courier New\", Courier, monospace; font-weight: bold; color: #374151; letter-spacing: 4px; }")
+                .append(".otp-expiration { font-size: 14px !important; color: #374151bd !important; margin-top: 8px; }")
+                .append(".footer { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }")
+                .append(".footer p { margin-bottom: 8px; font-size: 14px; opacity: 0.5; }")
+                .append("</style>")
+                .append("</head>")
+                .append("<body>")
+                .append("<div class=\"box\">")
+                .append("<div class=\"container\">")
+                .append("<div class=\"header\">")
+                .append("<h1>KOIAUCTION</h1>")
+                .append("<p>Nền tảng đấu giá cá Koi trực tuyến</p>")
+                .append("</div>")
+                .append("<div class=\"content\">")
+                .append("<p>Chào bạn,</p>")
+                .append("<p>Mã OTP của bạn là: <span class=\"otp-code\">")
+                .append(otp)
+                .append("</span></p>")
+                .append("<p class=\"otp-expiration\">Mã OTP sẽ hết hạn sau 5 phút.</p>")
+                .append("</div>")
+                .append("<div class=\"footer\">")
+                .append("<p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>")
+                .append("</div>")
+                .append("</div>")
+                .append("</div>")
+                .append("</body>")
+                .append("</html>");
 
-        try {
-            emailService.sendHtmlMessage(email, subject, body);
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            // Xử lý lỗi gửi email nếu cần thiết
-        }
+        emailService.sendHtmlMessage(new MailBody(email, subject, body.toString()));
     }
+
 
 
 }

@@ -90,7 +90,6 @@ public class OrderService {
                 order.getStatus()
         )).toList();
     }
-
     public OrderResponse getOrderById(Integer orderId, Integer userId) {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
         if (!optionalOrder.isPresent()) {
@@ -143,7 +142,6 @@ public class OrderService {
         orderRepository.save(order);
         return "Updated successfully";
     }
-
     @Transactional
     public String doneOrder(Integer orderId, Integer userId) {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
@@ -162,30 +160,21 @@ public class OrderService {
         orderRepository.save(order);
         return "Updated successfully";
     }
-
     @Transactional
     public String rejectOrder(Integer orderId, Integer userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with ID: " + orderId));
-
         if (!order.getBidderID().getId().equals(userId)) {
             throw new RuntimeException("User is not authorized to update this order");
         }
-
         order.setStatus("UnSuccessful");
-
         Auction auction = order.getAuctionID();
         auction.setStatus("Finished");
-
         Long breederRefundAmount = auction.getBreederDeposit() - auction.getAuctionFee();
-
-        Long bidderRefundAmount = auction.getBidderDeposit();
-
+        Long bidderRefundAmount = auction.getFinalPrice();
         WalletService walletService = new WalletService();
         walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId()); // Hoàn trả cho Breeder
         walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId()); // Hoàn trả cho Bidder
-
-        // Lưu các thay đổi vào cơ sở dữ liệu
         orderRepository.save(order);
 
         return "Order refund processed for Bidder and Breeder.";
