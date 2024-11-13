@@ -43,5 +43,33 @@ public class SystemConfigService {
         auctionFee.setValue(value);
         systemConfigRepository.save(auctionFee);
     }
+    public Double getWithdrawFree() {
+        return systemConfigRepository.findByName("Withdraw Free")
+                .map(SystemConfig::getValue)
+                .orElseThrow(() -> new RuntimeException("Withdraw Free not found"));
+    }
+
+    public void setWithdrawFree(Double value) {
+        SystemConfig withdrawFree = systemConfigRepository.findByName("Withdraw Free")
+                .orElse(new SystemConfig());
+        withdrawFree.setName("Withdraw Free");
+        withdrawFree.setValue(value);
+        systemConfigRepository.save(withdrawFree);
+    }
+
+    // Get và set cho Withdraw Fee Min
+    public Double getWithdrawFeeMin() {
+        return systemConfigRepository.findByName("Withdraw Fee Min")
+                .map(SystemConfig::getValue)
+                .orElseThrow(() -> new RuntimeException("Withdraw Fee Min not found"));
+    }
+
+    public void setWithdrawFeeMin(Double value) {
+        SystemConfig withdrawFeeMin = systemConfigRepository.findByName("Withdraw Fee Min")
+                .orElse(new SystemConfig());
+        withdrawFeeMin.setName("Withdraw Fee Min");
+        withdrawFeeMin.setValue(value);
+        systemConfigRepository.save(withdrawFeeMin);
+    }
 }
 

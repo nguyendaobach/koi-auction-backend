@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiActiveResponse;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishIdName;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
@@ -298,7 +299,7 @@ public class KoiFishService {
         return ResponseEntity.ok(koiFishDetail);
     }
 
-    public List<KoiFishIdName> getKoiActive() {
+public List<KoiFishIdName> getKoiActive() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         List<KoiFish> koiFishList;

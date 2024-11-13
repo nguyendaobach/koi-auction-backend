@@ -19,6 +19,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     List<Transaction> findByAmount(Long amount);
     List<Transaction> findByTimeBetween(Instant startTime, Instant endTime);
     List<Transaction> findByTransactionType(String transactionType);
+    @Query("SELECT t FROM Transaction t WHERE t.transactionType = :transactionType AND t.status = :status")
+    List<Transaction> findByTransactionTypeAndStatus(
+            @Param("transactionType") String transactionType,
+            @Param("status") String status);
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE MONTH(t.time) = :month AND YEAR(t.time) = :year")
     int countTransactionsByMonth(@Param("month") int month, @Param("year") int year);
 
