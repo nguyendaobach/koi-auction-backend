@@ -54,10 +54,11 @@ public class TransactionService {
     }
 
     public Page<Transaction> searchTransactions(String transactionType, Instant startInstant, Instant endInstant,
-                                                Long walletID, Long amountStart, Long amountEnd, Pageable pageable) {
+                                                Long walletID, Long amountStart, Long amountEnd, String status, Pageable pageable) {
         return transactionRepository.searchTransactions(
-                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, pageable);
+                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, status, pageable);
     }
+
 
 
 

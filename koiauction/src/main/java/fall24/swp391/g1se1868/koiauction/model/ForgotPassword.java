@@ -24,7 +24,7 @@ public class ForgotPassword {
     private Date expirationDate;
 
     @OneToOne
-    @JoinColumn(name = "userId", referencedColumnName = "UserID") // Chỉ định rõ tên cột khóa ngoại
+    @JoinColumn(name = "userId", referencedColumnName = "UserID")
     private User user;
 
 }
