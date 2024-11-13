@@ -140,6 +140,65 @@ public class OrderController {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
         }
     }
+    @GetMapping("/dispute")
+    public ResponseEntity<?> listOrder() {
+        try {
+            // Kiểm tra người dùng đã xác thực chưa
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+            }
+
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            String userRole = userPrinciple.getUser().getRole();
+
+            // Kiểm tra quyền truy cập của vai trò
+            if (!userRole.equals("Staff") && !userRole.equals("Admin")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: only Staff or Admin allowed");
+            }
+
+            // Trả về kết quả của các đơn hàng có trạng thái "Dispute"
+            return ResponseEntity.ok(orderService.disputeOrder());
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/dispute/{auctionId}")
+    public ResponseEntity<?> handleDisputeOrder(
+            @PathVariable Integer orderId,
+            @RequestParam String action
+    ) {
+        try {
+            // Xác thực người dùng
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+            }
+
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            String userRole = userPrinciple.getUser().getRole();
+
+            // Chỉ cho phép Admin hoặc Staff thực hiện hành động này
+            if (!userRole.equals("Staff") && !userRole.equals("Admin")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: only Staff or Admin allowed");
+            }
+
+            // Xử lý yêu cầu "approve" hoặc "reject"
+            if ("reject".equalsIgnoreCase(action)) {
+                return ResponseEntity.ok(orderService.doneOrder(orderId,userPrinciple.getId()));
+            } else if ("approve".equalsIgnoreCase(action)) {
+                return ResponseEntity.ok(orderService.rejectOrder(orderId,userPrinciple.getId()));
+            } else {
+                return ResponseEntity.badRequest().body("Invalid action. Use 'approve' or 'reject'.");
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
+        }
+    }
+
 
 
 }
