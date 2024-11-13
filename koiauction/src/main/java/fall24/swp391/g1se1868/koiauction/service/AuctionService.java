@@ -661,5 +661,8 @@ public class AuctionService {
             return auctionRepository.getTotalFinishedAuctionCount("Finished");
         }
     }
-    
+
+    public Page<Auction> findAuctionsByKoiNameContaining(String koiName, Pageable pageable) {
+        return auctionRepository.findAuctionsByKoiNameContaining(koiName, pageable);
+    }
 }

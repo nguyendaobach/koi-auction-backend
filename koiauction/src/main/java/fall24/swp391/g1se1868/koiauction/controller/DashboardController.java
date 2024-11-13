@@ -20,7 +20,7 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
-    @GetMapping("/dashboard")
+    @GetMapping()
     public ResponseEntity<Map<String, Object>> getDashboard(
             @RequestParam(required = false) Integer day,
             @RequestParam(required = false) Integer month,

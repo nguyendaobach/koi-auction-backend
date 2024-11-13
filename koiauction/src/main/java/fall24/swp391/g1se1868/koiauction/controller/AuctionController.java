@@ -74,6 +74,24 @@ public class AuctionController {
         }
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchAuctionsByKoiName(
+            @RequestParam String koiName,
+            @RequestParam(defaultValue = "0") int page,  // default to the first page
+            @RequestParam(defaultValue = "10") int size) {  // default to 10 items per page
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Auction> auctionDetails = auctionService.findAuctionsByKoiNameContaining(koiName, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctions", auctionDetails.getContent());
+        response.put("currentPage", auctionDetails.getNumber()); // Current page index
+        response.put("totalPages", auctionDetails.getTotalPages()); // Total number of pages
+        response.put("totalElements", auctionDetails.getTotalElements()); // Total number of elements
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/breeder")
     public ResponseEntity<Map<String, Object>> getAllOwnerAuction(
             @RequestParam(defaultValue = "0") int page,
@@ -97,15 +115,12 @@ public class AuctionController {
             auctionPage = auctionRepository.findAllOwnerAsc(status, method,userId, pageable);
         }
 
-        // Log thông tin về phiên đấu giá
         System.out.println("Request page: " + page + ", size: " + size);
         System.out.println("Total elements: " + auctionPage.getTotalElements());
         System.out.println("Auctions on page " + page + ": " + auctionPage.getContent().size());
 
-        // Gọi service để lấy thông tin chi tiết
         Page<KoiFishAuctionAll> auctionDetails = auctionService.getAllAuction(auctionPage);
 
-        // Tạo một Map để chứa thông tin phản hồi
         Map<String, Object> response = new HashMap<>();
         response.put("auctions", auctionDetails.getContent());
         response.put("currentPage", auctionDetails.getNumber()); // Trang hiện tại

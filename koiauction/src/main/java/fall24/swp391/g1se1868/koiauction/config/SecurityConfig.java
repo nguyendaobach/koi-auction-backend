@@ -44,8 +44,6 @@ public class SecurityConfig {
 //        return source;
 //    }
 
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception{
         httpSecurity.cors(Customizer.withDefaults());
