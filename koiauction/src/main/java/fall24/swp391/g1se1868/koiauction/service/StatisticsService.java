@@ -52,8 +52,6 @@ public class StatisticsService {
             if (month.getValue() > today.getMonthValue()) {
                 break;
             }
-
-            // Đếm số lượng giao dịch trong mỗi tháng
             int transactionCount = transactionRepository.countTransactionsByMonth(month.getValue(), today.getYear());
             transactionsPerMonth.put(month.name(), transactionCount);
         }

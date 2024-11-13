@@ -51,16 +51,10 @@ public class AuctionController {
         } else {
             auctionPage = auctionRepository.findAllAsc(status, method, pageable);
         }
-
-        // Log thông tin về phiên đấu giá
         System.out.println("Request page: " + page + ", size: " + size);
         System.out.println("Total elements: " + auctionPage.getTotalElements());
         System.out.println("Auctions on page " + page + ": " + auctionPage.getContent().size());
-
-        // Gọi service để lấy thông tin chi tiết
         Page<KoiFishAuctionAll> auctionDetails = auctionService.getAllAuction(auctionPage);
-
-        // Tạo một Map để chứa thông tin phản hồi
         Map<String, Object> response = new HashMap<>();
         response.put("auctions", auctionDetails.getContent());
         response.put("currentPage", auctionDetails.getNumber()); // Trang hiện tại
