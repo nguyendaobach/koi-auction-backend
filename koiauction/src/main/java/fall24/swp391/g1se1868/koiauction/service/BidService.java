@@ -56,21 +56,37 @@ public class BidService {
         if ("First-come".equalsIgnoreCase(auction.getAuctionMethod()) && hasUserBid(auction.getId(), userId)) {
             throw new IllegalArgumentException("User has already placed a bid in this First-come auction.");
         }
-        Long currentPrice = getCurrentPrice(auction);
-        Long stepPrice = auction.getBidStep();
-        Long nextPrice = (currentPrice.equals(auction.getStartingPrice())) ? currentPrice : currentPrice + stepPrice;
-        if (bid.getAmount() < nextPrice) {
-            throw new IllegalArgumentException("Bid must be at least the current highest bid plus the step price.");
-        }
-        bid.setBidderID(new User(userId));
-        bid.getId().setAuctionID(auction.getId());
-        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
-        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
-        bid.getId().setTime(now.toInstant());
-        Bid savedBid = bidRepository.save(bid);
-        notifyBidUpdates(auction.getId(), savedBid);
-        if (bid.getAmount().equals(auction.getBuyoutPrice())) {
-            auctionService.closeAuction(auction);
+        Bid savedBid = null;
+        if("Ascending".equalsIgnoreCase(auction.getAuctionMethod())) {
+            Long currentPrice = getCurrentPrice(auction);
+            Long stepPrice = auction.getBidStep();
+            Long nextPrice = (currentPrice.equals(auction.getStartingPrice())) ? currentPrice : currentPrice + stepPrice;
+            if (bid.getAmount() < nextPrice) {
+                throw new IllegalArgumentException("Bid must be at least the current highest bid plus the step price.");
+            }
+            bid.setBidderID(new User(userId));
+            bid.getId().setAuctionID(auction.getId());
+            ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+            bid.getId().setTime(now.toInstant());
+            savedBid = bidRepository.save(bid);
+            notifyBidUpdates(auction.getId(), savedBid);
+            if (bid.getAmount().equals(auction.getBuyoutPrice())) {
+                auctionService.closeAuction(auction);
+            }
+        }else if("First-come".equalsIgnoreCase(auction.getAuctionMethod())) {
+            if (bid.getAmount() < auction.getStartingPrice()) {
+                throw new IllegalArgumentException("Bid must be at least the current highest bid plus the step price.");
+            }
+            bid.setBidderID(new User(userId));
+            bid.getId().setAuctionID(auction.getId());
+            ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+            bid.getId().setTime(now.toInstant());
+            savedBid = bidRepository.save(bid);
+            if (bid.getAmount().equals(auction.getBuyoutPrice())) {
+                auctionService.closeAuction(auction);
+            }
         }
         return savedBid;
     }

@@ -13,16 +13,16 @@ public class AuctionDetailDTO {
     private Integer staffID;
     private Integer winnerID;
     private String auctionMethod;
-    private Instant startTime; // Sử dụng Instant
-    private Instant endTime;   // Sử dụng Instant
-    private Long breederDeposit; // Sử dụng Long
-    private Long bidderDeposit;  // Sử dụng Long
-    private Long startingPrice;  // Sử dụng Long
-    private Long buyoutPrice;    // Sử dụng Long
-    private Long finalPrice;     // Sử dụng Long
-    private Long bidStep;        // Sử dụng Long
-    private Long auctionFee;     // Sử dụng Long
-    private Instant createAt;    // Sử dụng Instant
+    private Instant startTime;
+    private Instant endTime;
+    private Long breederDeposit;
+    private Long bidderDeposit;
+    private Long startingPrice;
+    private Long buyoutPrice;
+    private Long finalPrice;
+    private Long bidStep;
+    private Long auctionFee;
+    private Instant createAt;
     private String status;
     private List<KoiDataDTO> koiData;
 

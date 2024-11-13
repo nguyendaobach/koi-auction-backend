@@ -1,6 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.Changepassword;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +63,7 @@ public class UserService {
                 user.setUserName(userRegister.getUserName());
                 user.setEmail(userRegister.getEmail());
                 user.setPassword(encoder.encode(userRegister.getPassword()));
+                user.setFullName("");
                 user.setPhoneNumber("");
                 user.setAddress("");
                 user.setCreateAt(Instant.now());
@@ -136,7 +139,7 @@ public class UserService {
 
             String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-            LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.",tokenExpire);
+            LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.",tokenExpire,user.getAddress());
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
@@ -240,5 +243,34 @@ public class UserService {
     public List<UserAuctionCount> getTopBreedersByAuctionCount() {
         return userRepository.findTopBreedersByAuctionCount(PageRequest.of(0, 10));
     }
+
+    public ResponseEntity<?> changePassword(Changepassword changepassword) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+            }
+
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            User user = userPrinciple.getUser();
+
+            if ("Admin".equals(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Admin does not have permission to change password");
+            }
+
+            if (!encoder.matches(changepassword.getOldPassword(), user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Old password does not match");
+            }
+
+            user.setPassword(encoder.encode(changepassword.getNewPassword()));
+            userRepository.save(user);
+
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
+
 }
 

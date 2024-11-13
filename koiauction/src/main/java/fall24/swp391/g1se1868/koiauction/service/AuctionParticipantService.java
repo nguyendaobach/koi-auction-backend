@@ -32,6 +32,9 @@ public class AuctionParticipantService {
         if (userWallet.getAmount() < activeAuction.getBidderDeposit()) {
             return "Insufficient balance for deposit.";
         }
+        if(activeAuction.getBreederID() == userId){
+            throw new IllegalArgumentException("This is own's auction cannot register.");
+        }
         Transaction transaction = walletService.deposit(userId, activeAuction.getBidderDeposit(),auctionId);
         AuctionParticipant auctionParticipant = new AuctionParticipant();
         AuctionParticipantId participantId = new AuctionParticipantId();
