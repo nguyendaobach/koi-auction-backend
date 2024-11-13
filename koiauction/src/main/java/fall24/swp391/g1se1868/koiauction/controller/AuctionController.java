@@ -141,7 +141,6 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-
         Page<Auction> auctionPage = auctionRepository.findAllAdmin(pageable);
         Page<KoiAuctionResponseDTO> koiAuctionResponseDTOList =auctionService.getAuctionDetails(auctionPage);
         Map<String, Object> response = new HashMap<>();
