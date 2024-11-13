@@ -159,7 +159,7 @@ public class AuctionService {
             case "First-come":
                 auction.setStartingPrice(request.getStartingPrice());
                 auction.setBuyoutPrice(request.getBuyoutPrice());
-                auction.setBidStep(request.getBidStep());
+                auction.setBidStep(null);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid auction method: " + request.getAuctionMethod());
