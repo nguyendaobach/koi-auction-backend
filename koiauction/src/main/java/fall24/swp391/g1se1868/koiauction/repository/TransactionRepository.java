@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 
-    @Query("SELECT t FROM Transaction t WHERE t.walletID.id = ?1")
+    @Query("SELECT t FROM Transaction t WHERE t.walletID.id = ?1 ORDER BY t.time DESC")
     List<Transaction> findByWalletID(Integer walletID);
     List<Transaction> findByAmount(Long amount);
     List<Transaction> findByTimeBetween(Instant startTime, Instant endTime);
