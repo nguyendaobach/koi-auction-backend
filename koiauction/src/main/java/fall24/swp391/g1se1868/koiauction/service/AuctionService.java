@@ -224,8 +224,7 @@ public class AuctionService {
                 .orElseThrow(() -> new EntityNotFoundException("Auction not found"));
         if (!auction.getStatus().equals("Pending")) {
             throw new IllegalArgumentException("Auction must be in Pending status to be rejected.");
-        }
-        auction.setStatus("Rejected");
+        }        auction.setStatus("Reject");
         auction.setStaffID(userId);
         walletService.refund(auction.getBreederID(), auction.getBreederDeposit(), auctionId);
         List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auctionId);
