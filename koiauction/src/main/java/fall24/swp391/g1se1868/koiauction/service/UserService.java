@@ -2,8 +2,10 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.Changepassword;
+import fall24.swp391.g1se1868.koiauction.repository.ForgotpasswordRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -21,10 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -42,46 +41,23 @@ public class UserService {
     JwtService jwtService;
 
     @Autowired
-    WalletService walletService;
+    EmailService emailService;
+
+    @Autowired
+    RegisterService registerService;
+
+    @Autowired
+    ForgotpasswordRepository forgotpasswordRepository;
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
     public ResponseEntity<?> register(UserRegister userRegister) {
-        if (userRegister == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User object cannot be null");
-        }
-        if (userRegister.getUserName() == null || userRegister.getUserName().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username cannot be null or empty");
-        }
-
-        if (userRegister.getPassword() == null || userRegister.getPassword().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password cannot be null or empty");
-        }
-
-        if (verifyUserName(userRegister.getUserName())) {
-            if(verifyEmail(userRegister.getEmail())){
-                User user = new User();
-                user.setUserName(userRegister.getUserName());
-                user.setEmail(userRegister.getEmail());
-                user.setPassword(encoder.encode(userRegister.getPassword()));
-                user.setFullName("");
-                user.setPhoneNumber("");
-                user.setAddress("");
-                user.setCreateAt(Instant.now());
-                user.setUpdateAt(Instant.now());
-                user.setRole("User");
-                user.setStatus("Active");
-                if (userRepository.save(user) != null) {
-                    walletService.addUserWallet(user.getId());
-                    return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
-                }
-            }else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
-            }
-
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already in use");
+        try {
+            Integer otp = registerService.generateOTP();
+            registerService.saveOTP(userRegister.getEmail(), otp);
+            sendOTPEmail(userRegister.getEmail(),otp);
+            return ResponseEntity.status(HttpStatus.CREATED).body("OTP sent successfully to your email.");
+        } catch (Exception e) {
+            return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -271,6 +247,49 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
+    private Integer generateOTP() {
+        Random rand = new Random();
+        return 100000 + rand.nextInt(900000); // OTP ngẫu nhiên 6 chữ số
+    }
+
+    private Date calculateExpirationDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, 5); // OTP hết hạn sau 5 phút
+        return calendar.getTime();
+    }
+
+    private void sendOTPEmail(String email, Integer otp) {
+        String subject = "Your OTP Code for Registration";
+        String body = "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\" />"
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />"
+                + "<title>KOIAUCTION - OTP Email</title>"
+                + "<style>"
+                + "h1, p, div { margin: 0; padding: 0; font-family: \"Arial\", sans-serif; box-sizing: border-box; }"
+                + ".box { display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; }"
+                + ".container { max-width: 600px; width: 100%; background-color: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); padding: 24px; }"
+                + ".header { text-align: center; } .header h1 { font-size: 28px; font-weight: bold; color: #b41712; }"
+                + ".header p { font-size: 14px; color: #6b7280; margin-top: 8px; }"
+                + ".content { margin-top: 24px; } .content p { color: #374151; font-size: 16px; margin-bottom: 16px; }"
+                + ".otp-box { background-color: #f9fafb; padding: 24px; margin-bottom: 16px; text-align: center; border-radius: 8px; border: 1px solid #e5e7eb; }"
+                + ".otp-code { font-size: 36px; font-family: \"Courier New\", Courier, monospace; font-weight: bold; color: #374151; letter-spacing: 4px; }"
+                + ".otp-expiration { font-size: 14px !important; color: #374151bd !important; margin-top: 8px; }"
+                + ".footer { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }"
+                + ".footer p { margin-bottom: 8px; font-size: 14px; opacity: 0.5; }"
+                + "</style></head><body><div class=\"box\"><div class=\"container\"><div class=\"header\"><h1>KOIAUCTION</h1>"
+                + "<p>Nền tảng đấu giá cá Koi trực tuyến</p></div><div class=\"content\"><p>Xin chào,</p><p>Cảm ơn bạn đã sử dụng dịch vụ của KOIAUCTION. "
+                + "Đây là mã xác thực (OTP) của bạn:</p><div class=\"otp-box\"><div class=\"otp-code\">" + otp + "</div>"
+                + "<p class=\"otp-expiration\">Mã này sẽ hết hạn sau 5 phút</p></div><p>Vui lòng không chia sẻ mã này với bất kỳ ai. "
+                + "Nếu bạn không thực hiện yêu cầu này, xin hãy bỏ qua email này.<br /><br />Trân trọng, <br />Đội ngũ KOIAUCTION</p>"
+                + "<div class=\"footer\"><p>Email này được gửi tự động, vui lòng không trả lời.</p>"
+                + "<p>© 2024 KOIAUCTION. Tất cả các quyền được bảo lưu.</p></div></div></div></div></body></html>";
+
+        try {
+            emailService.sendHtmlMessage(email, subject, body);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            // Xử lý lỗi gửi email nếu cần thiết
+        }
+    }
+
 
 }
-

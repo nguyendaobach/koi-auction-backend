@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.Changepassword;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
-import fall24.swp391.g1se1868.koiauction.service.ChangePassword;
-import fall24.swp391.g1se1868.koiauction.service.JwtService;
-import fall24.swp391.g1se1868.koiauction.service.UserService;
-import fall24.swp391.g1se1868.koiauction.service.WalletService;
+import fall24.swp391.g1se1868.koiauction.service.*;
 import io.jsonwebtoken.security.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +36,9 @@ public class SecurityController {
     @Autowired
     private WalletService walletService;
 
+    @Autowired
+    private RegisterService registerService;
+
     private BCryptPasswordEncoder encoder =new BCryptPasswordEncoder(12);
 
     Random random = new Random();
@@ -51,6 +51,38 @@ public class SecurityController {
             return userService.register(user);
         } catch (Exception e) {
             return new ResponseEntity<>(new StringResponse("Registration failed: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@RequestBody UserRegister userRegister, @RequestParam Integer otp) {
+        Register register = registerService.getOTPByEmail(userRegister.getEmail());
+        if (register == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found.");
+        }
+
+        if (register.getOtp().equals(otp)) {
+            if (registerService.isOTPExpired(register.getExpirationTime())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("OTP has expired.");
+            }
+            User user = new User();
+            user.setUserName(userRegister.getUserName());
+            user.setEmail(userRegister.getEmail());
+            user.setPassword(encoder.encode(userRegister.getPassword()));
+            user.setFullName("");
+            user.setPhoneNumber("");
+            user.setAddress("");
+            user.setCreateAt(Instant.now());
+            user.setUpdateAt(Instant.now());
+            user.setRole("User");
+            user.setStatus("Active");
+            if (userRepository.save(user) != null) {
+                walletService.addUserWallet(user.getId());
+                return ResponseEntity.status(HttpStatus.CREATED).body("Registered successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP.");
         }
     }
 
