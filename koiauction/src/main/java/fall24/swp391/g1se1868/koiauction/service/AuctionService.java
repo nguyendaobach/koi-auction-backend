@@ -62,8 +62,12 @@ public class AuctionService {
 
     @Autowired
     WalletService walletService;
+
     @Autowired
     private KoiFishRepository koiFishRepository;
+
+    @Autowired
+    EmailService emailService;
 
     public Auction getAuctionById(Integer auctionId) {
         return auctionRepository.findById(auctionId)
@@ -295,6 +299,7 @@ public class AuctionService {
         if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")) {
             Integer winnerID = determineWinner(auction);
             if (winnerID != null) {
+                User winnerUser = userRepository.findById(winnerID).get();
                 auction.setWinnerID(winnerID);
                 long finalPrice = bidService.getCurrentPrice(auction);
                 auction.setFinalPrice(finalPrice);
@@ -302,6 +307,26 @@ public class AuctionService {
                 for (KoiFish auctionKoi : auctionKois) {
                     auctionKoi.setStatus("Sold");
                     koiFishRepository.save(auctionKoi);
+                }
+                String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+                String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                        " với giá " + auction.getFinalPrice() +
+                        "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+                MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+                emailService.sendHtmlMessage(mailSendWinner);
+                Set<Integer> notifiedLosers = new HashSet<>();
+                List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
+                for (Bid bid : bids) {
+                    int bidderID = bid.getBidderID().getId();
+                    if (bidderID != winnerID && !notifiedLosers.contains(bidderID)) {
+                        notifiedLosers.add(bidderID);
+                        User loserUser = userRepository.findById(bidderID).get();
+                        String loserSubject = "Thông báo về kết quả đấu giá " + auction.getId();
+                        String loserText = "Bạn đã không chiến thắng đấu giá " + auction.getId() +
+                                ". Tiền cọc của bạn đã được hoàn trả.";
+                        MailBody mailSendLoser = new MailBody(loserUser.getEmail(), loserSubject, loserText);
+                        emailService.sendHtmlMessage(mailSendLoser);
+                    }
                 }
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
@@ -330,6 +355,7 @@ public class AuctionService {
                     new AuctionNotification("Closed", auction.getWinnerID()!=null?auction.getWinnerID():null , auction.getFinalPrice()));
         }
         if(auction.getWinnerID()==null) {
+            auction.setStatus("Failed");
             List<KoiFish> auctionKois = auctionKoiRepository.findKoiFishByAuctionId(auction.getId());
             for (KoiFish auctionKoi : auctionKois) {
                 auctionKoi.setStatus("Active");
