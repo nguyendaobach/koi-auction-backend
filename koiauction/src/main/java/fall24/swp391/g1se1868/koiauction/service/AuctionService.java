@@ -129,6 +129,8 @@ public class AuctionService {
 
 
     public boolean isUserParticipantForAuction(int userId, int auctionId) {
+        Auction auction = getAuctionById(auctionId);
+        if(auction.getAuctionMethod().equalsIgnoreCase("Fixed-price")||auction.getAuctionMethod().equalsIgnoreCase("Descending")) return true;
         return auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId);
     }
     @Transactional
@@ -170,12 +172,20 @@ public class AuctionService {
         }
 
         auction.setBidderDeposit(request.getBidderDeposit());
-        auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
+        if (request.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
+            auction.setBreederDeposit(Math.round(request.getBuyoutPrice() * 0.5 * systemConfigService.getBreederDeposit()));
+        } else {
+            auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
+        }
         auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
         Auction savedAuction = auctionRepository.save(auction);
-        walletService.deposit(breederID, Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()), savedAuction.getId());
+        if(request.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
+            walletService.deposit(breederID, Math.round(request.getBuyoutPrice()* 0.5 * systemConfigService.getBreederDeposit())+auction.getAuctionFee(), savedAuction.getId());
+        }else {
+            walletService.deposit(breederID, Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit())+auction.getAuctionFee(), savedAuction.getId());
+        }
         if (savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
