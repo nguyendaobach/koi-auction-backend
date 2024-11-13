@@ -12,11 +12,24 @@ public class KoiFishAuctionAll {
     private Instant startTime;
     private Instant endTime;
     private String method;
+    private Long buyoutPrice;  // Add buyoutPrice here
     private List<KoiInfo> koiInfoList;
 
-    public KoiFishAuctionAll() {
+    // Constructor with buyoutPrice
+    public KoiFishAuctionAll(Integer auctionId, Long startPrice, String status, Long finalPrice,
+                             Instant startTime, Instant endTime, String method, Long buyoutPrice, List<KoiInfo> koiInfoList) {
+        this.auctionId = auctionId;
+        this.startPrice = startPrice;
+        this.status = status;
+        this.finalPrice = finalPrice;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.method = method;
+        this.buyoutPrice = buyoutPrice;  // Initialize buyoutPrice
+        this.koiInfoList = koiInfoList;
     }
 
+    // Getters and setters
     public Integer getAuctionId() {
         return auctionId;
     }
@@ -65,14 +78,6 @@ public class KoiFishAuctionAll {
         this.endTime = endTime;
     }
 
-    public List<KoiInfo> getKoiInfoList() {
-        return koiInfoList;
-    }
-
-    public void setKoiInfoList(List<KoiInfo> koiInfoList) {
-        this.koiInfoList = koiInfoList;
-    }
-
     public String getMethod() {
         return method;
     }
@@ -81,17 +86,23 @@ public class KoiFishAuctionAll {
         this.method = method;
     }
 
-    public KoiFishAuctionAll(Integer auctionId, Long startPrice, String status, Long finalPrice, Instant startTime, Instant endTime, String method, List<KoiInfo> koiInfoList) {
-        this.auctionId = auctionId;
-        this.startPrice = startPrice;
-        this.status = status;
-        this.finalPrice = finalPrice;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.method = method;
-        this.koiInfoList = koiInfoList;
+    public Long getBuyoutPrice() {
+        return buyoutPrice;
     }
 
+    public void setBuyoutPrice(Long buyoutPrice) {
+        this.buyoutPrice = buyoutPrice;
+    }
 
+    public List<KoiInfo> getKoiInfoList() {
+        return koiInfoList;
+    }
+
+    public void setKoiInfoList(List<KoiInfo> koiInfoList) {
+        this.koiInfoList = koiInfoList;
+    }
 }
+
+
+
 

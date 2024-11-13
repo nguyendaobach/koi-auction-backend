@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 
-    @Query("SELECT t FROM Transaction t WHERE t.walletID.id = ?1")
+    @Query("SELECT t FROM Transaction t WHERE t.walletID.id = ?1 ORDER BY t.time DESC")
     List<Transaction> findByWalletID(Integer walletID);
     List<Transaction> findByAmount(Long amount);
     List<Transaction> findByTimeBetween(Instant startTime, Instant endTime);
@@ -66,7 +66,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             "AND (:endInstant IS NULL OR t.time <= :endInstant) " +
             "AND (:walletID IS NULL OR t.walletID.id = :walletID) " +
             "AND (:amountStart IS NULL OR t.amount >= :amountStart) " +
-            "AND (:amountEnd IS NULL OR t.amount <= :amountEnd)")
+            "AND (:amountEnd IS NULL OR t.amount <= :amountEnd) " +
+            "AND (:status IS NULL OR t.status = :status)")
     Page<Transaction> searchTransactions(
             @Param("transactionType") String transactionType,
             @Param("startInstant") Instant startInstant,
@@ -74,5 +75,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             @Param("walletID") Long walletID,
             @Param("amountStart") Long amountStart,
             @Param("amountEnd") Long amountEnd,
+            @Param("status") String status,
             Pageable pageable);
+
 }
