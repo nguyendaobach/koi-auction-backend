@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public class KoiDataDTO {
+public class KoiDataDTO { //auction
     private Integer id;
     private String country;
     private String koiType;

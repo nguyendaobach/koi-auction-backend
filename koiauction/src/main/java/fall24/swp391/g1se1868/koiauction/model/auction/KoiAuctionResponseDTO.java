@@ -6,7 +6,7 @@ import java.util.List;
 
 public class KoiAuctionResponseDTO {
     private Auction auction;
-    private List<Integer> koiFish; // Danh sách ID của KoiFish
+    private List<Integer> koiFish;
 
     public KoiAuctionResponseDTO(Auction auction, List<Integer> koiFish) {
         this.auction = auction;

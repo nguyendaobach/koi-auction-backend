@@ -84,8 +84,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
                                   @Param("BreederId") Integer BreederId,
                              Pageable pageable);
 
-
-
     @Query("SELECT a FROM Auction a")
     Page<Auction> findAllAdmin(Pageable pageable);
 
@@ -136,6 +134,15 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
 
     @Query("SELECT COUNT(a) FROM Auction a WHERE a.status = 'Ongoing'")
     Long getTotalAuctionCount();
+
+
+    @Query("SELECT a FROM Auction a " +
+            "JOIN AuctionKoi ak ON a.id = ak.auctionID.id " +
+            "JOIN KoiFish k ON ak.koiID.id = k.id " +
+            "WHERE LOWER(k.koiName) LIKE LOWER(CONCAT('%', :koiName, '%'))")
+
+    Page<Auction> findAuctionsByKoiNameContaining(@Param("koiName") String koiName,Pageable pageable);
+
 
 
 }
