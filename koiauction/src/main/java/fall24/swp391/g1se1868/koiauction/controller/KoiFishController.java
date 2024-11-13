@@ -4,6 +4,7 @@ import fall24.swp391.g1se1868.koiauction.model.KoiFish;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishIdName;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.service.KoiFishService;
 import fall24.swp391.g1se1868.koiauction.service.UserDetailService;
@@ -50,14 +51,8 @@ public class KoiFishController {
     }
 
     @GetMapping("/koi-active")
-    public ResponseEntity<?> getKoiActive() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-        int userId = userPrinciple.getId();
-        return ResponseEntity.status(HttpStatus.OK).body(koiFishService.getKoiActive(userId));
+    public List<KoiFishIdName> getKoiActive() {
+        return koiFishService.getKoiActive();
     }
 
     @GetMapping

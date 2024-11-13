@@ -8,14 +8,32 @@ package fall24.swp391.g1se1868.koiauction.model;
         private String Role;
         private Integer userId;
         private Integer expire;
+        private String address;
 
-        public LoginResponse(String token, String username, String fullname, String role, Integer userId, String s, Integer expire) {
+        public Integer getExpire() {
+            return expire;
+        }
+
+        public void setExpire(Integer expire) {
+            this.expire = expire;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public LoginResponse(String token, String username, String fullname, String role, Integer userId, String s, Integer expire,String address) {
             this.token = token;
             this.userId=userId;
             this.username = username;
             this.fullname = fullname;
             this.Role = role;
             this.expire = expire;
+            this.address=address;
         }
 
         public String getFullname() {

@@ -56,32 +56,7 @@ public class SecurityController {
 
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(@RequestBody Changepassword changepassword){
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                throw new RuntimeException("User is not authenticated");
-            }
-            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-            int userId = userPrinciple.getId();
-            Optional<User> user=userRepository.findById(userId);
-            if(!user.isEmpty()){
-                User user1=user.get();
-                if(user1.getRole().equals("Admin")){
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Admin does not have permission");
-                }
-                if(changepassword.getPassword().equals(changepassword.getConfirm())){
-                    user1.setPassword(encoder.encode(changepassword.getPassword()));
-                    userRepository.save(user1);
-                }else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Passwords do not match");
-                }
-            }else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
-            }
-        }catch(Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("ok");
+        return userService.changePassword(changepassword);
     }
 
     @PostMapping("/login")
@@ -142,7 +117,7 @@ public class SecurityController {
             if (user != null) {
                 String token = jwtService.generateToken(user.getUserName(), user.getId());
 
-                LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.", tokenExpire);
+                LoginResponse response = new LoginResponse(token, user.getUserName(), user.getFullName(), user.getRole(), user.getId(), "Registered successfully: Please complete your profile.", tokenExpire,user.getAddress());
                 return ResponseEntity.ok(response);
             } else {
                 User newUser = new User();
@@ -163,7 +138,7 @@ public class SecurityController {
                     // Tạo token cho người dùng mới
                 }
                 String token = jwtService.generateToken(newUser.getUserName(), newUser.getId());
-                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.", tokenExpire);
+                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.", tokenExpire,user.getAddress());
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {

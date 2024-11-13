@@ -1,28 +1,23 @@
 package fall24.swp391.g1se1868.koiauction.model.koifishdto;
 
 public class Changepassword {
-    private String password;
-    private String confirm;
+    private String oldPassword;
+    private String newPassword;
 
-    public String getPassword() {
-        return password;
+    public String getOldPassword() {
+        return oldPassword;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
     }
 
-    public String getConfirm() {
-        return confirm;
+    public String getNewPassword() {
+        return newPassword;
     }
 
-    public void setConfirm(String confirm) {
-        this.confirm = confirm;
-    }
-
-    public Changepassword(String password, String confirm) {
-        this.password = password;
-        this.confirm = confirm;
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
 
     public Changepassword() {

@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.service;
 import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiActiveResponse;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishIdName;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiMediaDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
 import fall24.swp391.g1se1868.koiauction.repository.KoiFishRepository;
@@ -260,9 +261,6 @@ public class KoiFishService {
         }
     }
 
-
-
-
     public ResponseEntity<KoiFishDetailDTO> getById(Integer id) {
         Optional<KoiFish> koiFishOpt = koiFishRepository.findById(id);
 
@@ -301,21 +299,30 @@ public class KoiFishService {
         return ResponseEntity.ok(koiFishDetail);
     }
 
-    public List<KoiActiveResponse> getKoiActive(int userId) {
-        List<KoiFish> koiFishList = koiFishRepository.findByUserID_Id(userId);
+public List<KoiFishIdName> getKoiActive() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        List<KoiFish> koiFishList;
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserPrinciple) {
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            User userId = userPrinciple.getUser();
+
+            String role = userId.getRole();
+            if ("Breeder".equals(role)) {
+                koiFishList = koiFishRepository.findByUserID_Id(userId.getId());
+            } else {
+                koiFishList = koiFishRepository.findAll();
+            }
+        } else {
+            koiFishList = koiFishRepository.findAll();
+        }
+
         return koiFishList.stream()
-                .filter(koiFish -> "Active".equalsIgnoreCase(koiFish.getStatus()))  // Filter active Koi fish
-                .map(koiFish -> {
-                    Optional<KoiMedia> headerImage = koiMediaRepository.findByKoiIDAndMediaType(koiFish, "Header Image");
-                    return new KoiActiveResponse(
-                            koiFish.getId(),
-                            koiFish.getKoiName(),
-                            headerImage.isPresent() ? headerImage.get().getUrl() : null  // URL for header image
-                    );
-                })
+                .filter(koiFish -> "Active".equalsIgnoreCase(koiFish.getStatus()))
+                .map(koiFish -> new KoiFishIdName(koiFish.getId(), koiFish.getKoiName()))
                 .collect(Collectors.toList());
     }
-
 
     public ResponseEntity<?> delete(Integer id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
