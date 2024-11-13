@@ -50,8 +50,14 @@ public class KoiFishController {
     }
 
     @GetMapping("/koi-active")
-    public List<KoiFishUser> getKoiActive() {
-        return koiFishService.getKoiActive();
+    public ResponseEntity<?> getKoiActive() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        int userId = userPrinciple.getId();
+        return ResponseEntity.status(HttpStatus.OK).body(koiFishService.getKoiActive(userId));
     }
 
     @GetMapping
