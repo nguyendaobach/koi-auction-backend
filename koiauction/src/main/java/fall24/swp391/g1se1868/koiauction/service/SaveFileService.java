@@ -27,8 +27,6 @@ public class SaveFileService {
         BlobId blobId = BlobId.of(storageBucket, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
         Blob blob = storage.create(blobInfo, file.getBytes());
-
-        // Đường dẫn công khai (Public URL)
         String publicUrl = "https://firebasestorage.googleapis.com/v0/b/" + storageBucket + "/o/" + URLEncoder.encode(fileName, "UTF-8") + "?alt=media";
 
         return publicUrl;  // Trả về Public URL

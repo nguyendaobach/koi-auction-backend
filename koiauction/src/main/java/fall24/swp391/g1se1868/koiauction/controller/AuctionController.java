@@ -41,10 +41,10 @@ public class AuctionController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
             @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
+            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
 
         Pageable pageable = PageRequest.of(page, size);
-        String desc=desc1.toLowerCase();
+         desc=desc.toLowerCase();
         Page<Auction> auctionPage = null;
         if (desc.equals("desc")) {
             auctionPage = auctionRepository.findAllDesc(status, method, pageable);
@@ -96,10 +96,10 @@ public class AuctionController {
     public ResponseEntity<Map<String, Object>> getAllOwnerAuction(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
-            @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc1) { // Mô tả
-        String desc =desc1.toLowerCase();
+            @RequestParam(required = false) List<String> status,
+            @RequestParam(required = false) List<String> method,
+            @RequestParam(defaultValue = "DESC") String desc) {
+        desc =desc.toLowerCase();
         Pageable pageable = PageRequest.of(page, size);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

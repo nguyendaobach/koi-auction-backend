@@ -50,25 +50,24 @@ public class AdminController {
             @RequestParam(required = false) Long walletID,
             @RequestParam(required = false) Long amountStart,
             @RequestParam(required = false) Long amountEnd,
+            @RequestParam(required = false) String status,
             @PageableDefault(size = 10) Pageable pageable) {
 
-        // Chuyển đổi thời gian startTime và endTime sang Instant
         Instant startInstant = (startTime != null) ? startTime.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
         Instant endInstant = (endTime != null) ? endTime.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant() : null;
 
-        // Lấy kết quả tìm kiếm từ service
         Page<Transaction> transactions = transactionService.searchTransactions(
-                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, pageable);
+                transactionType, startInstant, endInstant, walletID, amountStart, amountEnd, status, pageable);
 
-        // Tạo đối tượng response trả về
         Map<String, Object> response = new HashMap<>();
-        response.put("transactions", transactions.getContent());  // Các giao dịch
-        response.put("currentPage", transactions.getNumber());  // Trang hiện tại
-        response.put("totalPages", transactions.getTotalPages());  // Tổng số trang
-        response.put("totalElements", transactions.getTotalElements());  // Tổng số phần tử
+        response.put("transactions", transactions.getContent());
+        response.put("currentPage", transactions.getNumber());
+        response.put("totalPages", transactions.getTotalPages());
+        response.put("totalElements", transactions.getTotalElements());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
 
     @GetMapping("/transaction/{id}")
