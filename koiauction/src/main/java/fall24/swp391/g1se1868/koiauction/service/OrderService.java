@@ -155,7 +155,7 @@ public class OrderService {
         order.setStatus("Done");
         WalletService walletService = new WalletService();
         Auction auction = order.getAuctionID();
-        walletService.refund(auction.getBreederID(),auction.getFinalPrice()+auction.getBreederDeposit()-auction.getAuctionFee(),order.getAuctionID().getId());
+        walletService.refund(auction.getBreederID(),auction.getFinalPrice()+auction.getBreederDeposit(),order.getAuctionID().getId());
         auction.setStatus("Finished");
         orderRepository.save(order);
         return "Updated successfully";
@@ -170,7 +170,7 @@ public class OrderService {
         order.setStatus("UnSuccessful");
         Auction auction = order.getAuctionID();
         auction.setStatus("Finished");
-        Long breederRefundAmount = auction.getBreederDeposit() - auction.getAuctionFee();
+        Long breederRefundAmount = auction.getBreederDeposit();
         Long bidderRefundAmount = auction.getFinalPrice();
         WalletService walletService = new WalletService();
         walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId()); // Hoàn trả cho Breeder
