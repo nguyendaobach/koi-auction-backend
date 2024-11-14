@@ -174,7 +174,10 @@ public class AuctionService {
         auction.setBidderDeposit(request.getBidderDeposit());
         if (request.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
             auction.setBreederDeposit(Math.round(request.getBuyoutPrice() * 0.5 * systemConfigService.getBreederDeposit()));
-        } else {
+        } else if(request.getAuctionMethod().equalsIgnoreCase("Descending")) {
+            auction.setBreederDeposit(Math.round(request.getBuyoutPrice() * systemConfigService.getBreederDeposit()));
+        }
+            else{
             auction.setBreederDeposit(Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit()));
         }
         auction.setAuctionFee(systemConfigService.getAuctionFee().longValue());

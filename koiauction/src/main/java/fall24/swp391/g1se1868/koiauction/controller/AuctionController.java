@@ -238,7 +238,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
-    @PostMapping("/user/close-acution")
+    @PostMapping("/user/close-auction")
     public ResponseEntity<?> closeAuction(@RequestParam int auctionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
