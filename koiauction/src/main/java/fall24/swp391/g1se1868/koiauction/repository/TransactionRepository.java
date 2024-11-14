@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
@@ -77,5 +78,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             @Param("amountEnd") Long amountEnd,
             @Param("status") String status,
             Pageable pageable);
+
+    @Query("SELECT t FROM Transaction t WHERE t.auctionID = :auctionId AND t.transactionType = 'Payment' AND t.status = 'Completed'")
+    Optional<Transaction> findCompletedPaymentTransactionByAuctionId(@Param("auctionId") Integer auctionId);
+
 
 }
