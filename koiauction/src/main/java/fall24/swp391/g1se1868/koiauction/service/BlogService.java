@@ -114,4 +114,7 @@ public class BlogService {
         }
         return false;
     }
+    public List<Blog> getBlogsByUserId(Integer userId) {
+        return blogRepository.findBlogsByUserIdWithoutImages(userId);
+    }
 }
