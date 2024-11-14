@@ -353,8 +353,7 @@ public List<KoiFishIdName> getKoiActive() {
         Page<KoiFish> koiFishPage = koiFishRepository.findByUserID_Id(id, pageable);
 
         // Lọc danh sách cá Koi theo trạng thái "Active"
-        List<KoiFishUser> koiFishUserList = koiFishPage.getContent().stream()
-                .filter(koiFish -> "Active".equalsIgnoreCase(koiFish.getStatus()))  // Lọc những cá Koi có trạng thái Active
+        List<KoiFishUser> koiFishUserList = koiFishPage.getContent().stream()// Lọc những cá Koi có trạng thái Active
                 .map(koiFish -> {
                     String fullName = koiFish.getUserID().getFullName();
                     String countryName = koiFish.getCountryID().getCountry();
