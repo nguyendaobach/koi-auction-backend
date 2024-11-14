@@ -164,7 +164,7 @@ public class WalletService {
         walletRepository.save(wallet);
         Transaction transaction = new Transaction();
         transaction.setWalletID(wallet);
-        transaction.setAmount(amount);
+        transaction.setAmount(fee+amount);
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         transaction.setTime(ZonedDateTime.now(vietnamZone).toInstant());
         transaction.setTransactionType("Withdraw");
