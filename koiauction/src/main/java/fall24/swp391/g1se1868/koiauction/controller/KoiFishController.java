@@ -3,6 +3,7 @@ package fall24.swp391.g1se1868.koiauction.controller;
 import fall24.swp391.g1se1868.koiauction.model.KoiFish;
 import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.koifishdto.CustomizeKoiFishRequest;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishDetailDTO;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishIdName;
 import fall24.swp391.g1se1868.koiauction.model.koifishdto.KoiFishUser;
@@ -159,66 +160,55 @@ public class KoiFishController {
 //        }
 //    }
 
-@PostMapping(value = "/customize-koi-fish")
-public ResponseEntity<String> customizeKoiFish(
-        @RequestParam String imageHeader,
-        @RequestParam List<String> imageDetail,
-        @RequestParam String video,
-        @RequestParam String name,
-        @RequestParam BigDecimal weight,
-        @RequestParam String sex,
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthday,
-        @RequestParam String description,
-        @RequestParam BigDecimal length,
-        @RequestParam Integer countryID,
-        @RequestParam Integer koiTypeID
-) {
+    @PostMapping(value = "/customize-koi-fish")
+    public ResponseEntity<String> customizeKoiFish(@RequestBody CustomizeKoiFishRequest request) {
 
-    // Kiểm tra giá trị weight và length
-    if (weight.compareTo(BigDecimal.ZERO) <= 0 || length.compareTo(BigDecimal.ZERO) <= 0) {
-        return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
-    }
-
-    // Kiểm tra xác thực người dùng
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || !authentication.isAuthenticated()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
-    }
-
-    if (!authentication.getAuthorities().stream()
-            .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
-    }
-
-    UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-    Integer userId = userPrinciple.getId();
-
-    User user = new User(userId) ;
-
-    try {
-        // Kiểm tra imageHeader
-        if (imageHeader.isEmpty()) {
-            return ResponseEntity.badRequest().body("Header image is required.");
+        if (request.getWeight().compareTo(BigDecimal.ZERO) <= 0 || request.getLength().compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body("Weight and Length must be positive values.");
         }
 
-        // Kiểm tra video
-        if (video.isEmpty()) {
-            return ResponseEntity.badRequest().body("Video is required.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated");
         }
-        // Kiểm tra từng tệp trong imageDetail
-        for (String file : imageDetail) {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
+
+        if (!authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_BREEDER"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission");
+        }
+
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        Integer userId = userPrinciple.getId();
+        User user = new User(userId);
+
+        try {
+            // Kiểm tra imageHeader
+            if (request.getImageHeader().isEmpty()) {
+                return ResponseEntity.badRequest().body("Header image is required.");
             }
-        }
 
-        return koiFishService.saveKoiFish(user,imageHeader, imageDetail, video, name, weight, sex, birthday, description, length, countryID, koiTypeID);
-    } catch (IOException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            // Kiểm tra video
+            if (request.getVideo().isEmpty()) {
+                return ResponseEntity.badRequest().body("Video is required.");
+            }
+
+            // Kiểm tra từng tệp trong imageDetail
+            for (String file : request.getImageDetail()) {
+                if (file.isEmpty()) {
+                    return ResponseEntity.badRequest().body("Each image in the detail must not be empty.");
+                }
+            }
+
+            return koiFishService.saveKoiFish(user, request.getImageHeader(), request.getImageDetail(),
+                    request.getVideo(), request.getName(), request.getWeight(), request.getSex(),
+                    request.getBirthday(), request.getDescription(), request.getLength(),
+                    request.getCountryID(), request.getKoiTypeID());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
     }
-}
 
     @CrossOrigin(origins = "*") // Hoặc thay thế "*" bằng origin cụ thể
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
