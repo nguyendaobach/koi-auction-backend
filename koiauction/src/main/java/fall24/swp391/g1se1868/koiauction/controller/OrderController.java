@@ -158,20 +158,19 @@ public class OrderController {
             }
 
             // Trả về kết quả của các đơn hàng có trạng thái "Dispute"
-            return ResponseEntity.ok(orderService.disputeOrder());
+            return ResponseEntity.ok(orderService.findOrderByStatus());
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
         }
     }
 
-    @PostMapping("/dispute/{auctionId}")
+    @PostMapping("/dispute")
     public ResponseEntity<?> handleDisputeOrder(
-            @PathVariable Integer orderId,
+            @RequestParam Integer orderId,  // Chuyển từ @PathVariable sang @RequestParam
             @RequestParam String action
     ) {
         try {
-            // Xác thực người dùng
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
@@ -180,16 +179,14 @@ public class OrderController {
             UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
             String userRole = userPrinciple.getUser().getRole();
 
-            // Chỉ cho phép Admin hoặc Staff thực hiện hành động này
             if (!userRole.equals("Staff") && !userRole.equals("Admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: only Staff or Admin allowed");
             }
 
-            // Xử lý yêu cầu "approve" hoặc "reject"
             if ("reject".equalsIgnoreCase(action)) {
-                return ResponseEntity.ok(orderService.doneOrder(orderId,userPrinciple.getId()));
+                return ResponseEntity.ok(orderService.doneOrder(orderId, userPrinciple.getId()));
             } else if ("approve".equalsIgnoreCase(action)) {
-                return ResponseEntity.ok(orderService.rejectOrder(orderId,userPrinciple.getId()));
+                return ResponseEntity.ok(orderService.rejectOrder(orderId, userPrinciple.getId()));
             } else {
                 return ResponseEntity.badRequest().body("Invalid action. Use 'approve' or 'reject'.");
             }
@@ -198,8 +195,5 @@ public class OrderController {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
         }
     }
-
-
-
 }
 

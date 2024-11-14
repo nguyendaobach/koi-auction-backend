@@ -216,6 +216,15 @@ public class WalletController {
         Transaction transactions = walletService.getTransactionById(id);
         return ResponseEntity.ok(transactions);
     }
+    @GetMapping("/checkPaymentStatus/{auctionId}")
+    public ResponseEntity<String> checkPaymentStatus(@PathVariable Integer auctionId) {
+        boolean isPaid = walletService.isAuctionPaid(auctionId);
+        if (isPaid) {
+            return ResponseEntity.ok("Auction has been paid.");
+        } else {
+            return ResponseEntity.ok("Auction has not been paid.");
+        }
+    }
     @PostMapping("/withdraw")
     public ResponseEntity<String> sendWithdrawRequest( @RequestParam Long amount) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

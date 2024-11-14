@@ -6,6 +6,7 @@ import fall24.swp391.g1se1868.koiauction.repository.OrderRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -180,10 +181,18 @@ public class OrderService {
         return "Order refund processed for Bidder and Breeder.";
     }
 
-
-    public List<Order> disputeOrder() {
-        return orderRepository.findOrderByStatus();
+    @Transactional
+    public List<Order> findOrderByStatus() {
+        List<Order> orders = orderRepository.findOrderByStatus();
+        for (Order order : orders) {
+            if (order.getBidderID() != null) {
+                Hibernate.initialize(order.getBidderID());
+            }
+            if (order.getAuctionID() != null) {
+                Hibernate.initialize(order.getAuctionID());
+            }
+        }
+        return orders;
     }
-
 
 }
