@@ -185,11 +185,7 @@ public class AuctionService {
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
         Auction savedAuction = auctionRepository.save(auction);
-        if(request.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
-            walletService.deposit(breederID, Math.round(request.getBuyoutPrice()* 0.5 * systemConfigService.getBreederDeposit())+auction.getAuctionFee(), savedAuction.getId());
-        }else {
-            walletService.deposit(breederID, Math.round(request.getStartingPrice() * systemConfigService.getBreederDeposit())+auction.getAuctionFee(), savedAuction.getId());
-        }
+        walletService.deposit(breederID, savedAuction.getBreederDeposit(), savedAuction.getId());
         if (savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
