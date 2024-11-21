@@ -7,6 +7,7 @@ import fall24.swp391.g1se1868.koiauction.model.auction.KoiFishAuctionAll;
 import fall24.swp391.g1se1868.koiauction.repository.AuctionRepository;
 import fall24.swp391.g1se1868.koiauction.service.AuctionSchedulerService;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -373,5 +374,25 @@ public class AuctionController {
         }
 
         return ResponseEntity.ok(updatedAuction);
+    }
+    @GetMapping("/{auctionId}/winner")
+    public ResponseEntity<?> getUserWin(@PathVariable Integer auctionId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new StringResponse("User is not authenticated"));
+            }
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            int userId = userPrinciple.getId();
+            Map<String, Object> winner = auctionService.getWinnerByAuction(auctionId, userId);
+            return ResponseEntity.ok(winner);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new StringResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new StringResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+
     }
 }
