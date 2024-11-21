@@ -42,7 +42,6 @@ public class BidService {
         }
         Auction auction = bid.getAuctionID();
 
-        // Check if auction has ended
         if (auction.getEndTime().isBefore(Instant.now())) {
             throw new IllegalArgumentException("Auction has already ended.");
         }
@@ -127,6 +126,7 @@ public class BidService {
         bidResponse.setBidTime(bid.getId().getTime());
         bidResponse.setAmount(bid.getAmount());
         bidResponse.setFullName(bid.getBidderID().getFullName());
+        bidResponse.setUserName(bid.getBidderID().getUserName());
         messagingTemplate.convertAndSend("/topic/auction/" + auctionId + "/bids", bidResponse);
     }
 

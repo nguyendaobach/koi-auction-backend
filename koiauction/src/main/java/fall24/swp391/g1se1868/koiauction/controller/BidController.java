@@ -46,10 +46,9 @@ public class BidController {
         bid.setAuctionID(auctionService.getAuctionById(bidRequest.getAuctionId()));
         bid.setAmount(bidRequest.getAmount());
         try {
-            User user = userService.getUserById(userId).get();
             Bid newBid = bidService.placeBid(bid, userId);
             return ResponseEntity.ok(new BidResponseDTO(newBid.getAuctionID().getId()
-                    ,newBid.getBidderID().getId(),newBid.getId().getTime(), newBid.getAmount(), user.getFullName(), user.getUserName()));
+                    ,newBid.getBidderID().getId(),newBid.getId().getTime(), newBid.getAmount(), userService.getUserById(userId).get().getFullName(), userService.getUserById(userId).get().getUserName()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (IllegalArgumentException e) {
