@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -695,7 +696,50 @@ public class AuctionService {
         }
     }
 
-    public Page<Auction> findAuctionsByKoiNameContaining(String koiName, Pageable pageable) {
-        return auctionRepository.findAuctionsByKoiNameContaining(koiName, pageable);
+    public Map<String, Object> getAuctionAndKoiDetails(String koiName, String breederName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size); // Tạo Pageable từ page và size
+        Page<Object[]> results = auctionRepository.findAuctionAndKoiDetails(breederName, koiName, pageable);
+
+        // Danh sách các auction và koiList
+        List<Map<String, Object>> auctions = new ArrayList<>();
+
+        for (Object[] row : results) {
+            Integer auctionId = (Integer) row[0];
+            String breederNameResult = (String) row[1];
+            String koiNameResult = (String) row[2];
+
+            // Tìm hoặc tạo mới một auction
+            Map<String, Object> existingAuction = auctions.stream()
+                    .filter(auction -> auction.get("auctionId").equals(auctionId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingAuction == null) {
+                Map<String, Object> auctionData = new HashMap<>();
+                auctionData.put("auctionId", auctionId);
+                auctionData.put("breederName", breederNameResult);
+                auctionData.put("koiList", new ArrayList<String>()); // Danh sách koiList trống
+                auctions.add(auctionData);
+                existingAuction = auctionData;
+            }
+
+            // Thêm koiName vào koiList của auction
+            @SuppressWarnings("unchecked")
+            List<String> koiList = (List<String>) existingAuction.get("koiList");
+            if (!koiList.contains(koiNameResult)) {
+                koiList.add(koiNameResult);
+            }
+        }
+
+        // Kết quả cuối cùng
+        Map<String, Object> response = new HashMap<>();
+        response.put("auctions", auctions);
+        response.put("currentPage", results.getNumber()); // Trang hiện tại
+        response.put("totalPages", results.getTotalPages()); // Tổng số trang
+        response.put("totalElements", results.getTotalElements()); // Tổng số phần tử
+
+        return response;
     }
+
+
 }
