@@ -259,6 +259,7 @@ public class AuctionService {
             }
         }
     }
+    @Transactional
     public void closeAuctionbyScheduled(){
         List<Auction> auctions = auctionRepository.findAll();
         ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
@@ -304,6 +305,7 @@ public class AuctionService {
         requestPaymentFromWinner(auction);
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
+    @Transactional
     public void closeAuction(Auction auction) {
         auction.setStatus("Closed");
         if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")) {
@@ -375,6 +377,7 @@ public class AuctionService {
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
     }
+    @Transactional
     public void closeAuctionCall(int auctionId, Integer userID) {
         Auction auction = auctionRepository.getById(auctionId);
         auction.setStatus("Closed");
