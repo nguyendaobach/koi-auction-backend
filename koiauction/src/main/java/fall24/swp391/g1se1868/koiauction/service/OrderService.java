@@ -6,6 +6,7 @@ import fall24.swp391.g1se1868.koiauction.repository.OrderRepository;
 import fall24.swp391.g1se1868.koiauction.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -173,17 +174,43 @@ public class OrderService {
         Long breederRefundAmount = auction.getBreederDeposit();
         Long bidderRefundAmount = auction.getFinalPrice();
         WalletService walletService = new WalletService();
-        walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId()); // Hoàn trả cho Breeder
-        walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId()); // Hoàn trả cho Bidder
+        walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId());
+        walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId());
         orderRepository.save(order);
 
         return "Order refund processed for Bidder and Breeder.";
     }
 
-
-    public List<Order> disputeOrder() {
-        return orderRepository.findOrderByStatus();
+    @Transactional
+    public List<Order> findOrderByStatus() {
+        List<Order> orders = orderRepository.findOrderByStatus();
+        for (Order order : orders) {
+            if (order.getBidderID() != null) {
+                Hibernate.initialize(order.getBidderID());
+            }
+            if (order.getAuctionID() != null) {
+                Hibernate.initialize(order.getAuctionID());
+            }
+        }
+        return orders;
     }
 
+    public List<OrderResponse> getAllOrder() {
 
+        List<Order> orderr=orderRepository.findAll();
+        List<Order> combinedOrders = new ArrayList<>();
+        combinedOrders.addAll(orderr);
+
+        return combinedOrders.stream().map(order -> new OrderResponse(
+                order.getId(),
+                order.getBidderID() != null ? order.getBidderID().getId() : null,
+                order.getAuctionID() != null ? order.getAuctionID().getId() : null,
+                order.getAddress(),
+                order.getDate(),
+                order.getPrice(),
+                order.getPhoneNumber(),
+                order.getNote(),
+                order.getStatus()
+        )).toList();
+    }
 }
