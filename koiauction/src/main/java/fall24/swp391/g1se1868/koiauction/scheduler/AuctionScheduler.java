@@ -11,7 +11,7 @@ public class AuctionScheduler {
     @Autowired
     private AuctionService auctionService;
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 60000)
     public void updateAuctionStatus() {
         auctionService.updateAuctionStatusOngoing();
         auctionService.closeAuctionbyScheduled();
