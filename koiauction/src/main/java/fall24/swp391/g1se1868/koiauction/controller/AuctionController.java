@@ -71,13 +71,14 @@ public class AuctionController {
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> searchAuctionDetails(
             @RequestParam(required = false, defaultValue = "") String koiName,
-            @RequestParam(required = false, defaultValue = "") String breederName,
+            @RequestParam(required = false, defaultValue = "") String bidderName, // Sửa tên tham số ở đây
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Map<String, Object> response = auctionService.getAuctionAndKoiDetails(koiName, breederName, page, size);
+        Map<String, Object> response = auctionService.getAuctionAndKoiDetails(koiName, bidderName, page, size); // Sửa tham số ở đây
         return ResponseEntity.ok(response);
     }
+
 
 
     @GetMapping("/breeder")
