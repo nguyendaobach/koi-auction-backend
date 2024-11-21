@@ -136,14 +136,16 @@ public interface AuctionRepository extends JpaRepository<Auction, Integer> {
     Long getTotalAuctionCount();
 
 
-    @Query("SELECT DISTINCT a.id AS auctionId, b.fullName AS breederName, k.koiName AS koiName " +
+    @Query("SELECT DISTINCT a.id AS auctionId, b.fullName AS bidderName, k.koiName AS koiName " +
             "FROM Auction a " +
             "JOIN AuctionKoi ak ON a.id = ak.auctionID.id " +
             "JOIN KoiFish k ON ak.koiID.id = k.id " +
-            "JOIN User b ON a.breederID = b.id " +
-            "WHERE LOWER(b.fullName) LIKE LOWER(CONCAT('%', :breederName, '%')) " +
+            "JOIN Bid bid ON a.id = bid.auctionID.id " +
+            "JOIN User b ON bid.bidderID.id = b.id " +
+            "WHERE LOWER(b.fullName) LIKE LOWER(CONCAT('%', :bidderName, '%')) " +
             "AND LOWER(k.koiName) LIKE LOWER(CONCAT('%', :koiName, '%'))")
-    Page<Object[]> findAuctionAndKoiDetails(@Param("breederName") String breederName,
+    Page<Object[]> findAuctionAndKoiDetails(@Param("bidderName") String bidderName,
                                             @Param("koiName") String koiName,
                                             Pageable pageable);
+
 }
