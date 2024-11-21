@@ -238,7 +238,7 @@ public class AuctionController {
         int userId = userPrinciple.getId();
         return auctionService.isUserParticipantForAuction(userId, auctionId);
     }
-    @PostMapping("/user/close-acution")
+    @PostMapping("/user/close-auction")
     public ResponseEntity<?> closeAuction(@RequestParam int auctionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -253,6 +253,7 @@ public class AuctionController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     @PostMapping("/breeder/add-auction")
     public ResponseEntity<AuctionResponse> addAuction(@RequestBody AuctionRequest auctionRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

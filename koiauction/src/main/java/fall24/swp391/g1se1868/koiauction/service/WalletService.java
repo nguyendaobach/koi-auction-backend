@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class WalletService {
@@ -87,6 +88,14 @@ public class WalletService {
         auctionService.updateAuctionStatusPaid(auctionId);
         return "Payment successful!";
     }
+
+    public boolean isAuctionPaid(Integer auctionId) {
+        Optional<Transaction> transaction = transactionRepository
+                .findCompletedPaymentTransactionByAuctionId(auctionId);
+
+        return transaction.isPresent();
+    }
+
     @Transactional
     public Transaction deposit(int payerUserId, Long amount, int auctionId) {
         Wallet payerWallet = walletRepository.findbyuserid(payerUserId)
@@ -155,7 +164,7 @@ public class WalletService {
         walletRepository.save(wallet);
         Transaction transaction = new Transaction();
         transaction.setWalletID(wallet);
-        transaction.setAmount(amount);
+        transaction.setAmount(fee+amount);
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         transaction.setTime(ZonedDateTime.now(vietnamZone).toInstant());
         transaction.setTransactionType("Withdraw");
