@@ -360,7 +360,7 @@ public class AuctionService {
                 auction.setFinalPrice(maxBidAmount);
                 auction.setWinnerID(highestBids.get(0).getBidderID().getId());
             } else if(highestBids.size() > 1){
-                int randomnumber= new Random().nextInt(highestBids.size());
+                int randomnumber= 0;
                 auction.setFinalPrice(highestBids.get(randomnumber).getAmount());
                 auction.setWinnerID(highestBids.get(randomnumber).getBidderID().getId());
             }}
