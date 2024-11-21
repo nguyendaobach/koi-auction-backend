@@ -739,4 +739,29 @@ public class AuctionService {
 
         return response;
     }
+    
+    public Map<String, Object> getWinnerByAuction(Integer auctionId, Integer breederId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new EntityNotFoundException("Auction not found with ID: " + auctionId));
+        if (!auction.getBreederID().equals(breederId)) {
+            throw new RuntimeException("You are not authorized to access this auction");
+        }
+        if (auction.getWinnerID() == null) {
+            throw new EntityNotFoundException("No winner found for this auction");
+        }
+        User userWinner = userRepository.findById(auction.getWinnerID())
+                .orElseThrow(() -> new EntityNotFoundException("Winner not found"));
+
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("id", userWinner.getId());
+        userDetails.put("fullName", userWinner.getFullName());
+        userDetails.put("userName", userWinner.getUserName());
+        userDetails.put("address", userWinner.getAddress());
+        userDetails.put("email", userWinner.getEmail());
+        userDetails.put("phoneNumber", userWinner.getPhoneNumber());
+        return userDetails;
+    }
+
+
+
 }
