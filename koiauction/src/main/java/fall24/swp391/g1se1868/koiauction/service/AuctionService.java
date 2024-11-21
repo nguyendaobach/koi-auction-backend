@@ -342,7 +342,7 @@ public class AuctionService {
                 }
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                    new AuctionNotification("Closed", winnerID!=null?winnerID:null , auction.getFinalPrice()));
+                    new AuctionNotification("Closed", winnerID!=null?winnerID:null, auction.getFinalPrice()));
         }else if(auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
             List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
             if (!bids.isEmpty()){
