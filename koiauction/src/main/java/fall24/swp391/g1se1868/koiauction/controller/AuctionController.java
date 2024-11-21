@@ -69,22 +69,16 @@ public class AuctionController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchAuctionsByKoiName(
-            @RequestParam String koiName,
-            @RequestParam(defaultValue = "0") int page,  // default to the first page
-            @RequestParam(defaultValue = "10") int size) {  // default to 10 items per page
+    public ResponseEntity<Map<String, Object>> searchAuctionDetails(
+            @RequestParam(required = false, defaultValue = "") String koiName,
+            @RequestParam(required = false, defaultValue = "") String breederName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Auction> auctionDetails = auctionService.findAuctionsByKoiNameContaining(koiName, pageable);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("auctions", auctionDetails.getContent());
-        response.put("currentPage", auctionDetails.getNumber()); // Current page index
-        response.put("totalPages", auctionDetails.getTotalPages()); // Total number of pages
-        response.put("totalElements", auctionDetails.getTotalElements()); // Total number of elements
-
+        Map<String, Object> response = auctionService.getAuctionAndKoiDetails(koiName, breederName, page, size);
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/breeder")
     public ResponseEntity<Map<String, Object>> getAllOwnerAuction(
