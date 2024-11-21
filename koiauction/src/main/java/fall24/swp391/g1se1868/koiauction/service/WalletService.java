@@ -71,6 +71,9 @@ public class WalletService {
         if (payerWallet.getAmount().compareTo(amount) < 0) {
             throw new RuntimeException( "Insufficient balance!");
         }
+        if(isAuctionPaid(auctionId)){
+            throw new RuntimeException("User has already paid");
+        }
         payerWallet.setAmount(payerWallet.getAmount()-amount);
         walletRepository.save(payerWallet);
         recipientWallet.setAmount(recipientWallet.getAmount()+amount);

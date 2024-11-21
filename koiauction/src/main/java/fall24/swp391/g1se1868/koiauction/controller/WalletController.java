@@ -229,7 +229,7 @@ public class WalletController {
         if (isPaid) {
             return ResponseEntity.ok("Auction has been paid.");
         } else {
-            return ResponseEntity.ok("Auction has not been paid.");
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body("Auction has not been paid.");
         }
     }
     @PostMapping("/withdraw")
