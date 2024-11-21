@@ -39,9 +39,9 @@ public class AuctionController {
     public ResponseEntity<Map<String, Object>> getAllAuction(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) List<String> status,  // Danh sách trạng thái
-            @RequestParam(required = false) List<String> method,  // Danh sách phương thức
-            @RequestParam(defaultValue = "DESC") String desc) { // Mô tả
+            @RequestParam(required = false) List<String> status,
+            @RequestParam(required = false) List<String> method,
+            @RequestParam(defaultValue = "DESC") String desc) {
 
         Pageable pageable = PageRequest.of(page, size);
          desc=desc.toLowerCase();

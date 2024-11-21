@@ -113,10 +113,8 @@ public class SecurityController {
     }
 
     private ResponseEntity<?> getGoogleProfile(String token) {
-        // Tạo một đối tượng RestTemplate để gửi request HTTP
         RestTemplate restTemplate = new RestTemplate();
 
-        // Đặt headers với Authorization: Bearer <token>
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token); // Bearer <token>
         HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -158,7 +156,7 @@ public class SecurityController {
                 newUser.setFullName(displayName);
                 newUser.setEmail(email);
                 String password = encoder.encode(String.valueOf(randomInt));
-                newUser.setPassword(password); // Không cần mã hóa lại
+                newUser.setPassword(password);
                 newUser.setRole("User");
                 newUser.setStatus("Active");
                 newUser.setCreateAt(Instant.now());
@@ -166,16 +164,20 @@ public class SecurityController {
                 newUser.setPhoneNumber("");
                 newUser.setAddress("");
 
-                if (userRepository.save(newUser) != null) {
-                    walletService.addUserWallet(newUser.getId());
-                    // Tạo token cho người dùng mới
+                User savedUser = userRepository.save(newUser);
+                if (savedUser != null) {
+                    System.out.println("New user saved with ID: " + savedUser.getId());
+                    walletService.addUserWallet(savedUser.getId());
+                } else {
+                    System.out.println("Failed to save new user");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving user");
                 }
-                String token = jwtService.generateToken(newUser.getUserName(), newUser.getId());
-                LoginResponse response = new LoginResponse(token, newUser.getUserName(), newUser.getFullName(), newUser.getRole(), newUser.getId(), "User created successfully. Please complete your profile.", tokenExpire,user.getAddress());
+                String token = jwtService.generateToken(newUser.getUserName(), savedUser.getId());
+                LoginResponse response;
+                response = new LoginResponse(token, savedUser.getUserName(), savedUser.getFullName(), savedUser.getRole(), savedUser.getId(), "Registered successfully: Please complete your profile.", tokenExpire,savedUser.getAddress());
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
-            // Xử lý ngoại lệ
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing profile response");
         }
     }

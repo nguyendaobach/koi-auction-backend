@@ -174,8 +174,8 @@ public class OrderService {
         Long breederRefundAmount = auction.getBreederDeposit();
         Long bidderRefundAmount = auction.getFinalPrice();
         WalletService walletService = new WalletService();
-        walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId()); // Hoàn trả cho Breeder
-        walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId()); // Hoàn trả cho Bidder
+        walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId());
+        walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId());
         orderRepository.save(order);
 
         return "Order refund processed for Bidder and Breeder.";
@@ -195,4 +195,22 @@ public class OrderService {
         return orders;
     }
 
+    public List<OrderResponse> getAllOrder() {
+
+        List<Order> orderr=orderRepository.findAll();
+        List<Order> combinedOrders = new ArrayList<>();
+        combinedOrders.addAll(orderr);
+
+        return combinedOrders.stream().map(order -> new OrderResponse(
+                order.getId(),
+                order.getBidderID() != null ? order.getBidderID().getId() : null,
+                order.getAuctionID() != null ? order.getAuctionID().getId() : null,
+                order.getAddress(),
+                order.getDate(),
+                order.getPrice(),
+                order.getPhoneNumber(),
+                order.getNote(),
+                order.getStatus()
+        )).toList();
+    }
 }

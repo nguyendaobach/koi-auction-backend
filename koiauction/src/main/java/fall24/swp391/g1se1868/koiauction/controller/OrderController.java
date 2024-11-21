@@ -72,6 +72,19 @@ public class OrderController {
         int userId = userPrinciple.getId();
         return orderService.getOrdersByUser(userId);
     }
+    @GetMapping("/admin")
+    public List<OrderResponse> getOrderAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+        User user=userPrinciple.getUser();
+        if(!user.getRole().equals("Admin")){
+            throw new RuntimeException("User is not authenticated");
+        }
+        return orderService.getAllOrder();
+    }
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrderById(
             @PathVariable Integer orderId) {
