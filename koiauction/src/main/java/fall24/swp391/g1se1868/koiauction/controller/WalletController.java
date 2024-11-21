@@ -196,8 +196,15 @@ public class WalletController {
         }
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         int userId = userPrinciple.getId();
-        String response = walletService.paymentforAuction(userId, auctionId);
-        return ResponseEntity.ok(new StringResponse(response));
+        try {
+            String response = walletService.paymentforAuction(userId, auctionId);
+            return ResponseEntity.ok(new StringResponse(response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(new StringResponse(e.getMessage()));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(e.getMessage()));
+        }
     }
 
     @GetMapping("/transactions")

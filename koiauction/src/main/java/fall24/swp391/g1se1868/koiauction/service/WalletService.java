@@ -66,10 +66,10 @@ public class WalletService {
         Auction auction = auctionService.getAuctionById(auctionId);
         Long amount = auction.getFinalPrice();
         if(amount==0||amount==null){
-            return "Final Price Error";
+            throw new IllegalArgumentException("Final Price Error");
         }
         if (payerWallet.getAmount().compareTo(amount) < 0) {
-            return "Insufficient balance!";
+            throw new RuntimeException( "Insufficient balance!");
         }
         payerWallet.setAmount(payerWallet.getAmount()-amount);
         walletRepository.save(payerWallet);
