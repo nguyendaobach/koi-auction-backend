@@ -5,6 +5,7 @@ import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.repository.BlogImageRepository;
 import fall24.swp391.g1se1868.koiauction.service.BlogService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,14 +29,17 @@ public class BlogController {
 
     @Autowired
     private BlogImageRepository blogImageRepository;
-    // 1. Lấy tất cả bài viết blog
+
     @GetMapping
-    public ResponseEntity<List<Blog>> getAllBlogs() {
-        List<Blog> blogs = blogService.getAllBlogs();
-        return new ResponseEntity<>(blogs, HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> getAllBlogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Map<String, Object> response = blogService.getAllBlogs(page, size);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 2. Lấy một bài viết blog theo ID
+
     @GetMapping("/{id}")
     public ResponseEntity<Blog> getBlogById(@PathVariable Long id) {
         Optional<Blog> blog = blogService.getBlogById(id);
