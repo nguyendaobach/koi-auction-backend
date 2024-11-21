@@ -2,22 +2,20 @@ package fall24.swp391.g1se1868.koiauction.service;
 
 import fall24.swp391.g1se1868.koiauction.model.Blog;
 import fall24.swp391.g1se1868.koiauction.model.BlogImage;
+import fall24.swp391.g1se1868.koiauction.model.User;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.repository.BlogImageRepository;
 import fall24.swp391.g1se1868.koiauction.repository.BlogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class BlogService {
@@ -31,17 +29,38 @@ public class BlogService {
     @Autowired
     private BlogImageRepository blogImageRepository;
 
-    // 1. Lấy tất cả bài viết blog
-    public List<Blog> getAllBlogs() {
-        return blogRepository.findAllBlogsWithoutImages();
+    @Autowired
+    private UserService userService;
+
+    public Map<String, Object> getAllBlogs(int page, int size) {
+        Page<Blog> blogs = blogRepository.findAll(PageRequest.of(page, size));
+
+        blogs.forEach(blog -> {
+            Optional<User> user = userService.getUserById(blog.getUserId());
+            user.ifPresent(u -> blog.setAuthorName(u.getFullName()));  // Gán tên tác giả vào blog
+        });
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("blogs", blogs.getContent());
+        response.put("currentPage", blogs.getNumber());
+        response.put("totalPages", blogs.getTotalPages());
+        response.put("totalElements", blogs.getTotalElements());
+
+        return response;
     }
 
-    // 2. Lấy một bài viết blog theo ID
     public Optional<Blog> getBlogById(Long id) {
-        return blogRepository.findById(id);
+        Optional<Blog> blog = blogRepository.findById(id);
+
+        blog.ifPresent(b -> {
+            Optional<User> user = userService.getUserById(b.getUserId());
+            user.ifPresent(u -> b.setAuthorName(u.getFullName()));  
+        });
+
+        return blog;
     }
 
-    // 3. Tạo một bài viết blog mới
+
     public String createBlog(Blog blog, List<MultipartFile> files) throws IOException {
         // Authenticate user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
