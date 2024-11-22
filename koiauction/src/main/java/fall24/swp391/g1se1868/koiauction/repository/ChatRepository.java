@@ -18,7 +18,7 @@ public interface ChatRepository extends JpaRepository<Chat, Integer> {
     Page<Chat> findMessages(Integer senderId, Integer receiverId, Pageable pageable);
 
 
-    @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserChat(u.id, u.fullName) " +
+    @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserChat(u.id, u.fullName, u.role) " +
             "FROM User u " +
             "JOIN Chat c ON (c.senderId = :senderId AND c.receiverId = u.id) " +
             "OR (c.receiverId = :senderId AND c.senderId = u.id) " +
@@ -26,8 +26,8 @@ public interface ChatRepository extends JpaRepository<Chat, Integer> {
     List<UserChat> getUserChatsBySenderId(@Param("senderId") Integer senderId);
 
 
-    @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserChat(u.id, u.fullName) " +
+    @Query("SELECT new fall24.swp391.g1se1868.koiauction.model.UserChat(u.id, u.fullName, u.role) " +
             "FROM User u " +
-            "WHERE u.role in ('STAFF','ADMIN') ")
+            "WHERE u.role in ('STAFF','ADMIN','BREEDER') ")
     List<UserChat> getStaffToChat();
 }
