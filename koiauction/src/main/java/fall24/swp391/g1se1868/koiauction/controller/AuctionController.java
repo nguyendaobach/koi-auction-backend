@@ -152,7 +152,6 @@ public class AuctionController {
     }
 
 
-
     @GetMapping("/past")
     public ResponseEntity<Map<String, Object>> getPastAuctionsWithWinnerName(
             @RequestParam(defaultValue = "0") int page,

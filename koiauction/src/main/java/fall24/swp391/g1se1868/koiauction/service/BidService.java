@@ -112,8 +112,6 @@ public class BidService {
         return bidRepository.existsByAuctionIdAndBidderId(auctionId, userId);
     }
 
-
-
     public List<Bid> getAllBidsForAuction(Integer auctionId) {
         return bidRepository.findByAuctionID(auctionId);
     }

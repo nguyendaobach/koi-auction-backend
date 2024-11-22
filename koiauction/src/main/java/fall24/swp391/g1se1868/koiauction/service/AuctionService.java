@@ -121,10 +121,8 @@ public class AuctionService {
 
 
     public Page<KoiAuctionResponseDTO> getWinnerAuctionByWinnerID(int winnerID, Pageable pageable) {
-        // Lấy danh sách các phiên đấu giá đã thắng với phân trang
         Page<Auction> auctionPage = auctionRepository.getAuctionbyWinnerID(winnerID, pageable);
 
-        // Chuyển đổi từ Page<Auction> sang Page<KoiAuctionResponseDTO>
         return getAuctionDetails(auctionPage);
     }
 
@@ -185,7 +183,11 @@ public class AuctionService {
         auction.setStatus("Pending");
         auction.setCreateAt(Instant.now());
         Auction savedAuction = auctionRepository.save(auction);
-        walletService.deposit(breederID, savedAuction.getBreederDeposit(), savedAuction.getId());
+        if(request.getAuctionMethod().equalsIgnoreCase("Fixed-price")) {
+            walletService.deposit(breederID, savedAuction.getBreederDeposit()+auction.getAuctionFee(), savedAuction.getId());
+        }else {
+            walletService.deposit(breederID, savedAuction.getBreederDeposit()+auction.getAuctionFee(), savedAuction.getId());
+        }
         if (savedAuction != null) {
             try {
                 Instant startTime = auction.getStartTime();
@@ -700,7 +702,7 @@ public class AuctionService {
     }
 
     public Map<String, Object> getAuctionAndKoiDetails(String koiName, String bidderName, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size); // Tạo Pageable từ page và size
+        Pageable pageable = PageRequest.of(page, size);
         Page<Object[]> results = auctionRepository.findAuctionAndKoiDetails(bidderName, koiName, pageable);
 
         List<Map<String, Object>> auctions = new ArrayList<>();
