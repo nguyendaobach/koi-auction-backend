@@ -122,6 +122,9 @@ public class OrderService {
             throw new EntityNotFoundException("Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
+        if(!order.getStatus().equals("Pending")){
+            throw new AccessDeniedException("This order cannot be modified because it is no longer Pending");
+        }
         if(order.getAuctionID().getBreederID()!=userId){
             throw new RuntimeException("User is not authorized to update this order");
         }else {
@@ -152,6 +155,9 @@ public class OrderService {
         Order order = optionalOrder.get();
         if(order.getBidderID().getId()!=userId){
             throw new RuntimeException("User is not authorized to update this order");
+        }
+        if(!order.getStatus().equalsIgnoreCase("Shipping")){
+            throw new RuntimeException("Status cannot update this order");
         }
         order.setStatus("Done");
         WalletService walletService = new WalletService();
