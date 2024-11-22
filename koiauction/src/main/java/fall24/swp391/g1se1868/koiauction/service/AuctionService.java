@@ -363,6 +363,29 @@ public class AuctionService {
                 auction.setFinalPrice(highestBids.get(randomnumber).getAmount());
                 auction.setWinnerID(highestBids.get(randomnumber).getBidderID().getId());
             }}
+            Integer winnerId = auction.getWinnerID();
+            if(winnerId != null){
+                User winnerUser = userRepository.findById(winnerId).get();
+                String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+                String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                        " với giá " + auction.getFinalPrice() +
+                        "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+                MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+                emailService.sendHtmlMessage(mailSendWinner);
+                Set<Integer> notifiedLosers = new HashSet<>();
+                for (Bid bid : bids) {
+                    int bidderID = bid.getBidderID().getId();
+                    if (bidderID != winnerId && !notifiedLosers.contains(bidderID)) {
+                        notifiedLosers.add(bidderID);
+                        User loserUser = userRepository.findById(bidderID).get();
+                        String loserSubject = "Thông báo về kết quả đấu giá " + auction.getId();
+                        String loserText = "Bạn đã không chiến thắng đấu giá " + auction.getId() +
+                                ". Tiền cọc của bạn đã được hoàn trả.";
+                        MailBody mailSendLoser = new MailBody(loserUser.getEmail(), loserSubject, loserText);
+                        emailService.sendHtmlMessage(mailSendLoser);
+                    }
+                }
+            }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", auction.getWinnerID()!=null?auction.getWinnerID():null , auction.getFinalPrice()));
         }
@@ -390,16 +413,56 @@ public class AuctionService {
             long finalPrice = calculateDescendingPrice(auction);
             auction.setFinalPrice(finalPrice);
             auction.setWinnerID(userID);
+            User winnerUser = userRepository.findById(userID).get();
+            String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+            String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                    " với giá " + auction.getFinalPrice() +
+                    "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+            MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+            emailService.sendHtmlMessage(mailSendWinner);
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", userID, auction.getFinalPrice()));
-
         } else if (auction.getAuctionMethod().equalsIgnoreCase("Fixed-price")
-        || auction.getAuctionMethod().equalsIgnoreCase("Ascending")
         || auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
+            auction.setWinnerID(userID);
+            auction.setFinalPrice(auction.getBuyoutPrice());
+            User winnerUser = userRepository.findById(userID).get();
+            String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+            String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                    " với giá " + auction.getFinalPrice() +
+                    "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+            MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+            emailService.sendHtmlMessage(mailSendWinner);
+            Set<Integer> notifiedLosers = new HashSet<>();
+            List<Bid> bids = bidService.getAllBidsForAuction(auction.getId());
+            if(!bids.isEmpty()) {
+                for (Bid bid : bids) {
+                    int bidderID = bid.getBidderID().getId();
+                    if (bidderID != userID && !notifiedLosers.contains(bidderID)) {
+                        notifiedLosers.add(bidderID);
+                        User loserUser = userRepository.findById(bidderID).get();
+                        String loserSubject = "Thông báo về kết quả đấu giá " + auction.getId();
+                        String loserText = "Bạn đã không chiến thắng đấu giá " + auction.getId() +
+                                ". Tiền cọc của bạn đã được hoàn trả.";
+                        MailBody mailSendLoser = new MailBody(loserUser.getEmail(), loserSubject, loserText);
+                        emailService.sendHtmlMessage(mailSendLoser);
+                    }
+                }
+            }
+            messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
+                    new AuctionNotification("Closed", userID, auction.getBuyoutPrice()));
+        }else if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")){
             auction.setWinnerID(userID);
             auction.setFinalPrice(auction.getBuyoutPrice());
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", userID, auction.getBuyoutPrice()));
+            User winnerUser = userRepository.findById(userID).get();
+            String winnerSubject = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId();
+            String winnerText = "Chúc mừng bạn đã chiến thắng đấu giá " + auction.getId() +
+                    " với giá " + auction.getFinalPrice() +
+                    "VND. Vui lòng thanh toán nếu bạn chưa thanh toán.";
+            MailBody mailSendWinner = new MailBody(winnerUser.getEmail(), winnerSubject, winnerText);
+            emailService.sendHtmlMessage(mailSendWinner);
         }
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
