@@ -20,6 +20,8 @@ import java.util.Optional;
 
 @Service
 public class OrderService {
+    @Autowired
+    WalletService walletService;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -122,7 +124,10 @@ public class OrderService {
             throw new EntityNotFoundException("Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
-        if(order.getAuctionID().getId()!=userId){
+        if(!order.getStatus().equals("Pending")){
+            throw new AccessDeniedException("This order cannot be modified because it is no longer Pending");
+        }
+        if(order.getAuctionID().getBreederID()!=userId){
             throw new RuntimeException("User is not authorized to update this order");
         }else {
             order.setStatus("Shipping");
@@ -153,8 +158,10 @@ public class OrderService {
         if(order.getBidderID().getId()!=userId){
             throw new RuntimeException("User is not authorized to update this order");
         }
+        if(!order.getStatus().equalsIgnoreCase("Shipping")){
+            throw new RuntimeException("Status cannot update this order");
+        }
         order.setStatus("Done");
-        WalletService walletService = new WalletService();
         Auction auction = order.getAuctionID();
         walletService.refund(auction.getBreederID(),auction.getFinalPrice()+auction.getBreederDeposit(),order.getAuctionID().getId());
         auction.setStatus("Finished");
@@ -173,7 +180,6 @@ public class OrderService {
         auction.setStatus("Finished");
         Long breederRefundAmount = auction.getBreederDeposit();
         Long bidderRefundAmount = auction.getFinalPrice();
-        WalletService walletService = new WalletService();
         walletService.refund(auction.getBreederID(), breederRefundAmount, auction.getId());
         walletService.refund(auction.getWinnerID(), bidderRefundAmount, auction.getId());
         orderRepository.save(order);

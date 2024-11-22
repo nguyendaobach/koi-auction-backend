@@ -24,13 +24,13 @@ public class AuctionParticipantService {
     @Transactional
     public String registerForAuction(Integer userId, Integer auctionId) {
         if (auctionParticipantRepository.existsByUserIdAndAuctionId(userId, auctionId)) {
-            return "You are already registered for this auction.";
+            throw new IllegalArgumentException( "You are already registered for this auction.");
         }
         Wallet userWallet = walletService.getWalletByUserId(userId);
         Auction activeAuction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new IllegalArgumentException("Auction not found"));
         if (userWallet.getAmount() < activeAuction.getBidderDeposit()) {
-            return "Insufficient balance for deposit.";
+            throw new RuntimeException("Insufficient balance for deposit.");
         }
         if(activeAuction.getBreederID() == userId){
             throw new IllegalArgumentException("This is own's auction cannot register.");

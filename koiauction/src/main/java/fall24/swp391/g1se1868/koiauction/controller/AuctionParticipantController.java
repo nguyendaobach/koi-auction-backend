@@ -4,6 +4,7 @@ import fall24.swp391.g1se1868.koiauction.model.StringResponse;
 import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
 import fall24.swp391.g1se1868.koiauction.service.AuctionParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +30,11 @@ public class AuctionParticipantController {
         try {
             String response = auctionParticipantService.registerForAuction(userId, auctionId);
             return ResponseEntity.ok(new StringResponse(response));
-        }catch(Exception e) {
+        }catch(RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.PAYMENT_REQUIRED)
+                    .body(new StringResponse(e.getMessage()));
+        }catch (Exception e) {
             return ResponseEntity.badRequest().body(new StringResponse(e.getMessage()));
         }
     }

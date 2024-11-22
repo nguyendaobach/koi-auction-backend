@@ -261,6 +261,7 @@ public class AuctionService {
             }
         }
     }
+    @Transactional
     public void closeAuctionbyScheduled(){
         List<Auction> auctions = auctionRepository.findAll();
         ZonedDateTime nowZoned = ZonedDateTime.now(ZoneId.systemDefault());
@@ -306,6 +307,7 @@ public class AuctionService {
         requestPaymentFromWinner(auction);
         System.out.println("End-of-auction tasks completed for auction " + auction.getId());
     }
+    @Transactional
     public void closeAuction(Auction auction) {
         auction.setStatus("Closed");
         if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")) {
@@ -342,7 +344,7 @@ public class AuctionService {
                 }
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
-                    new AuctionNotification("Closed", winnerID!=null?winnerID:null , auction.getFinalPrice()));
+                    new AuctionNotification("Closed", winnerID!=null?winnerID:null, auction.getFinalPrice()));
         }else if(auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
             List<Bid> bids = bidRepository.findByAuctionID(auction.getId());
             if (!bids.isEmpty()){
@@ -359,7 +361,7 @@ public class AuctionService {
                 auction.setFinalPrice(maxBidAmount);
                 auction.setWinnerID(highestBids.get(0).getBidderID().getId());
             } else if(highestBids.size() > 1){
-                int randomnumber= new Random().nextInt(highestBids.size());
+                int randomnumber= 0;
                 auction.setFinalPrice(highestBids.get(randomnumber).getAmount());
                 auction.setWinnerID(highestBids.get(randomnumber).getBidderID().getId());
             }}
@@ -377,6 +379,7 @@ public class AuctionService {
         processEndOfAuctionTasks(auction);
         auctionRepository.save(auction);
     }
+    @Transactional
     public void closeAuctionCall(int auctionId, Integer userID) {
         Auction auction = auctionRepository.getById(auctionId);
         auction.setStatus("Closed");
@@ -738,4 +741,29 @@ public class AuctionService {
 
         return response;
     }
+    
+    public Map<String, Object> getWinnerByAuction(Integer auctionId, Integer breederId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new EntityNotFoundException("Auction not found with ID: " + auctionId));
+        if (!auction.getBreederID().equals(breederId)) {
+            throw new RuntimeException("You are not authorized to access this auction");
+        }
+        if (auction.getWinnerID() == null) {
+            throw new EntityNotFoundException("No winner found for this auction");
+        }
+        User userWinner = userRepository.findById(auction.getWinnerID())
+                .orElseThrow(() -> new EntityNotFoundException("Winner not found"));
+
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("id", userWinner.getId());
+        userDetails.put("fullName", userWinner.getFullName());
+        userDetails.put("userName", userWinner.getUserName());
+        userDetails.put("address", userWinner.getAddress());
+        userDetails.put("email", userWinner.getEmail());
+        userDetails.put("phoneNumber", userWinner.getPhoneNumber());
+        return userDetails;
+    }
+
+
+
 }

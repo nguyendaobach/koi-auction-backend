@@ -1,10 +1,7 @@
 package fall24.swp391.g1se1868.koiauction.controller;
 
 
-import fall24.swp391.g1se1868.koiauction.model.Bid;
-import fall24.swp391.g1se1868.koiauction.model.BidRequest;
-import fall24.swp391.g1se1868.koiauction.model.BidResponseDTO;
-import fall24.swp391.g1se1868.koiauction.model.UserPrinciple;
+import fall24.swp391.g1se1868.koiauction.model.*;
 import fall24.swp391.g1se1868.koiauction.service.AuctionService;
 import fall24.swp391.g1se1868.koiauction.service.BidService;
 import fall24.swp391.g1se1868.koiauction.service.UserService;
@@ -51,7 +48,7 @@ public class BidController {
         try {
             Bid newBid = bidService.placeBid(bid, userId);
             return ResponseEntity.ok(new BidResponseDTO(newBid.getAuctionID().getId()
-                    ,newBid.getBidderID().getId(),newBid.getId().getTime(), newBid.getAmount(), userService.getUserById(userId).get().getFullName()));
+                    ,newBid.getBidderID().getId(),newBid.getId().getTime(), newBid.getAmount(), userService.getUserById(userId).get().getFullName(), userService.getUserById(userId).get().getUserName()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (IllegalArgumentException e) {

@@ -64,12 +64,15 @@ public class WalletService {
         Wallet recipientWallet = walletRepository.findbyuserid(1)
                 .orElseThrow(() -> new RuntimeException("Recipient wallet not found"));
         Auction auction = auctionService.getAuctionById(auctionId);
-        Long amount = auction.getFinalPrice();
+        Long amount = auction.getFinalPrice()-auction.getBidderDeposit();
         if(amount==0||amount==null){
-            return "Final Price Error";
+            throw new IllegalArgumentException("Final Price Error");
         }
         if (payerWallet.getAmount().compareTo(amount) < 0) {
-            return "Insufficient balance!";
+            throw new RuntimeException( "Insufficient balance!");
+        }
+        if(isAuctionPaid(auctionId)){
+            throw new RuntimeException("User has already paid");
         }
         payerWallet.setAmount(payerWallet.getAmount()-amount);
         walletRepository.save(payerWallet);
