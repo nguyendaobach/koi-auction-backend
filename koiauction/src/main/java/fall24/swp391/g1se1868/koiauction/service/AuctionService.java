@@ -424,7 +424,7 @@ public class AuctionService {
             emailService.sendHtmlMessage(mailSendWinner);
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", userID, auction.getFinalPrice()));
-        } else if (auction.getAuctionMethod().equalsIgnoreCase("Fixed-price")
+        } else if (auction.getAuctionMethod().equalsIgnoreCase("Ascending")
         || auction.getAuctionMethod().equalsIgnoreCase("First-come")) {
             auction.setWinnerID(userID);
             auction.setFinalPrice(auction.getBuyoutPrice());
@@ -453,7 +453,7 @@ public class AuctionService {
             }
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
                     new AuctionNotification("Closed", userID, auction.getBuyoutPrice()));
-        }else if(auction.getAuctionMethod().equalsIgnoreCase("Ascending")){
+        }else if(auction.getAuctionMethod().equalsIgnoreCase("Fixed-price")){
             auction.setWinnerID(userID);
             auction.setFinalPrice(auction.getBuyoutPrice());
             messagingTemplate.convertAndSend("/topic/auction/" + auction.getId(),
