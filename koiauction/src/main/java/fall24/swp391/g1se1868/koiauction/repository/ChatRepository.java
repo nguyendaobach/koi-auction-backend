@@ -22,7 +22,7 @@ public interface ChatRepository extends JpaRepository<Chat, Integer> {
             "FROM User u " +
             "JOIN Chat c ON (c.senderId = :senderId AND c.receiverId = u.id) " +
             "OR (c.receiverId = :senderId AND c.senderId = u.id) " +
-            "GROUP BY u.id, u.fullName")
+            "GROUP BY u.id, u.fullName, u.role")
     List<UserChat> getUserChatsBySenderId(@Param("senderId") Integer senderId);
 
 
