@@ -122,7 +122,7 @@ public class OrderService {
             throw new EntityNotFoundException("Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
-        if(order.getAuctionID().getId()!=userId){
+        if(order.getAuctionID().getBreederID()!=userId){
             throw new RuntimeException("User is not authorized to update this order");
         }else {
             order.setStatus("Shipping");
